@@ -1,0 +1,5 @@
+目前的问题：
+1）如果把channel建模为resource? 因为每一个UAV都有感知范围，只要在感知范围内没有其他人在发就ok DONE!!
+
+2) 可能global_data_packet_id这个变量只有在每个drone类内部是全局的，但是可能会出现这样的一个问题：
+    不同UAV发的包的id是一样的，这样会影响PDR的计算
