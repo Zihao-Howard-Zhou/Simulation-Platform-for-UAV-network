@@ -41,7 +41,11 @@ Our simulation platform can be expanded based on your research needs, including 
    ROUTING_PROTOCOL = RoutingProtocol.your_protocol
    ```
 
-## Contribute
-Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
+## Contributing
+Contributions, issues and feature requests are welcome! 
 
- Please make sure to update tests as appropriate.
+## Show your support
+Give a ⭐ is this project helped you!
+
+## License
+This project is MIT licensed.
