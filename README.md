@@ -24,7 +24,9 @@ You can even ```run main.py``` directly with one click to get a sneak peek. But 
 ## Performance test
 In this section, we test the relationship between drone movement velocity and packet delivery ratio (PDR) under settings with different drone numbers in our platform. As shown in the following figure, when the GPSR routing protocol is used, the faster the drone moves, the lower the PDR. This is because the increase in speed leads to frequent changes in the topology, and there is a certain lag in the information in the neighbor table, resulting in routing Wrong choice. In addition, we can also find that increasing the number of drones can improve PDR. This is because when the node density in the network is larger, the probability of link disconnection will be reduced, so the impact of mobility on data transmission will be appropriately weakened.
 
-![image](https://github.com/ZihaoZhouSCUT/Simulation-Platform-for-UAV-network/blob/master/img/pdr_vs_velocity.png)
+<div align="center">
+<img src="https://github.com/ZihaoZhouSCUT/Simulation-Platform-for-UAV-network/blob/master/img/pdr_vs_velocity.png" width="500px">
+</div>
 
 ## Design your own protocol
 Our simulation platform can be expanded based on your research needs, including designing your own mobility model of drones (in ```mobility``` folder), mac protocol (in ```mac``` floder), routing protocol (in ```routing``` floder) and so on. It should be noted that energy model for drones is still under development. Next, we take routing protocols as an example to introduce how users can design their own algorithms.
