@@ -51,6 +51,8 @@ Our simulation platform can be expanded based on your research needs, including 
 ## Contributing
 Contributions, issues and feature requests are welcome! 
 
+Currently, the energy model of UAVs (including energy consumption of flight, hovering and information transmission), calculation of physical layer SINR, etc. are still under development. Pull requests are welcomed!
+
 ## Show your support
 Give a ⭐ is this project helped you!
 
