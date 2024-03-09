@@ -1,5 +1,6 @@
 import logging
 from utils import config
+from phy.large_scale_fading import general_path_loss
 from utils.util_function import euclidean_distance
 
 # config logging
@@ -85,7 +86,11 @@ class Phy:
 
         previous_drone = self.my_drone.simulator.drones[msg[2]]
 
-        if euclidean_distance(self.my_drone.coords, previous_drone.coords) <= config.COMMUNICATION_RANGE:
+        # 在此处计算SINR
+        snr = general_path_loss(self.my_drone, previous_drone)
+
+        if snr >= 3:
+        # if euclidean_distance(self.my_drone.coords, previous_drone.coords) <= config.COMMUNICATION_RANGE:
             logging.info('UAV: %s receives the message: %s at %s, previous hop is: %s',
                          self.my_drone.identifier, msg[0], self.env.now, msg[2])
             yield self.env.process(self.my_drone.routing_protocol.packet_reception(msg[0], msg[2]))

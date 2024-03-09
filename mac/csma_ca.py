@@ -77,6 +77,7 @@ class CsmaCa:
         contention_window = min(config.CW_MIN * (2 ** transmission_attempt), config.CW_MAX)
 
         backoff = random.randint(0, contention_window - 1) * config.SLOT_DURATION  # random backoff
+
         to_wait = config.DIFS_DURATION + backoff
 
         while to_wait:

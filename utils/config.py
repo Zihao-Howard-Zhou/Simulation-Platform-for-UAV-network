@@ -7,16 +7,15 @@ MAP_WIDTH = 1000  # m, width of the map
 MAP_HEIGHT = 10  # m, height of the map
 SIM_TIME = 15 * 1e6  # us, total simulation time (10s)
 NUMBER_OF_DRONES = 20  # number of drones in the network
+STATIC_CASE = 0
 
 # ----------------------- radio parameters ----------------------- #
-TRANSMITTING_POWER = 0.1  # Watt
+TRANSMITTING_POWER = 1  # Watt
+LIGHT_SPEED = 3*1e8  # light speed (m/s)
+CARRIER_FREQUENCY = 1*1e9  # carrier frequency (Hz)
+NOISE_POWER = 4*1e-9  # noise power (Watt)
 RADIO_SWITCHING_TIME = 100  # us, the switching time of the transceiver mode
 RADIO_SENSITIVITY = 1e-10  # power under which signal is not sensed
-
-# ---------------------- signal parameters ----------------------- #
-LIGHT_SPEED = 3 * 1e8  # m/s, light speed
-FREQUENCY = 2.4 * 1e9  # 2.4 GHz, carrier frequency
-WAVELENGTH = LIGHT_SPEED / FREQUENCY
 
 # ---------------------- packet parameters ----------------------- #
 MAX_TTL = 15

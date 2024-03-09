@@ -69,9 +69,14 @@ class GaussMarkov3D:
             pitch_mean = drone.pitch_mean
 
             # update the position of next time step
-            next_position_x = cur_position[0] + cur_velocity[0] * self.position_update_interval / 1e6
-            next_position_y = cur_position[1] + cur_velocity[1] * self.position_update_interval / 1e6
-            next_position_z = cur_position[2] + cur_velocity[2] * self.position_update_interval / 1e6
+            if config.STATIC_CASE == 0:
+                next_position_x = cur_position[0] + cur_velocity[0] * self.position_update_interval / 1e6
+                next_position_y = cur_position[1] + cur_velocity[1] * self.position_update_interval / 1e6
+                next_position_z = cur_position[2] + cur_velocity[2] * self.position_update_interval / 1e6
+            else:
+                next_position_x = cur_position[0]
+                next_position_y = cur_position[1]
+                next_position_z = cur_position[2]
 
             cur_speed = ((cur_velocity[0] ** 2) + (cur_velocity[1] ** 2) + (cur_velocity[2] ** 2)) ** 0.5
 
