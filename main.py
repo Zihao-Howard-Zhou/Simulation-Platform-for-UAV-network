@@ -3,9 +3,8 @@ from utils import config
 from simulator.simulator import Simulator
 
 if __name__ == "__main__":
-    n_drones = 15
     env = simpy.Environment()
-    channel_states = {i: simpy.Resource(env, capacity=1) for i in range(15)}
-    sim = Simulator(seed=2025, env=env, channel_states=channel_states, n_drones=15)
+    channel_states = {i: simpy.Resource(env, capacity=1) for i in range(config.NUMBER_OF_DRONES)}
+    sim = Simulator(seed=2024, env=env, channel_states=channel_states, n_drones=config.NUMBER_OF_DRONES)
 
     env.run(until=config.SIM_TIME)

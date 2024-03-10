@@ -32,7 +32,7 @@ class Phy:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/11
-    Updated at: 2024/2/26
+    Updated at: 2024/3/10
     """
 
     def __init__(self, mac):
@@ -89,8 +89,7 @@ class Phy:
         # 在此处计算SINR
         snr = general_path_loss(self.my_drone, previous_drone)
 
-        if snr >= 3:
-        # if euclidean_distance(self.my_drone.coords, previous_drone.coords) <= config.COMMUNICATION_RANGE:
+        if snr >= config.SNR_THRESHOLD:
             logging.info('UAV: %s receives the message: %s at %s, previous hop is: %s',
                          self.my_drone.identifier, msg[0], self.env.now, msg[2])
             yield self.env.process(self.my_drone.routing_protocol.packet_reception(msg[0], msg[2]))

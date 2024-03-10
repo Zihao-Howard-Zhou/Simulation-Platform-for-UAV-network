@@ -5,8 +5,8 @@ from enum import Enum
 MAP_LENGTH = 1000  # m, length of the map
 MAP_WIDTH = 1000  # m, width of the map
 MAP_HEIGHT = 10  # m, height of the map
-SIM_TIME = 15 * 1e6  # us, total simulation time (10s)
-NUMBER_OF_DRONES = 20  # number of drones in the network
+SIM_TIME = 50 * 1e6  # us, total simulation time (10s)
+NUMBER_OF_DRONES = 5  # number of drones in the network
 STATIC_CASE = 0
 
 # ----------------------- radio parameters ----------------------- #
@@ -15,6 +15,7 @@ LIGHT_SPEED = 3*1e8  # light speed (m/s)
 CARRIER_FREQUENCY = 1*1e9  # carrier frequency (Hz)
 NOISE_POWER = 4*1e-9  # noise power (Watt)
 RADIO_SWITCHING_TIME = 100  # us, the switching time of the transceiver mode
+SNR_THRESHOLD = 4  # dB
 RADIO_SENSITIVITY = 1e-10  # power under which signal is not sensed
 
 # ---------------------- packet parameters ----------------------- #

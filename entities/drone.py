@@ -7,6 +7,7 @@ import queue
 from entities.packet import DataPacket
 from mac.csma_ca import CsmaCa
 from mobility.gauss_markov_3d import GaussMarkov3D
+from mobility.random_walk_3d import RandomWalk3D
 from utils import config
 
 # config logging
