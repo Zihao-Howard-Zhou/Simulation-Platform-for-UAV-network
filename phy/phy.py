@@ -1,6 +1,5 @@
 import logging
 from utils import config
-from phy.large_scale_fading import general_path_loss
 from utils.util_function import euclidean_distance
 
 # config logging
@@ -32,7 +31,7 @@ class Phy:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/11
-    Updated at: 2024/3/10
+    Updated at: 2024/2/26
     """
 
     def __init__(self, mac):
@@ -51,11 +50,15 @@ class Phy:
 
         next_hop_drone = self.my_drone.simulator.drones[next_hop_id]
 
-        # transmit through the channel
-        message = (packet, self.env.now, self.my_drone.identifier)
-
         # a transmission delay should be considered
         yield self.env.timeout(packet.packet_length / config.BIT_RATE * 1e6)
+
+        # energy consumption
+        energy_consumption = (packet.packet_length / config.BIT_RATE) * config.TRANSMITTING_POWER
+        self.my_drone.residual_energy -= energy_consumption
+
+        # transmit through the channel
+        message = (packet, self.env.now, self.my_drone.identifier)
 
         self.my_drone.simulator.channel.unicast_put(message, next_hop_id)
 
@@ -69,11 +72,15 @@ class Phy:
         :return: none
         """
 
-        # transmit through the channel
-        message = (packet, self.env.now, self.my_drone.identifier)
-
         # a transmission delay should be considered
         yield self.env.timeout(packet.packet_length / config.BIT_RATE * 1e6)
+
+        # energy consumption
+        energy_consumption = (packet.packet_length / config.BIT_RATE) * config.TRANSMITTING_POWER
+        self.my_drone.residual_energy -= energy_consumption
+
+        # transmit through the channel
+        message = (packet, self.env.now, self.my_drone.identifier)
 
         self.my_drone.simulator.channel.broadcast_put(message)
 
@@ -82,16 +89,16 @@ class Phy:
             yield self.send_process
 
     def receive(self):
-        msg = yield self.my_drone.certain_channel.get()
+        if not self.my_drone.sleep:
+            msg = yield self.my_drone.certain_channel.get()
 
-        previous_drone = self.my_drone.simulator.drones[msg[2]]
+            previous_drone = self.my_drone.simulator.drones[msg[2]]
 
-        # 在此处计算SINR
-        snr = general_path_loss(self.my_drone, previous_drone)
-
-        if snr >= config.SNR_THRESHOLD:
-            logging.info('UAV: %s receives the message: %s at %s, previous hop is: %s',
-                         self.my_drone.identifier, msg[0], self.env.now, msg[2])
-            yield self.env.process(self.my_drone.routing_protocol.packet_reception(msg[0], msg[2]))
-        else:
-            pass
+            if euclidean_distance(self.my_drone.coords, previous_drone.coords) <= config.COMMUNICATION_RANGE:
+                logging.info('UAV: %s receives the message: %s at %s, previous hop is: %s',
+                             self.my_drone.identifier, msg[0], self.env.now, msg[2])
+                yield self.env.process(self.my_drone.routing_protocol.packet_reception(msg[0], msg[2]))
+            else:
+                pass
+        else:  # cannot receive packets if "my_drone" is in sleep state
+            yield self.my_drone.certain_channel.get()

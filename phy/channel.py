@@ -1,6 +1,7 @@
 import logging
 import simpy
 import simpy.core
+from utils import config
 
 
 class Channel:
@@ -37,6 +38,10 @@ class Channel:
             logging.error('Pipes does not have any stores')
 
         # the sender "puts" packets to all stores in pipes separately
+        # events = []
+        # for idx in range(0, config.NUMBER_OF_DRONES):
+        #     if idx != value[2]:
+        #         events.append(self.pipes[idx].put(value))
         events = [store.put(value) for store in self.pipes]
         return self.env.all_of(events)
 

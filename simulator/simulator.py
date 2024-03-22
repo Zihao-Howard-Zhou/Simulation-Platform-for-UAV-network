@@ -19,10 +19,12 @@ class Simulator:
                  channel_states,
                  n_drones,
                  routing_protocol=config.ROUTING_PROTOCOL,
+                 mobility_model=config.MOBILITY_MODEL,
                  total_simulation_time=config.SIM_TIME):
 
         self.env = env
         self.routing_protocol = routing_protocol
+        self.mobility_model = mobility_model
 
         self.total_simulation_time = total_simulation_time  # total simulation time (ns)
 
@@ -45,7 +47,7 @@ class Simulator:
         self.drones = []
         for i in range(n_drones):
             print('UAV: ', i, ' initial location is at: ', start_position[i])
-            drone = Drone(env=env, node_id=i, coords=start_position[i], speed=40,
+            drone = Drone(env=env, node_id=i, coords=start_position[i], speed=60,
                           certain_channel=self.channel.create_store_for_receiver(), simulator=self)
             self.drones.append(drone)
 

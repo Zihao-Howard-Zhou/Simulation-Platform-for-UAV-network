@@ -77,6 +77,8 @@ class DataPacket(Packet):
         self.src_drone = src_drone
         self.dst_drone = dst_drone
 
+        self.routing_path = None  # for centralized routing protocols
+
 
 class AckPacket(Packet):
     def __init__(self,

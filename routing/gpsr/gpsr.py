@@ -9,18 +9,19 @@ from utils import config
 logging.basicConfig(filename='running_log.log',
                     filemode='w',  # there are two modes: 'a' and 'w'
                     format='%(asctime)s - %(levelname)s - %(message)s',
-                    level=logging.DEBUG
+                    level=logging.INFO
                     )
 
 GL_ID_HELLO_PACKET = 5000
 GL_ID_ACK_PACKET = 10000
+
 
 class Gpsr:
     """
     Main procedure of GPSR (v1.0)
 
     Attributes:
-        simulator:
+        simulator: the simulation platform that contains everything
         my_drone: the drone that installed the GPSR
         hello_interval: interval of sending hello packet
         neighbor_table: neighbor table of GPSR
@@ -33,7 +34,7 @@ class Gpsr:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/11
-    Updated at: 2024/2/27
+    Updated at: 2024/3/19
     """
 
     def __init__(self, simulator, my_drone):
@@ -87,7 +88,7 @@ class Gpsr:
 
         since different routing protocols have their own corresponding packets, it is necessary to add this packet
         reception function in the network layer
-        :param packet:
+        :param packet: the received packet
         :param src_drone_id: previous hop
         :return: None
         """
@@ -100,16 +101,6 @@ class Gpsr:
             # self.neighbor_table.print_neighbor(self.my_drone)
 
         elif isinstance(packet, DataPacket):
-            GL_ID_ACK_PACKET += 1
-            src_drone = self.simulator.drones[src_drone_id]
-            ack_packet = AckPacket(src_drone=self.my_drone, dst_drone=src_drone, ack_packet_id=GL_ID_ACK_PACKET,
-                                   ack_packet_length= config.ACK_PACKET_LENGTH,
-                                   ack_packet=packet, simulator=self.simulator)
-
-            yield self.simulator.env.timeout(config.SIFS_DURATION)  # switch from receiving to transmitting
-
-            yield self.simulator.env.process(self.my_drone.mac_protocol.phy.unicast(ack_packet, src_drone_id))
-
             if packet.dst_drone.identifier == self.my_drone.identifier:
                 self.simulator.metrics.deliver_time_dict[packet.packet_id] = self.simulator.env.now - packet.creation_time
                 self.simulator.metrics.datapacket_arrived.add(packet.packet_id)
@@ -117,7 +108,21 @@ class Gpsr:
             else:
                 self.my_drone.fifo_queue.put(packet)
 
+            GL_ID_ACK_PACKET += 1
+            src_drone = self.simulator.drones[src_drone_id]  # previous drone
+            ack_packet = AckPacket(src_drone=self.my_drone, dst_drone=src_drone, ack_packet_id=GL_ID_ACK_PACKET,
+                                   ack_packet_length=config.ACK_PACKET_LENGTH,
+                                   ack_packet=packet, simulator=self.simulator)
+
+            yield self.simulator.env.timeout(config.SIFS_DURATION)  # switch from receiving to transmitting
+
+            # unicast the ack packet immediately without contention for the channel
+            yield self.simulator.env.process(self.my_drone.mac_protocol.phy.unicast(ack_packet, src_drone_id))
+
         elif isinstance(packet, AckPacket):
-            key2 = str(self.my_drone.identifier) + str(self.my_drone.mac_protocol.wait_ack_process_count)
+            key2 = str(self.my_drone.identifier) + '_' + str(self.my_drone.mac_protocol.wait_ack_process_count)
+
             if self.my_drone.mac_protocol.wait_ack_process_finish[key2] == 0:
+                logging.info('At time: %s, the wait_ack process (id: %s) of UAV: %s is interrupted by UAV: %s',
+                             self.simulator.env.now, key2, self.my_drone.identifier, src_drone_id)
                 self.my_drone.mac_protocol.wait_ack_process_dict[key2].interrupt()

@@ -98,6 +98,8 @@ class RandomWalk3D:
             drone.velocity = next_velocity
 
             yield env.timeout(self.position_update_interval)
+            energy_consumption = (self.position_update_interval / 1e6) * drone.energy_model.power_consumption(drone.speed)
+            drone.residual_energy -= energy_consumption
 
     def show_trajectory(self):
         x = []

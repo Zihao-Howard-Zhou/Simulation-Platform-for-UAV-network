@@ -3,6 +3,7 @@ from utils import config
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
+
 class GaussMarkov3D:
     """
     3-D Gauss-Markov Mobility Model
@@ -41,7 +42,7 @@ class GaussMarkov3D:
 
         self.b1 = 50
         self.b2 = 50
-        self.b3 = 3
+        self.b3 = 10
 
         self.min_x = 0
         self.max_x = config.MAP_LENGTH
@@ -137,6 +138,8 @@ class GaussMarkov3D:
             drone.pitch_mean = pitch_mean
 
             yield env.timeout(self.position_update_interval)
+            energy_consumption = (self.position_update_interval / 1e6) * drone.energy_model.power_consumption(drone.speed)
+            drone.residual_energy -= energy_consumption
 
     def show_trajectory(self):
         x = []

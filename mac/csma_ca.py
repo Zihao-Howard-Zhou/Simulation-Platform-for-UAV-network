@@ -9,7 +9,7 @@ from utils.util_function import check_channel_availability
 logging.basicConfig(filename='running_log.log',
                     filemode='w',  # there are two modes: 'a' and 'w'
                     format='%(asctime)s - %(levelname)s - %(message)s',
-                    level=logging.DEBUG
+                    level=logging.INFO
                     )
 
 
@@ -41,7 +41,7 @@ class CsmaCa:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/11
-    Updated at: 2024/2/26
+    Updated at: 2024/3/19
     """
 
     def __init__(self, drone):
@@ -56,13 +56,12 @@ class CsmaCa:
         self.wait_ack_process_count = 0
         self.wait_ack_process = None
 
-    def mac_send(self, pkd, transmission_mode, i):
+    def mac_send(self, pkd, transmission_mode):
         """
         Control when drone can send packet
         :param pkd: the packet that needs to send
         :param transmission_mode: used to indicate unicast, broadcast or multicast
-        :param i: used to indicate the number of the process
-        :return: none
+        :return: None
         """
 
         if transmission_mode == 0:  # for unicast
@@ -77,7 +76,6 @@ class CsmaCa:
         contention_window = min(config.CW_MIN * (2 ** transmission_attempt), config.CW_MAX)
 
         backoff = random.randint(0, contention_window - 1) * config.SLOT_DURATION  # random backoff
-
         to_wait = config.DIFS_DURATION + backoff
 
         while to_wait:
@@ -85,7 +83,7 @@ class CsmaCa:
             yield self.env.process(self.wait_idle_channel(self.my_drone, self.simulator.drones))
 
             # start listen the channel
-            self.env.process(self.listen(self.channel_states, self.simulator.drones, i))
+            self.env.process(self.listen(self.channel_states, self.simulator.drones))
 
             logging.info('UAV: %s should wait from: %s, and wait for %s',
                          self.my_drone.identifier, self.env.now, to_wait)
@@ -95,7 +93,7 @@ class CsmaCa:
                 yield self.env.timeout(to_wait)
                 to_wait = 0  # to break the while loop
 
-                key = str(self.my_drone.identifier) + str(i)  # label of the process
+                key = str(self.my_drone.identifier) + '_' + str(self.my_drone.mac_process_count)  # label of the process
                 self.my_drone.mac_process_finish[key] = 1  # mark the process as "finished"
 
                 # occupy the channel to send packet
@@ -109,7 +107,7 @@ class CsmaCa:
                                      self.my_drone.identifier, pkd.packet_id, self.env.now)
 
                         self.wait_ack_process_count += 1
-                        key2 = str(self.my_drone.identifier) + str(self.wait_ack_process_count)
+                        key2 = str(self.my_drone.identifier) + '_' + str(self.wait_ack_process_count)
                         self.wait_ack_process = self.env.process(self.wait_ack(pkd))
                         self.wait_ack_process_dict[key2] = self.wait_ack_process
                         self.wait_ack_process_finish[key2] = 0
@@ -124,8 +122,6 @@ class CsmaCa:
                              self.my_drone.identifier, self.env.now, already_wait, to_wait)
 
                 to_wait -= already_wait  # the remaining waiting time
-                if to_wait < 0:
-                    print('UAV: ', self.my_drone.identifier, ' i is: ', i, 'arl: ', already_wait)
 
                 if to_wait > backoff:
                     # interrupted in the process of DIFS
@@ -146,7 +142,7 @@ class CsmaCa:
         try:
             yield self.env.timeout(config.ACK_TIMEOUT)
 
-            key2 = str(self.my_drone.identifier) + str(self.wait_ack_process_count)
+            key2 = str(self.my_drone.identifier) + '_' + str(self.wait_ack_process_count)
             self.wait_ack_process_finish[key2] = 1
 
             logging.info('ACK timeout of packet: %s', pkd.packet_id)
@@ -172,26 +168,26 @@ class CsmaCa:
         while not check_channel_availability(self.channel_states, sender_drone, drones):
             yield self.env.timeout(config.SLOT_DURATION)
 
-    def listen(self, channel_states, drones, i):
+    def listen(self, channel_states, drones):
         """
         When the drone waits until the channel is idle, it starts its own timer to count down, in this time, the drone
         needs to detect the state of the channel during this period, and if the channel is found to be busy again, the
         countdown process should be interrupted
         :param channel_states: a dictionary, indicates the use of the channel by different drones
         :param drones: a list, contains all drones in the simulation
-        :param i: used to indicate the number of the process
         :return: None
         """
 
-        logging.info('At time: %s, UAV: %s starts to listen the channel', self.env.now, self.my_drone.identifier)
+        logging.info('At time: %s, UAV: %s starts to listen the channel and perform backoff',
+                     self.env.now, self.my_drone.identifier)
 
         # while self.finish_one_round_transmission is False:
-        key = str(self.my_drone.identifier) + str(i)
+        key = str(self.my_drone.identifier) + '_' + str(self.my_drone.mac_process_count)
         while self.my_drone.mac_process_finish[key] == 0:  # interrupt only if the process is not complete
             if check_channel_availability(channel_states, self.my_drone, drones) is False:
                 # found channel be occupied, start interrupt
 
-                key = str(self.my_drone.identifier) + str(i)
+                key = str(self.my_drone.identifier) + '_' + str(self.my_drone.mac_process_count)
                 if not self.my_drone.mac_process_dict[key].triggered:
                     self.my_drone.mac_process_dict[key].interrupt()
                     break

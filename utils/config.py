@@ -1,13 +1,29 @@
 from routing.gpsr.gpsr import Gpsr
+from routing.opar.opar import Opar
+from mobility.gauss_markov_3d import GaussMarkov3D
+from mobility.random_walk_3d import RandomWalk3D
 from enum import Enum
 
 # --------------------- simulation parameters --------------------- #
 MAP_LENGTH = 1000  # m, length of the map
 MAP_WIDTH = 1000  # m, width of the map
-MAP_HEIGHT = 10  # m, height of the map
-SIM_TIME = 10 * 1e6  # us, total simulation time (10s)
-NUMBER_OF_DRONES = 5  # number of drones in the network
+MAP_HEIGHT = 120  # m, height of the map
+SIM_TIME = 50 * 1e6  # us, total simulation time (10s)
+NUMBER_OF_DRONES = 20  # number of drones in the network
 STATIC_CASE = 0
+
+# ---------- hardware parameters of drone (rotary-wing) -----------#
+PROFILE_DRAG_COEFFICIENT = 0.012
+AIR_DENSITY = 1.225  # kg/m^3
+ROTOR_SOLIDITY = 0.05  # defined as the ratio of the total blade area to disc area
+ROTOR_DISC_AREA = 0.79  # m^2
+BLADE_ANGULAR_VELOCITY = 400  # radians/second
+ROTOR_RADIUS = 0.5  # m
+INCREMENTAL_CORRECTION_FACTOR = 0.1
+AIRCRAFT_WEIGHT = 100  # Newton
+ROTOR_BLADE_TIP_SPEED = 500
+MEAN_ROTOR_VELOCITY = 7.2  # mean rotor induced velocity in hover
+FUSELAGE_DRAG_RATIO = 0.3
 
 # ----------------------- radio parameters ----------------------- #
 TRANSMITTING_POWER = 1  # Watt
@@ -50,13 +66,29 @@ CW_MAX = 1024
 ACK_TIMEOUT = 1000  # maximum waiting time for ACK (0.1s)
 MAX_RETRANSMISSION_ATTEMPT = 5
 
+
 # ------------------- network layer parameters ------------------- #
 class RoutingProtocol(Enum):
     gpsr_protocol = Gpsr
+    opar_protocol = Opar
 
     @staticmethod
     def keylist():
         return list(map(lambda c: c.name, RoutingProtocol))
 
 
-ROUTING_PROTOCOL = RoutingProtocol.gpsr_protocol
+ROUTING_PROTOCOL = RoutingProtocol.opar_protocol
+
+
+# ---------------------- mobility model ------------------------- #
+class MobilityModel(Enum):
+    gauss_markov = GaussMarkov3D
+    random_walk = RandomWalk3D
+
+    @staticmethod
+    def keylist():
+        return list(map(lambda c: c.name, MobilityModel))
+
+
+MOBILITY_MODEL = MobilityModel.gauss_markov
+

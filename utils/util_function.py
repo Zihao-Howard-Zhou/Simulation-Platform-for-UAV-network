@@ -1,5 +1,6 @@
 from utils import config
 
+
 def euclidean_distance(p1, p2):
     """
     Calculate the 3-D euclidean distance between two nodes
@@ -10,6 +11,7 @@ def euclidean_distance(p1, p2):
 
     dist = ((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2 + (p1[2] - p2[2]) ** 2) ** 0.5
     return dist
+
 
 def check_channel_availability(channel_states, sender_drone, drones):
     """
