@@ -21,6 +21,10 @@ git clone https://github.com/ZihaoZhouSCUT/Simulation-Platform-for-UAV-network.g
 ```
 You can even ```run main.py``` directly with one click to get a sneak peek. But we recommend that you go to ```utils/config.py``` to browse and roughly understand the simulation parameters before starting the operation, including: the size of the simulation map, the number of drones, the velocities of drones, the routing protocol adopted and so on.
 
+## Module overview
+### Mobility model
+Mobility model is one of the most important mudules to show the characteristics of UAV network more realistically. In this project, **Gauss-Markov 3D mobility model** and **Random Walk 3D mobility model** have been implemented. Specifically, since it is quite difficult to achieve continuous movement of drone in discrete time simulation, we set a "position_update_interval" to update the positions of drones periodically, that is, it is assumed that the drone moves continuously within this time interval. If the time interval "position_update_interval" is smaller, the simulation accuracy will be higher, but the corresponding simulation time will be longer. There will be a trade-off. Besides, the time interval that drone updates its direction can also be set manually. The trajectories of a single drone within 100 second of the simulation under the two mobility models are shown as follows:
+
 ## Performance test
 In this section, we test the relationship between drone movement velocity and packet delivery ratio (PDR) under settings with different drone numbers in our platform. As shown in the following figure, when the GPSR routing protocol is used, the faster the drone moves, the lower the PDR. This is because the increase in speed leads to frequent changes in the topology, and there is a certain lag in the information in the neighbor table, resulting in routing Wrong choice. In addition, we can also find that increasing the number of drones can improve PDR. This is because when the node density in the network is larger, the probability of link disconnection will be reduced, so the impact of mobility on data transmission will be appropriately weakened.
 
