@@ -163,6 +163,9 @@ class GaussMarkov3D:
             z = np.array(z)
 
             ax.plot(x, y, z)
+            ax.set_xlabel('x')
+            ax.set_ylabel('y')
+            ax.set_zlabel('z')
             plt.show()
 
     # rebound scheme (refer to ns-3)
