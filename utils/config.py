@@ -9,7 +9,7 @@ from enum import Enum
 MAP_LENGTH = 1000  # m, length of the map
 MAP_WIDTH = 1000  # m, width of the map
 MAP_HEIGHT = 120  # m, height of the map
-SIM_TIME = 150 * 1e6  # us, total simulation time (10s)
+SIM_TIME = 10 * 1e6  # us, total simulation time (10s)
 NUMBER_OF_DRONES = 20  # number of drones in the network
 STATIC_CASE = 0
 

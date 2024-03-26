@@ -106,9 +106,10 @@ class Drone:
         if self.identifier in [0, 1, 2, 3]:
             self.residual_energy = 50 * 1e4
         else:
-            self.residual_energy = 50 * 1e3
+            self.residual_energy = 50 * 1e4
         self.sleep = False
 
+        # self.env.process(self.generate_data_packet())
         if (self.identifier != 0) and (self.identifier in [1, 2, 3]):
             self.env.process(self.generate_data_packet())
 
@@ -139,6 +140,12 @@ class Drone:
                     yield self.env.timeout(round(random.expovariate(rate) * 1e6))
 
                 GLOBAL_DATA_PACKET_ID += 1  # packet id
+
+                # # randomly choose a destination
+                # all_candidate_list = [i for i in range(config.NUMBER_OF_DRONES)]
+                # all_candidate_list.remove(self.identifier)
+                # dst_id = random.choice(all_candidate_list)
+
                 destination = self.simulator.drones[0]  # obtain the destination drone
 
                 pkd = DataPacket(self, dst_drone=destination, creation_time=self.env.now,
