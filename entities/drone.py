@@ -189,9 +189,11 @@ class Drone:
         while True:
             yield self.env.timeout(10)  # for speed up the simulation
             if not self.fifo_queue.empty():
-                data_packet = self.fifo_queue.get()
+                item = self.fifo_queue.get()
+                data_packet = item[0]
+                transmission_mode = item[1]
                 if data_packet.number_retransmission_attempt[self.identifier] < config.MAX_RETRANSMISSION_ATTEMPT:
-                    yield self.env.process(self.packet_coming(data_packet, 0))
+                    yield self.env.process(self.packet_coming(data_packet, transmission_mode))
 
     def energy_monitor(self):
         while True:

@@ -1,5 +1,6 @@
 from routing.gpsr.gpsr import Gpsr
 from routing.opar.opar import Opar
+from routing.parrot.parrot import Parrot
 from mobility.gauss_markov_3d import GaussMarkov3D
 from mobility.random_walk_3d import RandomWalk3D
 from enum import Enum
@@ -8,7 +9,7 @@ from enum import Enum
 MAP_LENGTH = 1000  # m, length of the map
 MAP_WIDTH = 1000  # m, width of the map
 MAP_HEIGHT = 120  # m, height of the map
-SIM_TIME = 100 * 1e6  # us, total simulation time (10s)
+SIM_TIME = 150 * 1e6  # us, total simulation time (10s)
 NUMBER_OF_DRONES = 20  # number of drones in the network
 STATIC_CASE = 0
 
@@ -71,13 +72,14 @@ MAX_RETRANSMISSION_ATTEMPT = 5
 class RoutingProtocol(Enum):
     gpsr_protocol = Gpsr
     opar_protocol = Opar
+    parrot_protocol = Parrot
 
     @staticmethod
     def keylist():
         return list(map(lambda c: c.name, RoutingProtocol))
 
 
-ROUTING_PROTOCOL = RoutingProtocol.opar_protocol
+ROUTING_PROTOCOL = RoutingProtocol.parrot_protocol
 
 
 # ---------------------- mobility model ------------------------- #

@@ -2,6 +2,7 @@ import math
 from utils.util_function import euclidean_distance
 from collections import defaultdict
 
+
 class GpsrNeighborTable:
     """
     Neighbor table of GPSR (v1.0)
