@@ -1,9 +1,4 @@
-from routing.gpsr.gpsr import Gpsr
-from routing.opar.opar import Opar
-from routing.parrot.parrot import Parrot
-from mobility.gauss_markov_3d import GaussMarkov3D
-from mobility.random_walk_3d import RandomWalk3D
-from enum import Enum
+import logging
 
 # --------------------- simulation parameters --------------------- #
 MAP_LENGTH = 1000  # m, length of the map
@@ -12,6 +7,7 @@ MAP_HEIGHT = 120  # m, height of the map
 SIM_TIME = 30 * 1e6  # us, total simulation time (10s)
 NUMBER_OF_DRONES = 20  # number of drones in the network
 STATIC_CASE = 0
+LOGGING_LEVEL = logging.ERROR
 
 # ---------- hardware parameters of drone (rotary-wing) -----------#
 PROFILE_DRAG_COEFFICIENT = 0.012
@@ -66,31 +62,4 @@ CW_MIN = 16
 CW_MAX = 1024
 ACK_TIMEOUT = 1000  # maximum waiting time for ACK (0.1s)
 MAX_RETRANSMISSION_ATTEMPT = 5
-
-
-# ------------------- network layer parameters ------------------- #
-class RoutingProtocol(Enum):
-    gpsr_protocol = Gpsr
-    opar_protocol = Opar
-    parrot_protocol = Parrot
-
-    @staticmethod
-    def keylist():
-        return list(map(lambda c: c.name, RoutingProtocol))
-
-
-ROUTING_PROTOCOL = RoutingProtocol.parrot_protocol
-
-
-# ---------------------- mobility model ------------------------- #
-class MobilityModel(Enum):
-    gauss_markov = GaussMarkov3D
-    random_walk = RandomWalk3D
-
-    @staticmethod
-    def keylist():
-        return list(map(lambda c: c.name, MobilityModel))
-
-
-MOBILITY_MODEL = MobilityModel.random_walk
 

@@ -5,7 +5,12 @@ import random
 import math
 import queue
 from entities.packet import DataPacket
+from routing.gpsr.gpsr import Gpsr
+from routing.opar.opar import Opar
+from routing.parrot.parrot import Parrot
 from mac.csma_ca import CsmaCa
+from mobility.gauss_markov_3d import GaussMarkov3D
+from mobility.random_walk_3d import RandomWalk3D
 from energy.energy_model import EnergyModel
 from utils import config
 
@@ -13,7 +18,7 @@ from utils import config
 logging.basicConfig(filename='running_log.log',
                     filemode='w',  # there are two modes: 'a' and 'w'
                     format='%(asctime)s - %(levelname)s - %(message)s',
-                    level=logging.DEBUG
+                    level=config.LOGGING_LEVEL
                     )
 
 GLOBAL_DATA_PACKET_ID = 0
@@ -98,9 +103,9 @@ class Drone:
         self.mac_process_finish = dict()
         self.mac_process_count = 0
 
-        self.routing_protocol = self.simulator.routing_protocol.value(self.simulator, self)
+        self.routing_protocol = Parrot(self.simulator, self)
 
-        self.mobility_model = self.simulator.mobility_model.value(self)
+        self.mobility_model = GaussMarkov3D(self)
 
         self.energy_model = EnergyModel()
         # if self.identifier in [0, 1, 2, 3]:

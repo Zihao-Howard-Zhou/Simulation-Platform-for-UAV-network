@@ -1,6 +1,7 @@
 import numpy as np
 from collections import defaultdict
 
+
 class Metrics:
     def __init__(self, simulator):
         self.simulator = simulator

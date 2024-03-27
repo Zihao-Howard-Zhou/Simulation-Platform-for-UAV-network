@@ -10,7 +10,7 @@ from utils import config
 logging.basicConfig(filename='running_log.log',
                     filemode='w',  # there are two modes: 'a' and 'w'
                     format='%(asctime)s - %(levelname)s - %(message)s',
-                    level=logging.INFO
+                    level=config.LOGGING_LEVEL
                     )
 
 GL_ID_CHIRP_PACKET = 5000

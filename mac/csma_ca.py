@@ -9,7 +9,7 @@ from utils.util_function import check_channel_availability
 logging.basicConfig(filename='running_log.log',
                     filemode='w',  # there are two modes: 'a' and 'w'
                     format='%(asctime)s - %(levelname)s - %(message)s',
-                    level=logging.INFO
+                    level=config.LOGGING_LEVEL
                     )
 
 

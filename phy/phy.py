@@ -6,7 +6,7 @@ from utils.util_function import euclidean_distance
 logging.basicConfig(filename='running_log.log',
                     filemode='w',  # there are two modes: 'a' and 'w'
                     format='%(asctime)s - %(levelname)s - %(message)s',
-                    level=logging.DEBUG
+                    level=config.LOGGING_LEVEL
                     )
 
 

@@ -1,6 +1,5 @@
 import logging
 import math
-
 import numpy as np
 from entities.packet import DataPacket, AckPacket
 from utils import config
@@ -11,7 +10,7 @@ from utils.util_function import euclidean_distance
 logging.basicConfig(filename='running_log.log',
                     filemode='w',  # there are two modes: 'a' and 'w'
                     format='%(asctime)s - %(levelname)s - %(message)s',
-                    level=logging.INFO
+                    level=config.LOGGING_LEVEL
                     )
 
 GL_ID_DATA_PACKET = 5000

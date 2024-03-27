@@ -18,13 +18,9 @@ class Simulator:
                  env,
                  channel_states,
                  n_drones,
-                 routing_protocol=config.ROUTING_PROTOCOL,
-                 mobility_model=config.MOBILITY_MODEL,
                  total_simulation_time=config.SIM_TIME):
 
         self.env = env
-        self.routing_protocol = routing_protocol
-        self.mobility_model = mobility_model
 
         self.total_simulation_time = total_simulation_time  # total simulation time (ns)
 
