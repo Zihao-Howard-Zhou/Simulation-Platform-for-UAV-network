@@ -60,11 +60,12 @@ class EnergyModel:
 
         test_speed = [i for i in range(0, 71, 2)]  # speed ranges from 0m/s to 70m/s
         for speed in test_speed:
-            temp_p = self.power_consumption(speed)
+            temp_p, temp_blade, temp_induced, temp_para = self.power_consumption(speed)
             total_power.append(temp_p)
 
         plt.figure()
-        plt.plot(test_speed, total_power, marker='*', color='black', linestyle='-', linewidth=2)
+        plt.plot(test_speed, total_power,color='black', linestyle='-', linewidth=2, label='total')
+        plt.legend()
         plt.xlabel('UAV speed (m/s)')
         plt.ylabel('Required power (W)')
         plt.grid()
