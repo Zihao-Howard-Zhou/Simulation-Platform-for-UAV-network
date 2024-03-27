@@ -23,7 +23,7 @@ You can even ```run main.py``` directly with one click to get a sneak peek. But 
 
 ## Project structure
 <div align="center">
-<img src="https://github.com/ZihaoZhouSCUT/Simulation-Platform-for-UAV-network/blob/master/img/mobility_model.png" width="800px">
+<img src="https://github.com/ZihaoZhouSCUT/Simulation-Platform-for-UAV-network/blob/master/img/structure.png" width="800px">
 </div>
 
 ## Module overview
