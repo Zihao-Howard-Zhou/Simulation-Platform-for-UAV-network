@@ -21,6 +21,8 @@ class Parrot:
     """
     Main procedure of PARRoT (v1.0)
 
+    Trajectory prediction has not been implemented!
+
     Attributes:
         simulator: the simulation platform that contains everything
         my_drone: the drone that installed the PARRoT
@@ -50,7 +52,6 @@ class Parrot:
 
         GL_ID_CHIRP_PACKET += 1
 
-        # 要先做轨迹预测+获取凝聚力值
         cohesion = self.neighbor_table.cohesion
 
         # if a certain drone originates a chirp packet, then in the views of other drones, it will be regarded as
