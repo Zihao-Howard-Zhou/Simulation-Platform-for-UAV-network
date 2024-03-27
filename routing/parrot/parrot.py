@@ -24,7 +24,9 @@ class Parrot:
     Attributes:
         simulator: the simulation platform that contains everything
         my_drone: the drone that installed the PARRoT
-
+        chirp_interval: interval of broadcasting chirp packet
+        qtable: store the Q(d, a) and help routing decision
+        neighbor_table: used to calculate cohesion
 
     References:
         [1] B. Sliwa, et al.,"PARRoT: Predictive Ad-hoc Routing Fueled by Reinforcement Learning and Trajectory Knowledge,"
@@ -103,15 +105,15 @@ class Parrot:
             packet_seq_num = packet.packet_id  # get the sequence number of the packet
             destination = packet.src_drone  # drone that originates the chirp packet
 
+            # get the latest sequence number related to this specific destination
             latest_seq_num = max([self.qtable.q_table[destination.identifier, _][1] for _ in range(config.NUMBER_OF_DRONES)])
             if latest_seq_num >= packet_seq_num or self.my_drone.identifier == src_drone_id:
-                logging.info('++++++++++++++, packet seq num is: %s, the latest seq num is: %s',
-                             packet_seq_num, latest_seq_num)
                 pass
             else:
-                logging.info('At time: %s, UAV: %s receives the CHIRP packet from UAV: %s (action) to %s (destination), '
+                logging.info('At time: %s, UAV: %s receives the CHIRP packet from UAV: %s to %s , Q(%s, %s) is updated, '
                              'the reward is: %s, and the cohesion is: %s',
                              current_time, self.my_drone.identifier, src_drone_id, destination.identifier,
+                             destination.identifier, src_drone_id,
                              packet.reward, packet.cohesion)
 
                 self.qtable.update_table(packet, src_drone_id, current_time)
@@ -120,7 +122,7 @@ class Parrot:
                 cohesion = self.neighbor_table.cohesion
 
                 # continue to flood the chirp packet
-                chirp_packet = ChirpPacket(src_drone=destination, creation_time=self.simulator.env.now,
+                chirp_packet = ChirpPacket(src_drone=destination, creation_time=packet.creation_time,
                                            id_chirp_packet=packet_seq_num, current_position=self.my_drone.coords,
                                            predicted_position=0, reward=reward,
                                            cohesion=cohesion, simulator=self.simulator)

@@ -9,7 +9,7 @@ class ParrotNeighborTable:
     the only usage of neighbor table is to calculate the cohesion
 
     Attributes:
-        env:
+        env: simulation environment
         my_drone: the drone that installed the PARRoT protocol
         neighbor_table: a dictionary, used to record the neighbor drone and its updated time
         entry_life_time: each entry of the neighbor table has its lifetime, those expired items will be removed
@@ -22,7 +22,7 @@ class ParrotNeighborTable:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/3/26
-    Updated at: 2024/3/26
+    Updated at: 2024/3/27
     """
 
     def __init__(self, env, my_drone):
@@ -30,7 +30,7 @@ class ParrotNeighborTable:
         self.my_drone = my_drone
         self.neighbor_table = defaultdict(list)
         self.entry_life_time = 1*1e6  # unit: us (1s)
-        self.delta_t = 2.5*1e6  #
+        self.delta_t = 2.5*1e6
         self.cohesion = 1.0
         self.env.process(self.calculate_cohesion())
 
@@ -74,12 +74,14 @@ class ParrotNeighborTable:
     def calculate_cohesion(self):
         # calculate changes in neighbor set every "delta_t"
         while True:
+            self.purge()
             neighbor_set_last_time = set(self.neighbor_table.keys())
             if len(neighbor_set_last_time) == 0:
                 neighbor_set_last_time = {self.my_drone.identifier}  # initial case
 
             yield self.env.timeout(self.delta_t)
 
+            self.purge()
             neighbor_set_now = set(self.neighbor_table.keys())
 
             symmetric_diff = neighbor_set_now.symmetric_difference(neighbor_set_last_time)
@@ -89,4 +91,3 @@ class ParrotNeighborTable:
             denominator = len(union_set)
 
             self.cohesion = math.sqrt(1 - molecular / denominator)
-            print('UAV: ', self.my_drone.identifier, ' coherence is: ', self.cohesion)
