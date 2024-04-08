@@ -54,7 +54,7 @@ Our simulation platform can be expanded based on your research needs, including 
  * The main program of the routing protocol must contain the function: ```def next_hop_selection(self, packet)``` and ```def packet_reception(self, packet, src_drone_id)```
  * After confirming that the code logic is correct, you can import the module you designed in ```drone.py``` and install the routing module on the drone:
    ```python
-   from routing.  import Gpsr  # import your module
+   from routing.gpsr.gpsr import Gpsr  # import your module
    ...
    self.routing_protocol = Gpsr(self.simulator, self)  # install
    ```
