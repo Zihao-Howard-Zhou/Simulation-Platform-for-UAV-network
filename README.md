@@ -56,7 +56,11 @@ Our simulation platform can be expanded based on your research needs, including 
    ```python
    from routing.gpsr.gpsr import Gpsr  # import your module
    ...
-   self.routing_protocol = Gpsr(self.simulator, self)  # install
+   class Drone:
+     def __init__(self, env, node_id, coords, speed, certain_channel, simulator):
+       ...
+       self.routing_protocol = Gpsr(self.simulator, self)  # install
+       ...
    ```
 
 ## Contributing
