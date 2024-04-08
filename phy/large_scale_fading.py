@@ -11,67 +11,62 @@ logging.basicConfig(filename='running_log.log',
                     level=logging.DEBUG
                     )
 
-def sinr_calculator_general_path_loss(my_drone, previous_drones_list, all_transmitting_drones_list):
+
+def sinr_calculator(my_drone, main_drones_list, all_transmitting_drones_list):
+    """
+    calculate signal to signal-to-interference-plus-noise ratio
+    :param my_drone: receiver drone
+    :param main_drones_list: list of drones that wants to transmit packet to receiver
+    :param all_transmitting_drones_list: list of all drones currently transmitting packet
+    :return: list of sinr of each main drone
+    """
+
     simulator = my_drone.simulator
     transmit_power = config.TRANSMITTING_POWER
     noise_power = config.NOISE_POWER
 
-    c = config.LIGHT_SPEED
-    fc = config.CARRIER_FREQUENCY
-    alpha = 2
+    sinr_list = []  # record the sinr of all transmitter
+    receiver = my_drone
 
-    interference_strength = 0.0
-    sinr_list = []
-    for main_drone_idx in previous_drones_list:
-        main_drone = simulator.drones[main_drone_idx]
-        distance = euclidean_distance(my_drone.coords, main_drone.coords)
+    for transmitter_id in main_drones_list:
+        transmitter = simulator.drones[transmitter_id]
+        interference_list = all_transmitting_drones_list[:]
+        interference_list.remove(transmitter_id)
 
-        path_loss = (c / (4 * math.pi * fc * distance))**alpha
-        receive_power = transmit_power * path_loss
-        # path_loss = alpha * 10 * math.log10(4 * math.pi * fc * distance / c)
-        # receive_power = transmit_power - path_loss
+        main_link_path_loss = general_path_loss(receiver, transmitter)
+        receive_power = transmit_power * main_link_path_loss
+        interference_power = 0
 
-        for interference_drone_idx in all_transmitting_drones_list:
-            if interference_drone_idx != main_drone_idx and interference_drone_idx != my_drone.identifier:
-                interference_drone = simulator.drones[interference_drone_idx]
-                distance = euclidean_distance(my_drone.coords, interference_drone.coords)
+        if len(interference_list) != 0:
+            for interference_id in interference_list:
+                interference = simulator.drones[interference_id]
+                interference_link_path_loss = general_path_loss(receiver, interference)
+                interference_power += transmit_power * interference_link_path_loss
 
-                path_loss = (c / (4 * math.pi * fc * distance)) ** alpha
-                interference_power = transmit_power * path_loss
-                # path_loss = alpha * 10 * math.log10(4 * math.pi * fc * distance / c)
-                # interference_power = transmit_power - path_loss
-                interference_strength += interference_power
-
-        sinr = 10*math.log10(receive_power / (interference_strength + noise_power))
-        logging.info('Main node id: %s, my_drone is: %s, sinr is: %s',
-                main_drone_idx, my_drone.identifier, sinr)
+        sinr = 10 * math.log10(receive_power / (noise_power + interference_power))
         sinr_list.append(sinr)
-        # print('My drone is: ', my_drone.identifier, ' SINR of main node: ', main_drone, ' is: ', sinr)
 
     return sinr_list
 
-def general_path_loss(my_drone, previous_drone):
+
+def general_path_loss(receiver, transmitter):
     """
     general path loss model
-    :param my_drone: the drone that receives the packet
-    :param previous_drone: the drone that sends the packet
-    :return: the signal-to-noise ratio
+    :param receiver: the drone that receives the packet
+    :param transmitter: the drone that sends the packet
+    :return: path loss
     """
 
-    transmit_power = 10 * math.log10(config.TRANSMITTING_POWER)
-    noise_power = 10 * math.log10(config.NOISE_POWER)
-
-    distance = euclidean_distance(my_drone.coords, previous_drone.coords)
     c = config.LIGHT_SPEED
     fc = config.CARRIER_FREQUENCY
-    alpha = 2
+    alpha = 2  # path loss exponent
 
-    if my_drone.identifier != previous_drone.identifier:
-        path_loss = alpha * 10 * math.log10(4 * math.pi * fc * distance / c)
+    distance = euclidean_distance(receiver.coords, transmitter.coords)
+
+    if distance != 0:
+        path_loss = (c / (4 * math.pi * fc * distance)) ** alpha
     else:
-        path_loss = 0
+        path_loss = 1
 
-    snr = transmit_power - path_loss - noise_power
-
-    return snr
+    return path_loss
 

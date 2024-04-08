@@ -1,6 +1,5 @@
 import logging
 from utils import config
-from utils.util_function import euclidean_distance
 
 # config logging
 logging.basicConfig(filename='running_log.log',
@@ -31,7 +30,7 @@ class Phy:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/11
-    Updated at: 2024/2/26
+    Updated at: 2024/4/08
     """
 
     def __init__(self, mac):
@@ -48,8 +47,6 @@ class Phy:
         :return: none
         """
 
-        next_hop_drone = self.my_drone.simulator.drones[next_hop_id]
-
         # a transmission delay should be considered
         yield self.env.timeout(packet.packet_length / config.BIT_RATE * 1e6)
 
@@ -61,9 +58,6 @@ class Phy:
         message = (packet, self.env.now, self.my_drone.identifier)
 
         self.my_drone.simulator.channel.unicast_put(message, next_hop_id)
-
-        self.send_process = self.env.process(next_hop_drone.mac_protocol.phy.receive())
-        yield self.send_process
 
     def broadcast(self, packet):
         """
@@ -83,22 +77,3 @@ class Phy:
         message = (packet, self.env.now, self.my_drone.identifier)
 
         self.my_drone.simulator.channel.broadcast_put(message)
-
-        for drone in self.my_drone.simulator.drones:
-            self.send_process = self.env.process(drone.mac_protocol.phy.receive())
-            yield self.send_process
-
-    def receive(self):
-        if not self.my_drone.sleep:
-            msg = yield self.my_drone.certain_channel.get()
-
-            previous_drone = self.my_drone.simulator.drones[msg[2]]
-
-            if euclidean_distance(self.my_drone.coords, previous_drone.coords) <= config.COMMUNICATION_RANGE:
-                logging.info('UAV: %s receives the message: %s at %s, previous hop is: %s',
-                             self.my_drone.identifier, msg[0], self.env.now, msg[2])
-                yield self.env.process(self.my_drone.routing_protocol.packet_reception(msg[0], msg[2]))
-            else:
-                pass
-        else:  # cannot receive packets if "my_drone" is in sleep state
-            yield self.my_drone.certain_channel.get()

@@ -13,6 +13,7 @@ from mobility.gauss_markov_3d import GaussMarkov3D
 from mobility.random_walk_3d import RandomWalk3D
 from energy.energy_model import EnergyModel
 from utils import config
+from phy.large_scale_fading import sinr_calculator
 
 # config logging
 logging.basicConfig(filename='running_log.log',
@@ -103,25 +104,19 @@ class Drone:
         self.mac_process_finish = dict()
         self.mac_process_count = 0
 
-        self.routing_protocol = Parrot(self.simulator, self)
+        self.routing_protocol = Opar(self.simulator, self)
 
         self.mobility_model = GaussMarkov3D(self)
 
         self.energy_model = EnergyModel()
-        # if self.identifier in [0, 1, 2, 3]:
-        #     self.residual_energy = 50 * 1e4
-        # else:
-        #     self.residual_energy = 50 * 1e4
         self.residual_energy = 50 * 1e3
         self.sleep = False
 
         self.env.process(self.generate_data_packet())
-        # if (self.identifier != 0) and (self.identifier in [1, 2, 3]):
-        #     self.env.process(self.generate_data_packet())
 
         self.env.process(self.feed_packet())
         self.env.process(self.energy_monitor())
-        # self.env.process(self.receive_test())
+        self.env.process(self.receive())
 
     def generate_data_packet(self, traffic_pattern='Uniform'):
         """
@@ -215,29 +210,34 @@ class Drone:
                 self.sleep = True
                 # print('UAV: ', self.identifier, ' run out of energy at: ', self.env.now)
 
-    # def receive_test(self):
-    #     while True:
-    #         # 首先需要得到在当前时刻发包的所有drone id
-    #         all_drones_transmit_now = []
-    #
-    #         for drone in self.simulator.drones:
-    #             if drone.certain_channel.items:  # 如果值非空则说明有其他node向自己发包了
-    #                 for msg in drone.certain_channel.items:
-    #                     all_drones_transmit_now.append(msg[2])
-    #
-    #         if self.certain_channel.items:
-    #             xx = [msg[2] for msg in self.certain_channel.items]
-    #             # print('My drone is: ', self.identifier, ' and who wants to send pkd to me: ', xx)
-    #
-    #             sinr_list = sinr_calculator_general_path_loss(self, xx, all_drones_transmit_now)
-    #             max_sinr = max(sinr_list)
-    #             # print(xx[sinr_list.index(max_sinr)])
-    #             if max_sinr > config.SNR_THRESHOLD:
-    #                 # print(drone.certain_channel.items)
-    #                 msg = yield self.certain_channel.get()
-    #
-    #                 yield self.env.process(self.mac_protocol.phy.receive())
-    #             else:
-    #                 msg = yield self.certain_channel.get()
-    #
-    #         yield self.env.timeout(10)
+    def receive(self):
+        while True:
+            if self.certain_channel.items:  # non-empty list means that someone wants to transmit packet to me
+                # get the list of all drones currently transmitting packets
+                transmitting_node_list = []
+                for drone in self.simulator.drones:
+                    if drone.certain_channel.items:
+                        temp = [msg[2] for msg in drone.certain_channel.items]
+                        transmitting_node_list += temp
+
+                transmitting_node_list = list(set(transmitting_node_list))  # remove duplicates
+
+                all_drones_send_to_me = [msg[2] for msg in self.certain_channel.items]
+
+                sinr_list = sinr_calculator(self, all_drones_send_to_me, transmitting_node_list)
+
+                # Receive the packet of the transmitting node corresponding to the maximum SINR
+                max_sinr = max(sinr_list)
+                if max_sinr >= config.SNR_THRESHOLD:
+                    which_one = all_drones_send_to_me[sinr_list.index(max_sinr)]
+
+                    while self.certain_channel.items:
+                        msg = yield self.certain_channel.get()
+                        previous_drone = self.simulator.drones[msg[2]]
+
+                        if previous_drone.identifier is which_one:
+                            yield self.env.process(self.routing_protocol.packet_reception(msg[0], msg[2]))
+                else:
+                    msg = yield self.certain_channel.get()
+
+            yield self.env.timeout(5)
