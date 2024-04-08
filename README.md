@@ -48,24 +48,11 @@ In our current version, we support **GPSR (greedy perimeter stateless routing)**
 </div>
 
 ## Design your own protocol
-Our simulation platform can be expanded based on your research needs, including designing your own mobility model of drones (in ```mobility``` folder), mac protocol (in ```mac``` floder), routing protocol (in ```routing``` floder) and so on. It should be noted that energy model for drones is still under development. Next, we take routing protocols as an example to introduce how users can design their own algorithms.
+Our simulation platform can be expanded based on your research needs, including designing your own mobility model of drones (in ```mobility``` folder), mac protocol (in ```mac``` floder), routing protocol (in ```routing``` floder) and so on. Next, we take routing protocols as an example to introduce how users can design their own algorithms.
 
  * Create a new package under the ```routing``` folder (Don't forget to add ```__init__.py```)
  * The main program of the routing protocol must contain the function: ```def next_hop_selection(self, packet)``` and ```def packet_reception(self, packet, src_drone_id)```
- * After confirming that the code logic is correct, add the relevant classes of the routing protocol you designed in the import part and the enumeration part of the protocol in ```config.py```.
-   ```python
-   # in config.py
-   from routing.your_module_name.your_code_name import your_protocol_class
-   
-   class RoutingProtocol(Enum):
-     your_protocol = your_protocol_class
-
-     @staticmethof
-     def keylist():
-       return list(map(lambda c: c.name, RoutingProtocol))
-
-   ROUTING_PROTOCOL = RoutingProtocol.your_protocol
-   ```
+ * After confirming that the code logic is correct, you can import the module you designed in ```Drone.py``` and install the routing module on the drone
 
 ## Contributing
 Contributions, issues and feature requests are welcome! 
