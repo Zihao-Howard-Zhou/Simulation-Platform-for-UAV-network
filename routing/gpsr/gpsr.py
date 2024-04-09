@@ -75,10 +75,9 @@ class Gpsr:
         self.neighbor_table.purge()
 
         dst_drone = packet.dst_drone
-        if self.neighbor_table.is_neighbor(dst_drone):  # if the destination is my one-hop neighbor
-            return dst_drone.identifier  # the destination if the next hop
-        else:
-            best_next_hop_id = self.neighbor_table.best_neighbor(self.my_drone, dst_drone)
+
+        # choose best next hop according to the neighbor table
+        best_next_hop_id = self.neighbor_table.best_neighbor(self.my_drone, dst_drone)
 
         return best_next_hop_id
 

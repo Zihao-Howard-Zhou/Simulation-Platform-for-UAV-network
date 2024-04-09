@@ -65,7 +65,7 @@ class Drone:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/11
-    Updated at: 2024/3/22
+    Updated at: 2024/4/09
     """
 
     def __init__(self,
@@ -112,7 +112,8 @@ class Drone:
         self.residual_energy = 50 * 1e3
         self.sleep = False
 
-        self.env.process(self.generate_data_packet())
+        if self.identifier != 0:
+            self.env.process(self.generate_data_packet())
 
         self.env.process(self.feed_packet())
         self.env.process(self.energy_monitor())
@@ -143,9 +144,10 @@ class Drone:
                 GLOBAL_DATA_PACKET_ID += 1  # packet id
 
                 # randomly choose a destination
-                all_candidate_list = [i for i in range(config.NUMBER_OF_DRONES)]
-                all_candidate_list.remove(self.identifier)
-                dst_id = random.choice(all_candidate_list)
+                # all_candidate_list = [i for i in range(config.NUMBER_OF_DRONES)]
+                # all_candidate_list.remove(self.identifier)
+                # dst_id = random.choice(all_candidate_list)
+                dst_id = 0
 
                 destination = self.simulator.drones[dst_id]  # obtain the destination drone
 
@@ -236,8 +238,11 @@ class Drone:
                         previous_drone = self.simulator.drones[msg[2]]
 
                         if previous_drone.identifier is which_one:
+                            logging.info('Packet %s (sending to channel at: %s) from UAV: %s is received by UAV: %s at time: %s',
+                                         msg[0], msg[1], msg[2], self.identifier, self.simulator.env.now)
                             yield self.env.process(self.routing_protocol.packet_reception(msg[0], msg[2]))
                 else:
-                    msg = yield self.certain_channel.get()
+                    while self.certain_channel.items:
+                        yield self.certain_channel.get()
 
             yield self.env.timeout(5)

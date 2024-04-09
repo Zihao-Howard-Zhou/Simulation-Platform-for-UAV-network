@@ -4,6 +4,7 @@ import numpy as np
 from entities.packet import DataPacket, AckPacket
 from utils import config
 from utils.util_function import euclidean_distance
+from phy.large_scale_fading import maximum_communication_range
 
 
 # config logging
@@ -19,7 +20,7 @@ GL_ID_ACK_PACKET = 10000
 
 class Opar:
     """
-    Main procedure of OPAR (v2.0)
+    Main procedure of OPAR (v3.0)
 
     Attributes:
         simulator: the simulation platform that contains everything
@@ -29,6 +30,7 @@ class Opar:
         best_path: optimal routing path corresponding to "best_obj"
         w1: weight of the first term in objective function
         w2: weight of the second term in objective function
+        max_comm_range: maximum communication range corresponding to the snr threshold
 
     References:
         [1] M. Gharib, F. Afghah and E. Bentley, "OPAR: Optimized Predictive and Adaptive Routing for Cooperative UAV
@@ -38,7 +40,7 @@ class Opar:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/3/19
-    Updated at: 2024/3/21
+    Updated at: 2024/4/09
     """
 
     def __init__(self, simulator, my_drone):
@@ -51,6 +53,8 @@ class Opar:
         self.w1 = 0.5
         self.w2 = 0.5
 
+        self.max_comm_range = maximum_communication_range()
+
     def calculate_cost_matrix(self):
         cost = np.zeros((self.simulator.n_drones, self.simulator.n_drones))
         cost.fill(np.inf)
@@ -59,7 +63,8 @@ class Opar:
             for j in range((i+1), self.simulator.n_drones):
                 drone1 = self.simulator.drones[i]
                 drone2 = self.simulator.drones[j]
-                if (i != j) and (euclidean_distance(drone1.coords, drone2.coords) < config.COMMUNICATION_RANGE):
+
+                if (i != j) and (euclidean_distance(drone1.coords, drone2.coords) < self.max_comm_range):
                     cost[i, j] = 1
                     cost[j, i] = 1
 
@@ -94,7 +99,7 @@ class Opar:
                 drone2 = self.simulator.drones[j]
 
                 if (visited_list[j] is False) and (cost[min_distance_node, j] != np.inf):
-                    delta_temp = link_lifetime_predictor(drone1, drone2)
+                    delta_temp = link_lifetime_predictor(drone1, drone2, self.max_comm_range)
 
                     if delta_temp <= minimum_link_lifetime:
                         cost[min_distance_node, j] = np.inf
@@ -142,7 +147,7 @@ class Opar:
                     link_cost = self.cost[path[link], path[link+1]]
                     total_cost += link_cost
 
-                    delta_t = link_lifetime_predictor(drone1, drone2)
+                    delta_t = link_lifetime_predictor(drone1, drone2, self.max_comm_range)
 
                     if 1/delta_t > t:
                         t = delta_t
@@ -174,7 +179,7 @@ class Opar:
                         link_cost = self.cost[path[link], path[link + 1]]
                         total_cost += link_cost
 
-                        delta_t = link_lifetime_predictor(drone1, drone2)
+                        delta_t = link_lifetime_predictor(drone1, drone2, self.max_comm_range)
 
                         if 1 / delta_t > t:
                             t = delta_t
@@ -247,7 +252,7 @@ class Opar:
                 self.my_drone.mac_protocol.wait_ack_process_dict[key2].interrupt()
 
 
-def link_lifetime_predictor(drone1, drone2):
+def link_lifetime_predictor(drone1, drone2, max_comm_range):
     coords1 = drone1.coords
     coords2 = drone2.coords
     velocity1 = drone1.velocity
@@ -268,7 +273,7 @@ def link_lifetime_predictor(drone1, drone2):
     A = x1 + x2 + x3
 
     B = y1 + y2 + y3
-    C = (z1 + z2 + z3) - config.COMMUNICATION_RANGE ** 2
+    C = (z1 + z2 + z3) - max_comm_range ** 2
 
     delta_t_1 = (-B + math.sqrt(B ** 2 - 4 * A * C)) / (2 * A)
     delta_t_2 = (-B - math.sqrt(B ** 2 - 4 * A * C)) / (2 * A)

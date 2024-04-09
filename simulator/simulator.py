@@ -9,8 +9,20 @@ from mpl_toolkits.mplot3d import Axes3D
 
 class Simulator:
     """
-    Description:
+    Description: simulation environment
 
+    Attributes:
+        env: simpy environment
+        total_simulation_time: discrete time steps, in nanosecond
+        n_drones: number of the drones
+        channel_states:
+        channel: wireless channel
+        metrics: Metrics class, used to record the network performance
+        drones: a list, contains all drone instances
+
+    Author: Zihao Zhou, eezihaozhou@gmail.com
+    Created at: 2024/1/11
+    Updated at: 2024/4/08
     """
 
     def __init__(self,
@@ -43,7 +55,7 @@ class Simulator:
         self.drones = []
         for i in range(n_drones):
             print('UAV: ', i, ' initial location is at: ', start_position[i])
-            drone = Drone(env=env, node_id=i, coords=start_position[i], speed=50,
+            drone = Drone(env=env, node_id=i, coords=start_position[i], speed=30,
                           certain_channel=self.channel.create_store_for_receiver(), simulator=self)
             self.drones.append(drone)
 
