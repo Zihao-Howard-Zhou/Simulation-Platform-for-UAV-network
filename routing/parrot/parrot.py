@@ -136,7 +136,7 @@ class Parrot:
                 self.simulator.metrics.datapacket_arrived.add(packet.packet_id)
                 logging.info('Packet: %s is received by destination UAV: %s', packet.packet_id, self.my_drone.identifier)
             else:
-                self.my_drone.fifo_queue.put([packet, 0])
+                self.my_drone.fifo_queue.put(packet)
 
             GL_ID_ACK_PACKET += 1
             src_drone = self.simulator.drones[src_drone_id]  # previous drone

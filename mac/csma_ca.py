@@ -56,13 +56,14 @@ class CsmaCa:
         self.wait_ack_process_count = 0
         self.wait_ack_process = None
 
-    def mac_send(self, pkd, transmission_mode):
+    def mac_send(self, pkd):
         """
         Control when drone can send packet
         :param pkd: the packet that needs to send
-        :param transmission_mode: used to indicate unicast, broadcast or multicast
         :return: None
         """
+
+        transmission_mode = pkd.transmission_mode
 
         if transmission_mode == 0:  # for unicast
             # determine the next hop according to the routing protocol
@@ -100,6 +101,8 @@ class CsmaCa:
                 with self.channel_states[self.my_drone.identifier].request() as req:
                     yield req
                     logging.info('UAV: %s can send packet at: %s', self.my_drone.identifier, self.env.now)
+
+                    transmission_mode = pkd.transmission_mode
 
                     if transmission_mode == 0:
                         # only unicast data packets need to wait for ACK
@@ -148,7 +151,7 @@ class CsmaCa:
             logging.info('ACK timeout of packet: %s', pkd.packet_id)
             # timeout expired
             if pkd.number_retransmission_attempt[self.my_drone.identifier] < config.MAX_RETRANSMISSION_ATTEMPT:
-                yield self.env.process(self.my_drone.packet_coming(pkd, 0))  # resend
+                yield self.env.process(self.my_drone.packet_coming(pkd))  # resend
             else:
                 logging.info('Packet: %s is dropped!', pkd.packet_id)
 

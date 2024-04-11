@@ -154,17 +154,18 @@ class Drone:
                 pkd = DataPacket(self, dst_drone=destination, creation_time=self.env.now,
                                  data_packet_id=GLOBAL_DATA_PACKET_ID, data_packet_length=config.DATA_PACKET_LENGTH,
                                  simulator=self.simulator)
+                pkd.transmission_mode = 0  # the default transmission mode of data packet is "unicast" (0)
 
                 self.simulator.metrics.datapacket_generated_num += 1
 
                 logging.info('------> At time: %s, UAV: %s generates a data packet whose dst is: %s, and pkd id is: %s',
                              self.env.now, self.identifier, destination.identifier, pkd.packet_id)
 
-                yield self.env.process(self.packet_coming(pkd, 0))  # unicast
+                yield self.env.process(self.packet_coming(pkd))  # unicast
             else:  # cannot generate packets if "my_drone" is in sleep state
                 break
 
-    def packet_coming(self, pkd, tm):
+    def packet_coming(self, pkd):
         """
         When drone generates a packet or receives a data packet that is not bound for itself, yield it
         :param pkd: packet that waits to enter the buffer of drone
@@ -189,7 +190,7 @@ class Drone:
             # every time the drone initiates a data packet transmission, "mac_process_count" will be increased by 1
             self.mac_process_count += 1
             key = str(self.identifier) + '_' + str(self.mac_process_count)  # used to uniquely refer to a process
-            mac_process = self.env.process(self.mac_protocol.mac_send(pkd, tm))
+            mac_process = self.env.process(self.mac_protocol.mac_send(pkd))
             self.mac_process_dict[key] = mac_process
             self.mac_process_finish[key] = 0
 
@@ -199,11 +200,9 @@ class Drone:
         while True:
             yield self.env.timeout(10)  # for speed up the simulation
             if not self.fifo_queue.empty():
-                item = self.fifo_queue.get()
-                data_packet = item[0]
-                transmission_mode = item[1]
+                data_packet = self.fifo_queue.get()
                 if data_packet.number_retransmission_attempt[self.identifier] < config.MAX_RETRANSMISSION_ATTEMPT:
-                    yield self.env.process(self.packet_coming(data_packet, transmission_mode))
+                    yield self.env.process(self.packet_coming(data_packet))
 
     def energy_monitor(self):
         while True:

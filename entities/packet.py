@@ -78,6 +78,7 @@ class DataPacket(Packet):
         self.dst_drone = dst_drone
 
         self.routing_path = None  # for centralized routing protocols
+        self.transmission_mode = None  # unicast or multicast or broadcast?
 
 
 class AckPacket(Packet):
