@@ -65,7 +65,7 @@ class Drone:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/11
-    Updated at: 2024/4/09
+    Updated at: 2024/4/11
     """
 
     def __init__(self,
