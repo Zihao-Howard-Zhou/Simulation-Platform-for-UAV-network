@@ -52,11 +52,12 @@ class Gpsr:
                                     id_hello_packet=GL_ID_HELLO_PACKET,
                                     hello_packet_length=config.HELLO_PACKET_LENGTH,
                                     simulator=self.simulator)
+        hello_pkd.transmission_mode = 1
 
         logging.info('At time: %s, UAV: %s has hello packet to broadcast',
                      self.simulator.env.now, self.my_drone.identifier)
 
-        yield self.simulator.env.process(my_drone.packet_coming(hello_pkd, 1))
+        yield self.simulator.env.process(my_drone.packet_coming(hello_pkd))
 
     def broadcast_hello_packet_periodically(self):
         while True:

@@ -5,6 +5,7 @@ import random
 import math
 import queue
 from entities.packet import DataPacket
+from routing.dsdv.dsdv import Dsdv
 from routing.gpsr.gpsr import Gpsr
 from routing.opar.opar import Opar
 from routing.parrot.parrot import Parrot
@@ -104,7 +105,7 @@ class Drone:
         self.mac_process_finish = dict()
         self.mac_process_count = 0
 
-        self.routing_protocol = Opar(self.simulator, self)
+        self.routing_protocol = Dsdv(self.simulator, self)
 
         self.mobility_model = GaussMarkov3D(self)
 
