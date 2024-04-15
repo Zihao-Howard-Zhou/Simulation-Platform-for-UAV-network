@@ -142,8 +142,3 @@ class RandomWalk3D:
         next_position[2] = np.clip(next_position[2], self.min_z + self.b3, self.max_z - self.b3)
 
         return next_position, next_velocity, next_direction, next_pitch
-
-
-
-
-

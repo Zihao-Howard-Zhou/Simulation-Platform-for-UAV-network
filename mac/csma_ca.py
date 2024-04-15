@@ -104,7 +104,7 @@ class CsmaCa:
 
                     transmission_mode = pkd.transmission_mode
 
-                    if transmission_mode == 0:
+                    if transmission_mode == 0:  # for unicast
                         # only unicast data packets need to wait for ACK
                         logging.info('UAV: %s start to wait ACK for packet: %s at time: %s',
                                      self.my_drone.identifier, pkd.packet_id, self.env.now)

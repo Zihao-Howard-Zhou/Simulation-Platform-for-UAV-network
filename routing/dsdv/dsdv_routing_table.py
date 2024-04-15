@@ -1,4 +1,14 @@
+import logging
+from utils import config
 from collections import defaultdict
+
+
+# config logging
+logging.basicConfig(filename='running_log.log',
+                    filemode='w',  # there are two modes: 'a' and 'w'
+                    format='%(asctime)s - %(levelname)s - %(message)s',
+                    level=config.LOGGING_LEVEL
+                    )
 
 
 class DsdvRoutingTable:
@@ -24,15 +34,17 @@ class DsdvRoutingTable:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/4/14
-    Updated at: 2024/4/14
+    Updated at: 2024/4/15
     """
 
     def __init__(self, env, my_drone):
         self.env = env
         self.my_drone = my_drone
         self.routing_table = defaultdict(list)
+
+        # initialize the routing table
         self.routing_table[self.my_drone.identifier] = [self.my_drone.identifier, 0, self.my_drone.identifier*2, self.env.now]
-        self.entry_life_time = 5 * 1e6  # unit: us (5s)
+        self.entry_life_time = 2 * 1e6  # unit: us (2s)
 
     # determine if the routing table is empty
     def is_empty(self):
@@ -52,7 +64,6 @@ class DsdvRoutingTable:
             metric = packet.routing_table[dst_id][1]
             seq_num = packet.routing_table[dst_id][2]
             if dst_id not in self.routing_table.keys():
-                # 获取该dst_id的seq_num
                 self.routing_table[dst_id] = [src_drone.identifier, metric+1, seq_num, cur_time]
             elif seq_num > self.routing_table[dst_id][2]:
                 self.routing_table[dst_id] = [src_drone.identifier, metric+1, seq_num, cur_time]
@@ -62,37 +73,42 @@ class DsdvRoutingTable:
             else:
                 pass
 
-    # delete the specified item
-    def remove_item(self, drone_id):
-        del self.routing_table[drone_id]
-
     # remove the expired item
     def purge(self):
+        flag = 0
         if not bool(self.routing_table):
             # it means that the neighbor table is empty
-            return
+            return flag
 
         for key in list(self.routing_table):
-            updated_time = self.get_updated_time(key)
-            if updated_time + self.entry_life_time < self.env.now:  # expired
-                self.remove_item(key)
+            if key is not self.my_drone.identifier:
+                updated_time = self.get_updated_time(key)
+                if updated_time + self.entry_life_time < self.env.now:  # expired
+                    self.routing_table[key][1] = float('inf')
+                    self.routing_table[key][2] += 1
+                    self.routing_table[key][3] = self.env.now
 
-    # determine if it has the item to certain destination
+                    flag = 1  # broken links have occurred
+
+        return flag
+
+    # determine if it has the valid item to certain destination
     def has_entry(self, dst_id):
         if dst_id not in self.routing_table.keys():
             next_hop_id = self.my_drone.identifier
-        else:
+        elif self.routing_table[dst_id][1] != float('inf'):
             # get the next hop to the destination
             next_hop_id = self.routing_table[dst_id][0]
+        else:
+            next_hop_id = self.my_drone.identifier
 
         return next_hop_id
 
     # print routing table
     def print_neighbor(self, my_drone):
-        print('|----------Routing Table of: ', my_drone.identifier, ' ----------|')
+        logging.info('|----------Routing Table of: %s ----------|', my_drone.identifier)
         for key in self.routing_table.keys():
-            print('Dst_id: ', key, ', next hop is: ', self.routing_table[key][0],
-                  ', metric is: ', self.routing_table[key][1],
-                  'seq_num (dst_id) is: ', self.routing_table[key][2],
-                  'updated time is: ', self.routing_table[key][3])
-        print('|-----------------------------------------------------------------|')
+            logging.info('Dst_id: %s, next hop is: %s, metric is: %s, seq_num (dst_id) is: %s, updated time is: %s',
+                         key, self.routing_table[key][0], self.routing_table[key][1], self.routing_table[key][2],
+                         self.routing_table[key][3])
+        logging.info('|-----------------------------------------------------------------|')
