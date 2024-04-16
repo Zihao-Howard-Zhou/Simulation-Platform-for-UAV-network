@@ -27,7 +27,7 @@ class Parrot:
         simulator: the simulation platform that contains everything
         my_drone: the drone that installed the PARRoT
         chirp_interval: interval of broadcasting chirp packet
-        qtable: store the Q(d, a) and help routing decision
+        qtable: store the Q(d, a) and help decision
         neighbor_table: used to calculate cohesion
 
     References:

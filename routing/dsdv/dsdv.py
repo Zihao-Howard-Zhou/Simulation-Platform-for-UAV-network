@@ -72,6 +72,7 @@ class Dsdv:
                 logging.info('At time: %s, UAV: %s broadcast a hello packet to announce broken links',
                              self.simulator.env.now, self.my_drone.identifier)
 
+                self.simulator.metrics.control_packet_num += 1
                 yield self.simulator.env.process(my_drone.packet_coming(hello_pkd))
 
     def broadcast_hello_packet(self, my_drone):
@@ -90,6 +91,7 @@ class Dsdv:
         logging.info('At time: %s, UAV: %s has hello packet to broadcast',
                      self.simulator.env.now, self.my_drone.identifier)
 
+        self.simulator.metrics.control_packet_num += 1
         yield self.simulator.env.process(my_drone.packet_coming(hello_pkd))
 
     def broadcast_hello_packet_periodically(self):
