@@ -45,9 +45,9 @@ class Metrics:
 
         pdr = len(self.datapacket_arrived) / self.datapacket_generated_num * 100
 
-        nrl = self.control_packet_num / len(self.datapacket_arrived)
+        rl = self.control_packet_num / len(self.datapacket_arrived)
 
         print('Total send: ', self.datapacket_generated_num)
         print('PDR is: ', pdr, ' %')
         print('Average end-to-end delay is: ', e2e_delay, ' ms')
-        print('Routing load is: ', nrl)
+        print('Routing load is: ', rl)

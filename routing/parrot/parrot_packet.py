@@ -45,3 +45,4 @@ class ChirpPacket(Packet):
         self.predicted_position = predicted_position
         self.reward = reward
         self.cohesion = cohesion
+        self.transmission_mode = 1

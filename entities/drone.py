@@ -105,7 +105,7 @@ class Drone:
         self.mac_process_finish = dict()
         self.mac_process_count = 0
 
-        self.routing_protocol = Dsdv(self.simulator, self)
+        self.routing_protocol = Parrot(self.simulator, self)
 
         self.mobility_model = GaussMarkov3D(self)
 

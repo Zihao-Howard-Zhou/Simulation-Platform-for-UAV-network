@@ -1,6 +1,7 @@
 import math
 import numpy as np
 from utils import config
+from phy.large_scale_fading import maximum_communication_range
 
 
 class Qtable:
@@ -39,6 +40,7 @@ class Qtable:
         self.learning_rate = 0.5
         self.gamma0 = 0.8
         self.tau = 2.5
+        self.max_comm_range = maximum_communication_range()
 
         self.q_table = np.zeros((config.NUMBER_OF_DRONES, config.NUMBER_OF_DRONES), dtype=object)
         # initialize the q-table
@@ -62,7 +64,7 @@ class Qtable:
         reward = chirp_packet.reward
         cohesion = chirp_packet.cohesion
 
-        link_expiry_time = link_lifetime_predictor(self.my_drone, self.my_drone.simulator.drones[action])
+        link_expiry_time = link_lifetime_predictor(self.my_drone, self.my_drone.simulator.drones[action], self.max_comm_range)
 
         if link_expiry_time < self.tau:
             let = math.sqrt(link_expiry_time / self.tau)
@@ -94,7 +96,7 @@ class Qtable:
         return best_id
 
 
-def link_lifetime_predictor(drone1, drone2):
+def link_lifetime_predictor(drone1, drone2, max_comm_range):
     coords1 = drone1.coords
     coords2 = drone2.coords
     velocity1 = drone1.velocity
@@ -115,7 +117,7 @@ def link_lifetime_predictor(drone1, drone2):
     A = x1 + x2 + x3
 
     B = y1 + y2 + y3
-    C = (z1 + z2 + z3) - config.COMMUNICATION_RANGE ** 2
+    C = (z1 + z2 + z3) - max_comm_range ** 2
 
     delta_t_1 = (-B + math.sqrt(B ** 2 - 4 * A * C)) / (2 * A)
     delta_t_2 = (-B - math.sqrt(B ** 2 - 4 * A * C)) / (2 * A)

@@ -61,11 +61,13 @@ class Parrot:
                                    current_position=self.my_drone.coords, predicted_position=0,
                                    reward=1.0, cohesion=cohesion,
                                    simulator=self.simulator)
+        chirp_packet.transmission_mode = 1
 
         logging.info('At time: %s, UAV: %s has chirp packet to broadcast',
                      self.simulator.env.now, self.my_drone.identifier)
 
-        yield self.simulator.env.process(my_drone.packet_coming(chirp_packet, 1))
+        self.simulator.metrics.control_packet_num += 1
+        yield self.simulator.env.process(my_drone.packet_coming(chirp_packet))
 
     def broadcast_chirp_packet_periodically(self):
         while True:
@@ -128,7 +130,8 @@ class Parrot:
                                            predicted_position=0, reward=reward,
                                            cohesion=cohesion, simulator=self.simulator)
 
-                self.my_drone.fifo_queue.put([chirp_packet, 1])
+                self.simulator.metrics.control_packet_num += 1
+                self.my_drone.fifo_queue.put(chirp_packet)
 
         elif isinstance(packet, DataPacket):
             if packet.dst_drone.identifier == self.my_drone.identifier:
