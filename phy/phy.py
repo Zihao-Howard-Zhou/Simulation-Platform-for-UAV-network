@@ -77,3 +77,23 @@ class Phy:
         message = (packet, self.env.now, self.my_drone.identifier)
 
         self.my_drone.simulator.channel.broadcast_put(message)
+
+    def multicast(self, packet, dst_id_list):
+        """
+        Multicast packet through the wireless channel
+        :param packet: tha packet that needs to be multicasted
+        :param dst_id_list: list of ids for multicast destinations
+        :return: none
+        """
+
+        # a transmission delay should be considered
+        yield self.env.timeout(packet.packet_length / config.BIT_RATE * 1e6)
+
+        # energy consumption
+        energy_consumption = (packet.packet_length / config.BIT_RATE) * config.TRANSMITTING_POWER
+        self.my_drone.residual_energy -= energy_consumption
+
+        # transmit through the channel
+        message = (packet, self.env.now, self.my_drone.identifier)
+
+        self.my_drone.simulator.channel.multicast_put(message, dst_id_list)
