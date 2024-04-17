@@ -9,6 +9,7 @@ from routing.dsdv.dsdv import Dsdv
 from routing.gpsr.gpsr import Gpsr
 from routing.opar.opar import Opar
 from routing.parrot.parrot import Parrot
+from routing.qgeo.qgeo import QGeo
 from mac.csma_ca import CsmaCa
 from mobility.gauss_markov_3d import GaussMarkov3D
 from mobility.random_walk_3d import RandomWalk3D
@@ -105,7 +106,7 @@ class Drone:
         self.mac_process_finish = dict()
         self.mac_process_count = 0
 
-        self.routing_protocol = Dsdv(self.simulator, self)
+        self.routing_protocol = QGeo(self.simulator, self)
 
         self.mobility_model = GaussMarkov3D(self)
 
@@ -184,6 +185,10 @@ class Drone:
                          pkd.packet_id, self.env.now, self.identifier, self.env.now - arrival_time)
 
             pkd.number_retransmission_attempt[self.identifier] += 1
+
+            if pkd.number_retransmission_attempt[self.identifier] == 1:
+                pkd.time_transmitted_at_last_hop = self.env.now
+
             logging.info('Re-transmission times of pkd: %s at UAV: %s is: %s',
                          pkd.packet_id, self.identifier, pkd.number_retransmission_attempt[self.identifier])
 
@@ -202,6 +207,7 @@ class Drone:
             if not self.fifo_queue.empty():
                 data_packet = self.fifo_queue.get()
                 if data_packet.number_retransmission_attempt[self.identifier] < config.MAX_RETRANSMISSION_ATTEMPT:
+
                     yield self.env.process(self.packet_coming(data_packet))
 
     def energy_monitor(self):

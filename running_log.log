@@ -1,128 +1,126 @@
-2024-04-17 15:18:50,634 - INFO - At time: 0, UAV: 0 has hello packet to broadcast
-2024-04-17 15:18:50,634 - INFO - At time: 0, UAV: 1 has hello packet to broadcast
-2024-04-17 15:18:50,634 - INFO - At time: 0, UAV: 2 has hello packet to broadcast
-2024-04-17 15:18:50,634 - INFO - At time: 0, UAV: 3 has hello packet to broadcast
-2024-04-17 15:18:50,634 - INFO - At time: 0, UAV: 4 has hello packet to broadcast
-2024-04-17 15:18:50,634 - INFO - At time: 0, UAV: 5 has hello packet to broadcast
-2024-04-17 15:18:50,634 - INFO - At time: 0, UAV: 6 has hello packet to broadcast
-2024-04-17 15:18:50,634 - INFO - At time: 0, UAV: 7 has hello packet to broadcast
-2024-04-17 15:18:50,634 - INFO - At time: 0, UAV: 8 has hello packet to broadcast
-2024-04-17 15:18:50,634 - INFO - At time: 0, UAV: 9 has hello packet to broadcast
-2024-04-17 15:18:50,634 - INFO - Packet: 5001 waiting for UAV: 0 buffer resource at: 0
-2024-04-17 15:18:50,634 - INFO - Packet: 5002 waiting for UAV: 1 buffer resource at: 0
-2024-04-17 15:18:50,634 - INFO - Packet: 5003 waiting for UAV: 2 buffer resource at: 0
-2024-04-17 15:18:50,634 - INFO - Packet: 5004 waiting for UAV: 3 buffer resource at: 0
-2024-04-17 15:18:50,634 - INFO - Packet: 5005 waiting for UAV: 4 buffer resource at: 0
-2024-04-17 15:18:50,635 - INFO - Packet: 5006 waiting for UAV: 5 buffer resource at: 0
-2024-04-17 15:18:50,635 - INFO - Packet: 5007 waiting for UAV: 6 buffer resource at: 0
-2024-04-17 15:18:50,635 - INFO - Packet: 5008 waiting for UAV: 7 buffer resource at: 0
-2024-04-17 15:18:50,635 - INFO - Packet: 5009 waiting for UAV: 8 buffer resource at: 0
-2024-04-17 15:18:50,635 - INFO - Packet: 5010 waiting for UAV: 9 buffer resource at: 0
-2024-04-17 15:18:50,635 - INFO - Packet: 5001 has been added to the buffer at: 0 of UAV: 0, waiting time is: 0
-2024-04-17 15:18:50,635 - INFO - Re-transmission times of pkd: 5001 at UAV: 0 is: 1
-2024-04-17 15:18:50,635 - INFO - Packet: 5002 has been added to the buffer at: 0 of UAV: 1, waiting time is: 0
-2024-04-17 15:18:50,635 - INFO - Re-transmission times of pkd: 5002 at UAV: 1 is: 1
-2024-04-17 15:18:50,635 - INFO - Packet: 5003 has been added to the buffer at: 0 of UAV: 2, waiting time is: 0
-2024-04-17 15:18:50,635 - INFO - Re-transmission times of pkd: 5003 at UAV: 2 is: 1
-2024-04-17 15:18:50,635 - INFO - Packet: 5004 has been added to the buffer at: 0 of UAV: 3, waiting time is: 0
-2024-04-17 15:18:50,635 - INFO - Re-transmission times of pkd: 5004 at UAV: 3 is: 1
-2024-04-17 15:18:50,635 - INFO - Packet: 5005 has been added to the buffer at: 0 of UAV: 4, waiting time is: 0
-2024-04-17 15:18:50,635 - INFO - Re-transmission times of pkd: 5005 at UAV: 4 is: 1
-2024-04-17 15:18:50,635 - INFO - Packet: 5006 has been added to the buffer at: 0 of UAV: 5, waiting time is: 0
-2024-04-17 15:18:50,635 - INFO - Re-transmission times of pkd: 5006 at UAV: 5 is: 1
-2024-04-17 15:18:50,635 - INFO - Packet: 5007 has been added to the buffer at: 0 of UAV: 6, waiting time is: 0
-2024-04-17 15:18:50,636 - INFO - Re-transmission times of pkd: 5007 at UAV: 6 is: 1
-2024-04-17 15:18:50,636 - INFO - Packet: 5008 has been added to the buffer at: 0 of UAV: 7, waiting time is: 0
-2024-04-17 15:18:50,636 - INFO - Re-transmission times of pkd: 5008 at UAV: 7 is: 1
-2024-04-17 15:18:50,636 - INFO - Packet: 5009 has been added to the buffer at: 0 of UAV: 8, waiting time is: 0
-2024-04-17 15:18:50,636 - INFO - Re-transmission times of pkd: 5009 at UAV: 8 is: 1
-2024-04-17 15:18:50,636 - INFO - Packet: 5010 has been added to the buffer at: 0 of UAV: 9, waiting time is: 0
-2024-04-17 15:18:50,636 - INFO - Re-transmission times of pkd: 5010 at UAV: 9 is: 1
-2024-04-17 15:18:50,636 - INFO - UAV: 0 should wait from: 0, and wait for 1678
-2024-04-17 15:18:50,636 - INFO - At time: 0, UAV: 0 starts to listen the channel and perform backoff
-2024-04-17 15:18:50,636 - INFO - UAV: 1 should wait from: 0, and wait for 178
-2024-04-17 15:18:50,636 - INFO - At time: 0, UAV: 1 starts to listen the channel and perform backoff
-2024-04-17 15:18:50,636 - INFO - UAV: 2 should wait from: 0, and wait for 728
-2024-04-17 15:18:50,636 - INFO - At time: 0, UAV: 2 starts to listen the channel and perform backoff
-2024-04-17 15:18:50,636 - INFO - UAV: 3 should wait from: 0, and wait for 128
-2024-04-17 15:18:50,636 - INFO - At time: 0, UAV: 3 starts to listen the channel and perform backoff
-2024-04-17 15:18:50,636 - INFO - UAV: 4 should wait from: 0, and wait for 1628
-2024-04-17 15:18:50,636 - INFO - At time: 0, UAV: 4 starts to listen the channel and perform backoff
-2024-04-17 15:18:50,637 - INFO - UAV: 5 should wait from: 0, and wait for 1228
-2024-04-17 15:18:50,637 - INFO - At time: 0, UAV: 5 starts to listen the channel and perform backoff
-2024-04-17 15:18:50,637 - INFO - UAV: 6 should wait from: 0, and wait for 1328
-2024-04-17 15:18:50,637 - INFO - At time: 0, UAV: 6 starts to listen the channel and perform backoff
-2024-04-17 15:18:50,637 - INFO - UAV: 7 should wait from: 0, and wait for 128
-2024-04-17 15:18:50,637 - INFO - At time: 0, UAV: 7 starts to listen the channel and perform backoff
-2024-04-17 15:18:50,637 - INFO - UAV: 8 should wait from: 0, and wait for 1528
-2024-04-17 15:18:50,637 - INFO - At time: 0, UAV: 8 starts to listen the channel and perform backoff
-2024-04-17 15:18:50,637 - INFO - UAV: 9 should wait from: 0, and wait for 178
-2024-04-17 15:18:50,637 - INFO - At time: 0, UAV: 9 starts to listen the channel and perform backoff
-2024-04-17 15:18:50,645 - INFO - UAV: 0 was interrupted at: 128, already waits for: 128, original to_wait is: 1678
-2024-04-17 15:18:50,645 - INFO - UAV: 4 was interrupted at: 128, already waits for: 128, original to_wait is: 1628
-2024-04-17 15:18:50,645 - INFO - UAV: 5 was interrupted at: 128, already waits for: 128, original to_wait is: 1228
-2024-04-17 15:18:50,645 - INFO - UAV: 6 was interrupted at: 128, already waits for: 128, original to_wait is: 1328
-2024-04-17 15:18:50,645 - INFO - UAV: 3 can send packet at: 128
-2024-04-17 15:18:50,645 - INFO - UAV: 7 can send packet at: 128
-2024-04-17 15:18:50,646 - INFO - Packet <routing.dsdv.dsdv_packet.DsdvHelloPacket object at 0x000001B2979CD790> (sending to channel at: 135.11111111111111) from UAV: 3 is received by UAV: 3 at time: 140
-2024-04-17 15:18:50,647 - INFO - Packet <routing.dsdv.dsdv_packet.DsdvHelloPacket object at 0x000001B2979CD790> (sending to channel at: 135.11111111111111) from UAV: 3 is received by UAV: 5 at time: 140
-2024-04-17 15:18:50,647 - INFO - Packet <routing.dsdv.dsdv_packet.DsdvHelloPacket object at 0x000001B2979B30B0> (sending to channel at: 135.11111111111111) from UAV: 7 is received by UAV: 4 at time: 140
-2024-04-17 15:18:50,647 - INFO - Packet <routing.dsdv.dsdv_packet.DsdvHelloPacket object at 0x000001B2979B30B0> (sending to channel at: 135.11111111111111) from UAV: 7 is received by UAV: 7 at time: 140
-2024-04-17 15:18:50,648 - INFO - UAV: 2 was interrupted at: 178, already waits for: 178, original to_wait is: 728
-2024-04-17 15:18:50,648 - INFO - UAV: 1 can send packet at: 178
-2024-04-17 15:18:50,648 - INFO - UAV: 9 can send packet at: 178
-2024-04-17 15:18:50,648 - INFO - UAV: 0 should wait from: 178, and wait for 1678
-2024-04-17 15:18:50,648 - INFO - At time: 178, UAV: 0 starts to listen the channel and perform backoff
-2024-04-17 15:18:50,648 - INFO - UAV: 4 should wait from: 178, and wait for 1628
-2024-04-17 15:18:50,648 - INFO - At time: 178, UAV: 4 starts to listen the channel and perform backoff
-2024-04-17 15:18:50,648 - INFO - UAV: 6 should wait from: 178, and wait for 1328
-2024-04-17 15:18:50,648 - INFO - At time: 178, UAV: 6 starts to listen the channel and perform backoff
-2024-04-17 15:18:50,649 - INFO - Packet <routing.dsdv.dsdv_packet.DsdvHelloPacket object at 0x000001B297996420> (sending to channel at: 185.11111111111111) from UAV: 1 is received by UAV: 1 at time: 190
-2024-04-17 15:18:50,649 - INFO - Packet <routing.dsdv.dsdv_packet.DsdvHelloPacket object at 0x000001B297996420> (sending to channel at: 185.11111111111111) from UAV: 1 is received by UAV: 2 at time: 190
-2024-04-17 15:18:50,649 - INFO - Packet <routing.dsdv.dsdv_packet.DsdvHelloPacket object at 0x000001B2979B0590> (sending to channel at: 185.11111111111111) from UAV: 9 is received by UAV: 9 at time: 190
-2024-04-17 15:18:50,650 - INFO - UAV: 5 should wait from: 228, and wait for 1228
-2024-04-17 15:18:50,650 - INFO - At time: 228, UAV: 5 starts to listen the channel and perform backoff
-2024-04-17 15:18:50,650 - INFO - UAV: 2 should wait from: 228, and wait for 678
-2024-04-17 15:18:50,650 - INFO - At time: 228, UAV: 2 starts to listen the channel and perform backoff
-2024-04-17 15:18:50,662 - INFO - UAV: 5 was interrupted at: 906, already waits for: 678, original to_wait is: 1228
-2024-04-17 15:18:50,662 - INFO - UAV: 2 can send packet at: 906
-2024-04-17 15:18:50,662 - INFO - Packet <routing.dsdv.dsdv_packet.DsdvHelloPacket object at 0x000001B297962F00> (sending to channel at: 913.1111111111111) from UAV: 2 is received by UAV: 5 at time: 915
-2024-04-17 15:18:50,662 - INFO - Packet <routing.dsdv.dsdv_packet.DsdvHelloPacket object at 0x000001B297962F00> (sending to channel at: 913.1111111111111) from UAV: 2 is received by UAV: 1 at time: 915
-2024-04-17 15:18:50,662 - INFO - Packet <routing.dsdv.dsdv_packet.DsdvHelloPacket object at 0x000001B297962F00> (sending to channel at: 913.1111111111111) from UAV: 2 is received by UAV: 2 at time: 915
-2024-04-17 15:18:50,662 - INFO - Packet <routing.dsdv.dsdv_packet.DsdvHelloPacket object at 0x000001B297962F00> (sending to channel at: 913.1111111111111) from UAV: 2 is received by UAV: 9 at time: 915
-2024-04-17 15:18:50,662 - INFO - UAV: 5 should wait from: 956, and wait for 678
-2024-04-17 15:18:50,662 - INFO - At time: 956, UAV: 5 starts to listen the channel and perform backoff
-2024-04-17 15:18:50,671 - INFO - UAV: 0 was interrupted at: 1506, already waits for: 1328, original to_wait is: 1678
-2024-04-17 15:18:50,672 - INFO - UAV: 4 was interrupted at: 1506, already waits for: 1328, original to_wait is: 1628
-2024-04-17 15:18:50,672 - INFO - UAV: 6 can send packet at: 1506
-2024-04-17 15:18:50,672 - INFO - Packet <routing.dsdv.dsdv_packet.DsdvHelloPacket object at 0x000001B297995C70> (sending to channel at: 1513.111111111111) from UAV: 6 is received by UAV: 0 at time: 1515
-2024-04-17 15:18:50,672 - INFO - Packet <routing.dsdv.dsdv_packet.DsdvHelloPacket object at 0x000001B297995C70> (sending to channel at: 1513.111111111111) from UAV: 6 is received by UAV: 6 at time: 1515
-2024-04-17 15:18:50,672 - INFO - Packet <routing.dsdv.dsdv_packet.DsdvHelloPacket object at 0x000001B297995C70> (sending to channel at: 1513.111111111111) from UAV: 6 is received by UAV: 4 at time: 1515
-2024-04-17 15:18:50,672 - INFO - Packet <routing.dsdv.dsdv_packet.DsdvHelloPacket object at 0x000001B297995C70> (sending to channel at: 1513.111111111111) from UAV: 6 is received by UAV: 7 at time: 1515
-2024-04-17 15:18:50,672 - INFO - UAV: 8 can send packet at: 1528
-2024-04-17 15:18:50,673 - INFO - Packet <routing.dsdv.dsdv_packet.DsdvHelloPacket object at 0x000001B2979B0650> (sending to channel at: 1535.111111111111) from UAV: 8 is received by UAV: 8 at time: 1540
-2024-04-17 15:18:50,673 - INFO - Packet <routing.dsdv.dsdv_packet.DsdvHelloPacket object at 0x000001B2979B0650> (sending to channel at: 1535.111111111111) from UAV: 8 is received by UAV: 0 at time: 1540
-2024-04-17 15:18:50,673 - INFO - UAV: 0 should wait from: 1556, and wait for 478
-2024-04-17 15:18:50,673 - INFO - At time: 1556, UAV: 0 starts to listen the channel and perform backoff
-2024-04-17 15:18:50,673 - INFO - UAV: 4 should wait from: 1556, and wait for 428
-2024-04-17 15:18:50,673 - INFO - At time: 1556, UAV: 4 starts to listen the channel and perform backoff
-2024-04-17 15:18:50,674 - INFO - UAV: 5 can send packet at: 1634
-2024-04-17 15:18:50,674 - INFO - Packet <routing.dsdv.dsdv_packet.DsdvHelloPacket object at 0x000001B297938920> (sending to channel at: 1641.111111111111) from UAV: 5 is received by UAV: 3 at time: 1645
-2024-04-17 15:18:50,674 - INFO - Packet <routing.dsdv.dsdv_packet.DsdvHelloPacket object at 0x000001B297938920> (sending to channel at: 1641.111111111111) from UAV: 5 is received by UAV: 5 at time: 1645
-2024-04-17 15:18:50,674 - INFO - Packet <routing.dsdv.dsdv_packet.DsdvHelloPacket object at 0x000001B297938920> (sending to channel at: 1641.111111111111) from UAV: 5 is received by UAV: 1 at time: 1645
-2024-04-17 15:18:50,674 - INFO - Packet <routing.dsdv.dsdv_packet.DsdvHelloPacket object at 0x000001B297938920> (sending to channel at: 1641.111111111111) from UAV: 5 is received by UAV: 2 at time: 1645
-2024-04-17 15:18:50,674 - INFO - Packet <routing.dsdv.dsdv_packet.DsdvHelloPacket object at 0x000001B297938920> (sending to channel at: 1641.111111111111) from UAV: 5 is received by UAV: 9 at time: 1645
-2024-04-17 15:18:50,678 - INFO - UAV: 0 was interrupted at: 1984, already waits for: 428, original to_wait is: 478
-2024-04-17 15:18:50,678 - INFO - UAV: 4 can send packet at: 1984
-2024-04-17 15:18:50,679 - INFO - Packet <routing.dsdv.dsdv_packet.DsdvHelloPacket object at 0x000001B2979CD850> (sending to channel at: 1991.111111111111) from UAV: 4 is received by UAV: 6 at time: 1995
-2024-04-17 15:18:50,679 - INFO - Packet <routing.dsdv.dsdv_packet.DsdvHelloPacket object at 0x000001B2979CD850> (sending to channel at: 1991.111111111111) from UAV: 4 is received by UAV: 4 at time: 1995
-2024-04-17 15:18:50,679 - INFO - Packet <routing.dsdv.dsdv_packet.DsdvHelloPacket object at 0x000001B2979CD850> (sending to channel at: 1991.111111111111) from UAV: 4 is received by UAV: 7 at time: 1995
-2024-04-17 15:18:50,679 - INFO - Packet <routing.dsdv.dsdv_packet.DsdvHelloPacket object at 0x000001B2979CD850> (sending to channel at: 1991.111111111111) from UAV: 4 is received by UAV: 0 at time: 1995
-2024-04-17 15:18:50,679 - INFO - UAV: 0 should wait from: 2034, and wait for 178
-2024-04-17 15:18:50,679 - INFO - At time: 2034, UAV: 0 starts to listen the channel and perform backoff
-2024-04-17 15:18:50,680 - INFO - UAV: 0 can send packet at: 2212
-2024-04-17 15:18:50,680 - INFO - Packet <routing.dsdv.dsdv_packet.DsdvHelloPacket object at 0x000001B2979CD640> (sending to channel at: 2219.1111111111113) from UAV: 0 is received by UAV: 8 at time: 2220
-2024-04-17 15:18:50,680 - INFO - Packet <routing.dsdv.dsdv_packet.DsdvHelloPacket object at 0x000001B2979CD640> (sending to channel at: 2219.1111111111113) from UAV: 0 is received by UAV: 6 at time: 2220
-2024-04-17 15:18:50,680 - INFO - Packet <routing.dsdv.dsdv_packet.DsdvHelloPacket object at 0x000001B2979CD640> (sending to channel at: 2219.1111111111113) from UAV: 0 is received by UAV: 4 at time: 2220
-2024-04-17 15:18:50,680 - INFO - Packet <routing.dsdv.dsdv_packet.DsdvHelloPacket object at 0x000001B2979CD640> (sending to channel at: 2219.1111111111113) from UAV: 0 is received by UAV: 7 at time: 2220
-2024-04-17 15:18:50,680 - INFO - Packet <routing.dsdv.dsdv_packet.DsdvHelloPacket object at 0x000001B2979CD640> (sending to channel at: 2219.1111111111113) from UAV: 0 is received by UAV: 0 at time: 2220
+2024-04-17 22:15:47,821 - INFO - At time: 0, UAV: 0 has hello packet to broadcast
+2024-04-17 22:15:47,822 - INFO - At time: 0, UAV: 1 has hello packet to broadcast
+2024-04-17 22:15:47,822 - INFO - At time: 0, UAV: 2 has hello packet to broadcast
+2024-04-17 22:15:47,822 - INFO - At time: 0, UAV: 3 has hello packet to broadcast
+2024-04-17 22:15:47,822 - INFO - At time: 0, UAV: 4 has hello packet to broadcast
+2024-04-17 22:15:47,822 - INFO - At time: 0, UAV: 5 has hello packet to broadcast
+2024-04-17 22:15:47,822 - INFO - At time: 0, UAV: 6 has hello packet to broadcast
+2024-04-17 22:15:47,822 - INFO - At time: 0, UAV: 7 has hello packet to broadcast
+2024-04-17 22:15:47,822 - INFO - At time: 0, UAV: 8 has hello packet to broadcast
+2024-04-17 22:15:47,822 - INFO - At time: 0, UAV: 9 has hello packet to broadcast
+2024-04-17 22:15:47,822 - INFO - Packet: 5001 waiting for UAV: 0 buffer resource at: 0
+2024-04-17 22:15:47,822 - INFO - Packet: 5002 waiting for UAV: 1 buffer resource at: 0
+2024-04-17 22:15:47,822 - INFO - Packet: 5003 waiting for UAV: 2 buffer resource at: 0
+2024-04-17 22:15:47,822 - INFO - Packet: 5004 waiting for UAV: 3 buffer resource at: 0
+2024-04-17 22:15:47,822 - INFO - Packet: 5005 waiting for UAV: 4 buffer resource at: 0
+2024-04-17 22:15:47,822 - INFO - Packet: 5006 waiting for UAV: 5 buffer resource at: 0
+2024-04-17 22:15:47,822 - INFO - Packet: 5007 waiting for UAV: 6 buffer resource at: 0
+2024-04-17 22:15:47,822 - INFO - Packet: 5008 waiting for UAV: 7 buffer resource at: 0
+2024-04-17 22:15:47,822 - INFO - Packet: 5009 waiting for UAV: 8 buffer resource at: 0
+2024-04-17 22:15:47,822 - INFO - Packet: 5010 waiting for UAV: 9 buffer resource at: 0
+2024-04-17 22:15:47,822 - INFO - Packet: 5001 has been added to the buffer at: 0 of UAV: 0, waiting time is: 0
+2024-04-17 22:15:47,822 - INFO - Re-transmission times of pkd: 5001 at UAV: 0 is: 1
+2024-04-17 22:15:47,823 - INFO - Packet: 5002 has been added to the buffer at: 0 of UAV: 1, waiting time is: 0
+2024-04-17 22:15:47,823 - INFO - Re-transmission times of pkd: 5002 at UAV: 1 is: 1
+2024-04-17 22:15:47,823 - INFO - Packet: 5003 has been added to the buffer at: 0 of UAV: 2, waiting time is: 0
+2024-04-17 22:15:47,823 - INFO - Re-transmission times of pkd: 5003 at UAV: 2 is: 1
+2024-04-17 22:15:47,823 - INFO - Packet: 5004 has been added to the buffer at: 0 of UAV: 3, waiting time is: 0
+2024-04-17 22:15:47,823 - INFO - Re-transmission times of pkd: 5004 at UAV: 3 is: 1
+2024-04-17 22:15:47,823 - INFO - Packet: 5005 has been added to the buffer at: 0 of UAV: 4, waiting time is: 0
+2024-04-17 22:15:47,823 - INFO - Re-transmission times of pkd: 5005 at UAV: 4 is: 1
+2024-04-17 22:15:47,823 - INFO - Packet: 5006 has been added to the buffer at: 0 of UAV: 5, waiting time is: 0
+2024-04-17 22:15:47,823 - INFO - Re-transmission times of pkd: 5006 at UAV: 5 is: 1
+2024-04-17 22:15:47,823 - INFO - Packet: 5007 has been added to the buffer at: 0 of UAV: 6, waiting time is: 0
+2024-04-17 22:15:47,823 - INFO - Re-transmission times of pkd: 5007 at UAV: 6 is: 1
+2024-04-17 22:15:47,823 - INFO - Packet: 5008 has been added to the buffer at: 0 of UAV: 7, waiting time is: 0
+2024-04-17 22:15:47,823 - INFO - Re-transmission times of pkd: 5008 at UAV: 7 is: 1
+2024-04-17 22:15:47,823 - INFO - Packet: 5009 has been added to the buffer at: 0 of UAV: 8, waiting time is: 0
+2024-04-17 22:15:47,823 - INFO - Re-transmission times of pkd: 5009 at UAV: 8 is: 1
+2024-04-17 22:15:47,824 - INFO - Packet: 5010 has been added to the buffer at: 0 of UAV: 9, waiting time is: 0
+2024-04-17 22:15:47,824 - INFO - Re-transmission times of pkd: 5010 at UAV: 9 is: 1
+2024-04-17 22:15:47,824 - INFO - UAV: 0 should wait from: 0, and wait for 1678
+2024-04-17 22:15:47,824 - INFO - At time: 0, UAV: 0 starts to listen the channel and perform backoff
+2024-04-17 22:15:47,824 - INFO - UAV: 1 should wait from: 0, and wait for 178
+2024-04-17 22:15:47,824 - INFO - At time: 0, UAV: 1 starts to listen the channel and perform backoff
+2024-04-17 22:15:47,824 - INFO - UAV: 2 should wait from: 0, and wait for 728
+2024-04-17 22:15:47,824 - INFO - At time: 0, UAV: 2 starts to listen the channel and perform backoff
+2024-04-17 22:15:47,824 - INFO - UAV: 3 should wait from: 0, and wait for 128
+2024-04-17 22:15:47,824 - INFO - At time: 0, UAV: 3 starts to listen the channel and perform backoff
+2024-04-17 22:15:47,824 - INFO - UAV: 4 should wait from: 0, and wait for 1628
+2024-04-17 22:15:47,824 - INFO - At time: 0, UAV: 4 starts to listen the channel and perform backoff
+2024-04-17 22:15:47,824 - INFO - UAV: 5 should wait from: 0, and wait for 1228
+2024-04-17 22:15:47,825 - INFO - At time: 0, UAV: 5 starts to listen the channel and perform backoff
+2024-04-17 22:15:47,825 - INFO - UAV: 6 should wait from: 0, and wait for 1328
+2024-04-17 22:15:47,825 - INFO - At time: 0, UAV: 6 starts to listen the channel and perform backoff
+2024-04-17 22:15:47,825 - INFO - UAV: 7 should wait from: 0, and wait for 128
+2024-04-17 22:15:47,825 - INFO - At time: 0, UAV: 7 starts to listen the channel and perform backoff
+2024-04-17 22:15:47,825 - INFO - UAV: 8 should wait from: 0, and wait for 1528
+2024-04-17 22:15:47,825 - INFO - At time: 0, UAV: 8 starts to listen the channel and perform backoff
+2024-04-17 22:15:47,825 - INFO - UAV: 9 should wait from: 0, and wait for 178
+2024-04-17 22:15:47,825 - INFO - At time: 0, UAV: 9 starts to listen the channel and perform backoff
+2024-04-17 22:15:47,831 - INFO - UAV: 0 was interrupted at: 128, already waits for: 128, original to_wait is: 1678
+2024-04-17 22:15:47,831 - INFO - UAV: 4 was interrupted at: 128, already waits for: 128, original to_wait is: 1628
+2024-04-17 22:15:47,831 - INFO - UAV: 5 was interrupted at: 128, already waits for: 128, original to_wait is: 1228
+2024-04-17 22:15:47,831 - INFO - UAV: 6 was interrupted at: 128, already waits for: 128, original to_wait is: 1328
+2024-04-17 22:15:47,831 - INFO - UAV: 3 can send packet at: 128
+2024-04-17 22:15:47,831 - INFO - UAV: 7 can send packet at: 128
+2024-04-17 22:15:47,833 - INFO - Packet <routing.qgeo.qgeo_packet.QGeoHelloPacket object at 0x000001D558201490> (sending to channel at: 135.11111111111111) from UAV: 3 is received by UAV: 3 at time: 140
+2024-04-17 22:15:47,833 - INFO - Packet <routing.qgeo.qgeo_packet.QGeoHelloPacket object at 0x000001D558201490> (sending to channel at: 135.11111111111111) from UAV: 3 is received by UAV: 5 at time: 140
+2024-04-17 22:15:47,833 - INFO - Packet <routing.qgeo.qgeo_packet.QGeoHelloPacket object at 0x000001D5581E56D0> (sending to channel at: 135.11111111111111) from UAV: 7 is received by UAV: 4 at time: 140
+2024-04-17 22:15:47,833 - INFO - Packet <routing.qgeo.qgeo_packet.QGeoHelloPacket object at 0x000001D5581E56D0> (sending to channel at: 135.11111111111111) from UAV: 7 is received by UAV: 7 at time: 140
+2024-04-17 22:15:47,835 - INFO - UAV: 2 was interrupted at: 178, already waits for: 178, original to_wait is: 728
+2024-04-17 22:15:47,835 - INFO - UAV: 1 can send packet at: 178
+2024-04-17 22:15:47,835 - INFO - UAV: 9 can send packet at: 178
+2024-04-17 22:15:47,835 - INFO - UAV: 0 should wait from: 178, and wait for 1678
+2024-04-17 22:15:47,835 - INFO - At time: 178, UAV: 0 starts to listen the channel and perform backoff
+2024-04-17 22:15:47,835 - INFO - UAV: 4 should wait from: 178, and wait for 1628
+2024-04-17 22:15:47,835 - INFO - At time: 178, UAV: 4 starts to listen the channel and perform backoff
+2024-04-17 22:15:47,835 - INFO - UAV: 6 should wait from: 178, and wait for 1328
+2024-04-17 22:15:47,835 - INFO - At time: 178, UAV: 6 starts to listen the channel and perform backoff
+2024-04-17 22:15:47,836 - INFO - Packet <routing.qgeo.qgeo_packet.QGeoHelloPacket object at 0x000001D5581E7F80> (sending to channel at: 185.11111111111111) from UAV: 1 is received by UAV: 1 at time: 190
+2024-04-17 22:15:47,836 - INFO - Packet <routing.qgeo.qgeo_packet.QGeoHelloPacket object at 0x000001D5581E7F80> (sending to channel at: 185.11111111111111) from UAV: 1 is received by UAV: 2 at time: 190
+2024-04-17 22:15:47,836 - INFO - Packet <routing.qgeo.qgeo_packet.QGeoHelloPacket object at 0x000001D5581E7920> (sending to channel at: 185.11111111111111) from UAV: 9 is received by UAV: 9 at time: 190
+2024-04-17 22:15:47,837 - INFO - UAV: 5 should wait from: 228, and wait for 1228
+2024-04-17 22:15:47,837 - INFO - At time: 228, UAV: 5 starts to listen the channel and perform backoff
+2024-04-17 22:15:47,837 - INFO - UAV: 2 should wait from: 228, and wait for 678
+2024-04-17 22:15:47,837 - INFO - At time: 228, UAV: 2 starts to listen the channel and perform backoff
+2024-04-17 22:15:47,849 - INFO - UAV: 5 was interrupted at: 906, already waits for: 678, original to_wait is: 1228
+2024-04-17 22:15:47,849 - INFO - UAV: 2 can send packet at: 906
+2024-04-17 22:15:47,850 - INFO - Packet <routing.qgeo.qgeo_packet.QGeoHelloPacket object at 0x000001D5582012E0> (sending to channel at: 913.1111111111111) from UAV: 2 is received by UAV: 5 at time: 915
+2024-04-17 22:15:47,850 - INFO - Packet <routing.qgeo.qgeo_packet.QGeoHelloPacket object at 0x000001D5582012E0> (sending to channel at: 913.1111111111111) from UAV: 2 is received by UAV: 1 at time: 915
+2024-04-17 22:15:47,850 - INFO - Packet <routing.qgeo.qgeo_packet.QGeoHelloPacket object at 0x000001D5582012E0> (sending to channel at: 913.1111111111111) from UAV: 2 is received by UAV: 2 at time: 915
+2024-04-17 22:15:47,850 - INFO - Packet <routing.qgeo.qgeo_packet.QGeoHelloPacket object at 0x000001D5582012E0> (sending to channel at: 913.1111111111111) from UAV: 2 is received by UAV: 9 at time: 915
+2024-04-17 22:15:47,851 - INFO - UAV: 5 should wait from: 956, and wait for 678
+2024-04-17 22:15:47,851 - INFO - At time: 956, UAV: 5 starts to listen the channel and perform backoff
+2024-04-17 22:15:47,859 - INFO - UAV: 0 was interrupted at: 1506, already waits for: 1328, original to_wait is: 1678
+2024-04-17 22:15:47,859 - INFO - UAV: 4 was interrupted at: 1506, already waits for: 1328, original to_wait is: 1628
+2024-04-17 22:15:47,859 - INFO - UAV: 6 can send packet at: 1506
+2024-04-17 22:15:47,860 - INFO - Packet <routing.qgeo.qgeo_packet.QGeoHelloPacket object at 0x000001D5581C41A0> (sending to channel at: 1513.111111111111) from UAV: 6 is received by UAV: 0 at time: 1515
+2024-04-17 22:15:47,860 - INFO - Packet <routing.qgeo.qgeo_packet.QGeoHelloPacket object at 0x000001D5581C41A0> (sending to channel at: 1513.111111111111) from UAV: 6 is received by UAV: 6 at time: 1515
+2024-04-17 22:15:47,860 - INFO - Packet <routing.qgeo.qgeo_packet.QGeoHelloPacket object at 0x000001D5581C41A0> (sending to channel at: 1513.111111111111) from UAV: 6 is received by UAV: 4 at time: 1515
+2024-04-17 22:15:47,860 - INFO - Packet <routing.qgeo.qgeo_packet.QGeoHelloPacket object at 0x000001D5581C41A0> (sending to channel at: 1513.111111111111) from UAV: 6 is received by UAV: 7 at time: 1515
+2024-04-17 22:15:47,860 - INFO - UAV: 8 can send packet at: 1528
+2024-04-17 22:15:47,860 - INFO - Packet <routing.qgeo.qgeo_packet.QGeoHelloPacket object at 0x000001D5581E76E0> (sending to channel at: 1535.111111111111) from UAV: 8 is received by UAV: 8 at time: 1540
+2024-04-17 22:15:47,860 - INFO - UAV: 0 should wait from: 1556, and wait for 478
+2024-04-17 22:15:47,860 - INFO - At time: 1556, UAV: 0 starts to listen the channel and perform backoff
+2024-04-17 22:15:47,860 - INFO - UAV: 4 should wait from: 1556, and wait for 428
+2024-04-17 22:15:47,860 - INFO - At time: 1556, UAV: 4 starts to listen the channel and perform backoff
+2024-04-17 22:15:47,861 - INFO - UAV: 5 can send packet at: 1634
+2024-04-17 22:15:47,862 - INFO - Packet <routing.qgeo.qgeo_packet.QGeoHelloPacket object at 0x000001D558169BB0> (sending to channel at: 1641.111111111111) from UAV: 5 is received by UAV: 3 at time: 1645
+2024-04-17 22:15:47,862 - INFO - Packet <routing.qgeo.qgeo_packet.QGeoHelloPacket object at 0x000001D558169BB0> (sending to channel at: 1641.111111111111) from UAV: 5 is received by UAV: 5 at time: 1645
+2024-04-17 22:15:47,862 - INFO - Packet <routing.qgeo.qgeo_packet.QGeoHelloPacket object at 0x000001D558169BB0> (sending to channel at: 1641.111111111111) from UAV: 5 is received by UAV: 1 at time: 1645
+2024-04-17 22:15:47,862 - INFO - Packet <routing.qgeo.qgeo_packet.QGeoHelloPacket object at 0x000001D558169BB0> (sending to channel at: 1641.111111111111) from UAV: 5 is received by UAV: 2 at time: 1645
+2024-04-17 22:15:47,862 - INFO - Packet <routing.qgeo.qgeo_packet.QGeoHelloPacket object at 0x000001D558169BB0> (sending to channel at: 1641.111111111111) from UAV: 5 is received by UAV: 9 at time: 1645
+2024-04-17 22:15:47,865 - INFO - UAV: 0 was interrupted at: 1984, already waits for: 428, original to_wait is: 478
+2024-04-17 22:15:47,865 - INFO - UAV: 4 can send packet at: 1984
+2024-04-17 22:15:47,865 - INFO - Packet <routing.qgeo.qgeo_packet.QGeoHelloPacket object at 0x000001D558201550> (sending to channel at: 1991.111111111111) from UAV: 4 is received by UAV: 0 at time: 1995
+2024-04-17 22:15:47,865 - INFO - Packet <routing.qgeo.qgeo_packet.QGeoHelloPacket object at 0x000001D558201550> (sending to channel at: 1991.111111111111) from UAV: 4 is received by UAV: 6 at time: 1995
+2024-04-17 22:15:47,865 - INFO - Packet <routing.qgeo.qgeo_packet.QGeoHelloPacket object at 0x000001D558201550> (sending to channel at: 1991.111111111111) from UAV: 4 is received by UAV: 4 at time: 1995
+2024-04-17 22:15:47,865 - INFO - Packet <routing.qgeo.qgeo_packet.QGeoHelloPacket object at 0x000001D558201550> (sending to channel at: 1991.111111111111) from UAV: 4 is received by UAV: 7 at time: 1995
+2024-04-17 22:15:47,866 - INFO - UAV: 0 should wait from: 2034, and wait for 178
+2024-04-17 22:15:47,866 - INFO - At time: 2034, UAV: 0 starts to listen the channel and perform backoff
+2024-04-17 22:15:47,867 - INFO - UAV: 0 can send packet at: 2212
+2024-04-17 22:15:47,868 - INFO - Packet <routing.qgeo.qgeo_packet.QGeoHelloPacket object at 0x000001D558201280> (sending to channel at: 2219.1111111111113) from UAV: 0 is received by UAV: 0 at time: 2220
+2024-04-17 22:15:47,868 - INFO - Packet <routing.qgeo.qgeo_packet.QGeoHelloPacket object at 0x000001D558201280> (sending to channel at: 2219.1111111111113) from UAV: 0 is received by UAV: 6 at time: 2220
+2024-04-17 22:15:47,868 - INFO - Packet <routing.qgeo.qgeo_packet.QGeoHelloPacket object at 0x000001D558201280> (sending to channel at: 2219.1111111111113) from UAV: 0 is received by UAV: 4 at time: 2220
+2024-04-17 22:15:47,868 - INFO - Packet <routing.qgeo.qgeo_packet.QGeoHelloPacket object at 0x000001D558201280> (sending to channel at: 2219.1111111111113) from UAV: 0 is received by UAV: 7 at time: 2220

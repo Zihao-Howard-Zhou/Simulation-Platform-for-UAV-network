@@ -39,6 +39,7 @@ class Packet:
             self.number_retransmission_attempt[drone.identifier] = 0
 
         self.time_delivery = None
+        self.time_transmitted_at_last_hop = 0
 
     def increase_ttl(self):
         self.__ttl += 1

@@ -44,7 +44,7 @@ class DsdvRoutingTable:
 
         # initialize the routing table, sequence number if even number
         self.routing_table[self.my_drone.identifier] = [self.my_drone.identifier, 0, self.my_drone.identifier*2, self.env.now]
-        self.entry_life_time = 1.6 * 1e6  # unit: us (1s)
+        self.entry_life_time = 2 * 1e6  # unit: us (2s)
 
     # determine if the routing table is empty
     def is_empty(self):
@@ -86,6 +86,7 @@ class DsdvRoutingTable:
                 updated_time = self.get_updated_time(key)
                 if updated_time + self.entry_life_time < self.env.now:
                     expired_next_hop = self.routing_table[key][0]  # expired next hop
+
                     # all entries through this next hop should be set to invalid
                     for key2 in list(self.routing_table):
                         if self.routing_table[key2][0] == expired_next_hop:
