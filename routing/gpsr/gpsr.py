@@ -40,7 +40,7 @@ class Gpsr:
     def __init__(self, simulator, my_drone):
         self.simulator = simulator
         self.my_drone = my_drone
-        self.hello_interval = 0.5*1e6  # broadcast hello packet every 0.5s
+        self.hello_interval = 0.5 * 1e6  # broadcast hello packet every 0.5s
         self.neighbor_table = GpsrNeighborTable(self.simulator.env, my_drone)
         self.simulator.env.process(self.broadcast_hello_packet_periodically())
 

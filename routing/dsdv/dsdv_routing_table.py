@@ -34,7 +34,7 @@ class DsdvRoutingTable:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/4/14
-    Updated at: 2024/4/15
+    Updated at: 2024/4/17
     """
 
     def __init__(self, env, my_drone):
@@ -42,9 +42,9 @@ class DsdvRoutingTable:
         self.my_drone = my_drone
         self.routing_table = defaultdict(list)
 
-        # initialize the routing table
+        # initialize the routing table, sequence number if even number
         self.routing_table[self.my_drone.identifier] = [self.my_drone.identifier, 0, self.my_drone.identifier*2, self.env.now]
-        self.entry_life_time = 2 * 1e6  # unit: us (2s)
+        self.entry_life_time = 1.6 * 1e6  # unit: us (1s)
 
     # determine if the routing table is empty
     def is_empty(self):
@@ -59,19 +59,20 @@ class DsdvRoutingTable:
 
     # update item according to the receiving packet
     def update_item(self, packet, cur_time):
-        for dst_id in packet.routing_table.keys():
-            src_drone = packet.src_drone
-            metric = packet.routing_table[dst_id][1]
-            seq_num = packet.routing_table[dst_id][2]
-            if dst_id not in self.routing_table.keys():
-                self.routing_table[dst_id] = [src_drone.identifier, metric+1, seq_num, cur_time]
-            elif seq_num > self.routing_table[dst_id][2]:
-                self.routing_table[dst_id] = [src_drone.identifier, metric+1, seq_num, cur_time]
-            elif seq_num == self.routing_table[dst_id][2]:
-                if metric < self.routing_table[dst_id][1]:
+        src_drone = packet.src_drone
+        if src_drone is not self.my_drone:  # the hello packet is not broadcast by myself
+            for dst_id in packet.routing_table.keys():
+                metric = packet.routing_table[dst_id][1]
+                seq_num = packet.routing_table[dst_id][2]
+                if dst_id not in self.routing_table.keys():
                     self.routing_table[dst_id] = [src_drone.identifier, metric+1, seq_num, cur_time]
-            else:
-                pass
+                elif seq_num > self.routing_table[dst_id][2]:
+                    self.routing_table[dst_id] = [src_drone.identifier, metric+1, seq_num, cur_time]
+                elif seq_num == self.routing_table[dst_id][2]:
+                    if metric < self.routing_table[dst_id][1]:
+                        self.routing_table[dst_id] = [src_drone.identifier, metric+1, seq_num, cur_time]
+                else:
+                    pass
 
     # remove the expired item
     def purge(self):
@@ -83,10 +84,14 @@ class DsdvRoutingTable:
         for key in list(self.routing_table):
             if key is not self.my_drone.identifier:
                 updated_time = self.get_updated_time(key)
-                if updated_time + self.entry_life_time < self.env.now:  # expired
-                    self.routing_table[key][1] = float('inf')
-                    self.routing_table[key][2] += 1
-                    self.routing_table[key][3] = self.env.now
+                if updated_time + self.entry_life_time < self.env.now:
+                    expired_next_hop = self.routing_table[key][0]  # expired next hop
+                    # all entries through this next hop should be set to invalid
+                    for key2 in list(self.routing_table):
+                        if self.routing_table[key2][0] == expired_next_hop:
+                            self.routing_table[key2][1] = float('inf')
+                            self.routing_table[key2][2] += 1
+                            self.routing_table[key2][3] = self.env.now
 
                     flag = 1  # broken links have occurred
 

@@ -34,7 +34,7 @@ class Dsdv:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/4/14
-    Updated at: 2024/4/15
+    Updated at: 2024/4/17
     """
 
     def __init__(self, simulator, my_drone):

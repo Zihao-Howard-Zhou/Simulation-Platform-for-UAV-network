@@ -105,7 +105,7 @@ class Drone:
         self.mac_process_finish = dict()
         self.mac_process_count = 0
 
-        self.routing_protocol = Parrot(self.simulator, self)
+        self.routing_protocol = Dsdv(self.simulator, self)
 
         self.mobility_model = GaussMarkov3D(self)
 
@@ -132,10 +132,10 @@ class Drone:
 
         while True:
             if not self.sleep:
-                if traffic_pattern is 'Uniform':
+                if traffic_pattern == 'Uniform':
                     # the drone generates a data packet every 0.5s with jitter
                     yield self.env.timeout(random.randint(500000, 505000))
-                elif traffic_pattern is 'Poisson':
+                elif traffic_pattern == 'Poisson':
                     # the process of generating data packets by nodes follows Poisson distribution,
                     # thus the generation interval of data packets follows exponential distribution
 
@@ -145,10 +145,9 @@ class Drone:
                 GLOBAL_DATA_PACKET_ID += 1  # packet id
 
                 # randomly choose a destination
-                # all_candidate_list = [i for i in range(config.NUMBER_OF_DRONES)]
-                # all_candidate_list.remove(self.identifier)
-                # dst_id = random.choice(all_candidate_list)
-                dst_id = 0
+                all_candidate_list = [i for i in range(config.NUMBER_OF_DRONES)]
+                all_candidate_list.remove(self.identifier)
+                dst_id = random.choice(all_candidate_list)
 
                 destination = self.simulator.drones[dst_id]  # obtain the destination drone
 
