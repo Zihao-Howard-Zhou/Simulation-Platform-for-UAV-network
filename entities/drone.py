@@ -31,14 +31,14 @@ class Drone:
     """
     Drone implementation
 
-    Drones in the simulation are served as routers. Every drone can be used as a potential source node, destination and
-    relay node. Each drone needs to install the corresponding routing module, MAC module, mobility module and energy
+    Drones in the simulation are served as routers. Every drone can be selected as a potential source node, destination and
+    relaying node. Each drone needs to install the corresponding routing module, MAC module, mobility module and energy
     module, etc. At the same time, each drone also has its own queue and can only send one data packet in the queue at
     a time, so subsequent data packets need queuing for queue resources, which is used to reflect the queue delay in the
     drone network
 
     Attributes:
-        simulator:
+        simulator: the simulation platform that contains everything
         env: simulation environment created by simpy
         identifier: used to uniquely represent a drone
         coords: the 3-D position of the drone
@@ -49,17 +49,16 @@ class Drone:
         direction_mean: mean direction
         pitch_mean: mean pitch
         velocity_mean: mean velocity
-        certain_channel: a store created for the drone
-                         different drones will have different stores for transmitting and receiving
+        certain_channel: a dictionary of "Resource", used to determine if the channel is busy or idle
         buffer: each drone has a buffer to store the coming data packets
         fifo_queue: when the next hop node receives the packet, it should first temporarily store the packet in
-                    fifo_queue instead of immediately yield "packet_coming" process, so that the buffer resources of
-                    the previous hop node are not always occupied
+                    "fifo_queue" instead of immediately yield "packet_coming" process. It can prevent the buffer
+                    resource of the previous hop node from being occupied all the time
         mac_protocol: installed mac protocol (CSMA/CA, ALOHA, etc.)
         mac_process_dict: a dictionary, used to store the mac_process that is triggered each time
         mac_process_finish: a dictionary, used to indicate the completion of the process
         mac_process_count: used to distinguish between different processes
-        routing_protocol: installed routing protocol (GPSR, AODV, etc.)
+        routing_protocol: installed routing protocol (GPSR, DSDV, etc.)
         mobility_model: installed mobility model (3-D Gauss-markov, random waypoint, etc.)
         energy_model: installed energy consumption model
         residual_energy: the residual energy of drone in Joule
@@ -106,7 +105,7 @@ class Drone:
         self.mac_process_finish = dict()
         self.mac_process_count = 0
 
-        self.routing_protocol = QGeo(self.simulator, self)
+        self.routing_protocol = Gpsr(self.simulator, self)
 
         self.mobility_model = GaussMarkov3D(self)
 
@@ -170,7 +169,6 @@ class Drone:
         """
         When drone generates a packet or receives a data packet that is not bound for itself, yield it
         :param pkd: packet that waits to enter the buffer of drone
-        :param tm: transmission mode
         :return: None
         """
 
