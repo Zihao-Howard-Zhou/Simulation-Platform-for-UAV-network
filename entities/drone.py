@@ -105,12 +105,12 @@ class Drone:
         self.mac_process_finish = dict()
         self.mac_process_count = 0
 
-        self.routing_protocol = Gpsr(self.simulator, self)
+        self.routing_protocol = Dsdv(self.simulator, self)
 
         self.mobility_model = GaussMarkov3D(self)
 
         self.energy_model = EnergyModel()
-        self.residual_energy = 50 * 1e3
+        self.residual_energy = 4 * 1e3
         self.sleep = False
 
         if self.identifier != 0:
@@ -201,12 +201,15 @@ class Drone:
 
     def feed_packet(self):
         while True:
-            yield self.env.timeout(10)  # for speed up the simulation
-            if not self.fifo_queue.empty():
-                data_packet = self.fifo_queue.get()
-                if data_packet.number_retransmission_attempt[self.identifier] < config.MAX_RETRANSMISSION_ATTEMPT:
+            if not self.sleep:  # if drone still has enough energy to relay packets
+                yield self.env.timeout(10)  # for speed up the simulation
+                if not self.fifo_queue.empty():
+                    data_packet = self.fifo_queue.get()
+                    if data_packet.number_retransmission_attempt[self.identifier] < config.MAX_RETRANSMISSION_ATTEMPT:
 
-                    yield self.env.process(self.packet_coming(data_packet))
+                        yield self.env.process(self.packet_coming(data_packet))
+            else:
+                break
 
     def energy_monitor(self):
         while True:
@@ -217,35 +220,38 @@ class Drone:
 
     def receive(self):
         while True:
-            if self.certain_channel.items:  # non-empty list means that someone wants to transmit packet to me
-                # get the list of all drones currently transmitting packets
-                transmitting_node_list = []
-                for drone in self.simulator.drones:
-                    if drone.certain_channel.items:
-                        temp = [msg[2] for msg in drone.certain_channel.items]
-                        transmitting_node_list += temp
+            if not self.sleep:
+                if self.certain_channel.items:  # non-empty list means that someone wants to transmit packet to me
+                    # get the list of all drones currently transmitting packets
+                    transmitting_node_list = []
+                    for drone in self.simulator.drones:
+                        if drone.certain_channel.items:
+                            temp = [msg[2] for msg in drone.certain_channel.items]
+                            transmitting_node_list += temp
 
-                transmitting_node_list = list(set(transmitting_node_list))  # remove duplicates
+                    transmitting_node_list = list(set(transmitting_node_list))  # remove duplicates
 
-                all_drones_send_to_me = [msg[2] for msg in self.certain_channel.items]
+                    all_drones_send_to_me = [msg[2] for msg in self.certain_channel.items]
 
-                sinr_list = sinr_calculator(self, all_drones_send_to_me, transmitting_node_list)
+                    sinr_list = sinr_calculator(self, all_drones_send_to_me, transmitting_node_list)
 
-                # Receive the packet of the transmitting node corresponding to the maximum SINR
-                max_sinr = max(sinr_list)
-                if max_sinr >= config.SNR_THRESHOLD:
-                    which_one = all_drones_send_to_me[sinr_list.index(max_sinr)]
+                    # Receive the packet of the transmitting node corresponding to the maximum SINR
+                    max_sinr = max(sinr_list)
+                    if max_sinr >= config.SNR_THRESHOLD:
+                        which_one = all_drones_send_to_me[sinr_list.index(max_sinr)]
 
-                    while self.certain_channel.items:
-                        msg = yield self.certain_channel.get()
-                        previous_drone = self.simulator.drones[msg[2]]
+                        while self.certain_channel.items:
+                            msg = yield self.certain_channel.get()
+                            previous_drone = self.simulator.drones[msg[2]]
 
-                        if previous_drone.identifier is which_one:
-                            logging.info('Packet %s (sending to channel at: %s) from UAV: %s is received by UAV: %s at time: %s',
-                                         msg[0], msg[1], msg[2], self.identifier, self.simulator.env.now)
-                            yield self.env.process(self.routing_protocol.packet_reception(msg[0], msg[2]))
-                else:
-                    while self.certain_channel.items:
-                        yield self.certain_channel.get()
+                            if previous_drone.identifier is which_one:
+                                logging.info('Packet %s (sending to channel at: %s) from UAV: %s is received by UAV: %s at time: %s',
+                                             msg[0], msg[1], msg[2], self.identifier, self.simulator.env.now)
+                                yield self.env.process(self.routing_protocol.packet_reception(msg[0], msg[2]))
+                    else:
+                        while self.certain_channel.items:
+                            yield self.certain_channel.get()
 
-            yield self.env.timeout(5)
+                yield self.env.timeout(5)
+            else:
+                break
