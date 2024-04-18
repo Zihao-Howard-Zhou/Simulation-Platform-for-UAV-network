@@ -92,7 +92,7 @@ class QGeo:
         reception function in the network layer
         :param packet: the received packet
         :param src_drone_id: previous hop
-        :return: None
+        :return: none
         """
 
         global GL_ID_ACK_PACKET
@@ -104,8 +104,7 @@ class QGeo:
 
         elif isinstance(packet, DataPacket):
             if packet.dst_drone.identifier == self.my_drone.identifier:
-                self.simulator.metrics.deliver_time_dict[
-                    packet.packet_id] = self.simulator.env.now - packet.creation_time
+                self.simulator.metrics.deliver_time_dict[packet.packet_id] = self.simulator.env.now - packet.creation_time
                 self.simulator.metrics.datapacket_arrived.add(packet.packet_id)
                 logging.info('Packet: %s is received by destination UAV: %s', packet.packet_id,
                              self.my_drone.identifier)
@@ -137,7 +136,7 @@ class QGeo:
                 self.my_drone.mac_protocol.wait_ack_process_dict[key2].interrupt()
 
     def update_q_table(self, packet, next_hop_id):
-        # calculate the discounted factor
+        # next hello interval
         future_time = (self.hello_interval * (self.simulator.env.now / self.hello_interval + 1)) / 1e6
 
         cur_pos_myself = self.my_drone.coords
@@ -145,8 +144,9 @@ class QGeo:
 
         cur_vel_myself = self.my_drone.velocity
         cur_vel_next_hop = self.neighbor_table.get_neighbor_velocity(next_hop_id)
+
         update_time_next_hop = self.neighbor_table.get_updated_time(next_hop_id) / 1e6
-        time_interval = [future_time - update_time_next_hop] * 3
+        time_interval = [future_time - update_time_next_hop] * 3  # three dimensions
 
         position_shift_next_hop = [v * t for v, t in zip(cur_vel_next_hop, time_interval)]
         position_shift_myself = [v * t for v, t in zip(cur_vel_myself, time_interval)]
@@ -156,6 +156,7 @@ class QGeo:
 
         future_distance = euclidean_distance(future_pos_myself, future_pos_next_hop)
 
+        # calculate discounted factor
         if future_distance < maximum_communication_range():
             gamma = 0.6
         else:
