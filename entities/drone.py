@@ -49,8 +49,8 @@ class Drone:
         direction_mean: mean direction
         pitch_mean: mean pitch
         velocity_mean: mean velocity
-        certain_channel: a dictionary of "Resource", used to determine if the channel is busy or idle
-        buffer: each drone has a buffer to store the coming data packets
+        inbox: a "Store" in simpy, used to collect the packets from other drones
+        buffer: used to describe the queuing delay of sending packet
         fifo_queue: when the next hop node receives the packet, it should first temporarily store the packet in
                     "fifo_queue" instead of immediately yield "packet_coming" process. It can prevent the buffer
                     resource of the previous hop node from being occupied all the time
@@ -66,7 +66,7 @@ class Drone:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/11
-    Updated at: 2024/4/11
+    Updated at: 2024/4/18
     """
 
     def __init__(self,
@@ -74,7 +74,7 @@ class Drone:
                  node_id: int,
                  coords: list,
                  speed: float,
-                 certain_channel,
+                 inbox,
                  simulator):
         self.simulator = simulator
         self.env = env
@@ -95,7 +95,7 @@ class Drone:
         self.pitch_mean = self.pitch
         self.velocity_mean = self.speed
 
-        self.certain_channel = certain_channel
+        self.inbox = inbox
 
         self.buffer = simpy.Resource(env, capacity=1)
         self.fifo_queue = queue.Queue()
@@ -105,12 +105,12 @@ class Drone:
         self.mac_process_finish = dict()
         self.mac_process_count = 0
 
-        self.routing_protocol = Dsdv(self.simulator, self)
+        self.routing_protocol = Gpsr(self.simulator, self)
 
         self.mobility_model = GaussMarkov3D(self)
 
         self.energy_model = EnergyModel()
-        self.residual_energy = 4 * 1e3
+        self.residual_energy = 20 * 1e3
         self.sleep = False
 
         if self.identifier != 0:
@@ -172,32 +172,35 @@ class Drone:
         :return: None
         """
 
-        arrival_time = self.env.now
-        logging.info('Packet: %s waiting for UAV: %s buffer resource at: %s',
-                     pkd.packet_id, self.identifier, arrival_time)
+        if not self.sleep:
+            arrival_time = self.env.now
+            logging.info('Packet: %s waiting for UAV: %s buffer resource at: %s',
+                         pkd.packet_id, self.identifier, arrival_time)
 
-        with self.buffer.request() as request:
-            yield request  # wait to enter to buffer
+            with self.buffer.request() as request:
+                yield request  # wait to enter to buffer
 
-            logging.info('Packet: %s has been added to the buffer at: %s of UAV: %s, waiting time is: %s',
-                         pkd.packet_id, self.env.now, self.identifier, self.env.now - arrival_time)
+                logging.info('Packet: %s has been added to the buffer at: %s of UAV: %s, waiting time is: %s',
+                             pkd.packet_id, self.env.now, self.identifier, self.env.now - arrival_time)
 
-            pkd.number_retransmission_attempt[self.identifier] += 1
+                pkd.number_retransmission_attempt[self.identifier] += 1
 
-            if pkd.number_retransmission_attempt[self.identifier] == 1:
-                pkd.time_transmitted_at_last_hop = self.env.now
+                if pkd.number_retransmission_attempt[self.identifier] == 1:
+                    pkd.time_transmitted_at_last_hop = self.env.now
 
-            logging.info('Re-transmission times of pkd: %s at UAV: %s is: %s',
-                         pkd.packet_id, self.identifier, pkd.number_retransmission_attempt[self.identifier])
+                logging.info('Re-transmission times of pkd: %s at UAV: %s is: %s',
+                             pkd.packet_id, self.identifier, pkd.number_retransmission_attempt[self.identifier])
 
-            # every time the drone initiates a data packet transmission, "mac_process_count" will be increased by 1
-            self.mac_process_count += 1
-            key = str(self.identifier) + '_' + str(self.mac_process_count)  # used to uniquely refer to a process
-            mac_process = self.env.process(self.mac_protocol.mac_send(pkd))
-            self.mac_process_dict[key] = mac_process
-            self.mac_process_finish[key] = 0
+                # every time the drone initiates a data packet transmission, "mac_process_count" will be increased by 1
+                self.mac_process_count += 1
+                key = str(self.identifier) + '_' + str(self.mac_process_count)  # used to uniquely refer to a process
+                mac_process = self.env.process(self.mac_protocol.mac_send(pkd))
+                self.mac_process_dict[key] = mac_process
+                self.mac_process_finish[key] = 0
 
-            yield mac_process
+                yield mac_process
+        else:
+            pass
 
     def feed_packet(self):
         while True:
@@ -221,17 +224,17 @@ class Drone:
     def receive(self):
         while True:
             if not self.sleep:
-                if self.certain_channel.items:  # non-empty list means that someone wants to transmit packet to me
+                if self.inbox.items:  # non-empty list means that someone wants to transmit packet to me
                     # get the list of all drones currently transmitting packets
                     transmitting_node_list = []
                     for drone in self.simulator.drones:
-                        if drone.certain_channel.items:
-                            temp = [msg[2] for msg in drone.certain_channel.items]
+                        if drone.inbox.items:
+                            temp = [msg[2] for msg in drone.inbox.items]
                             transmitting_node_list += temp
 
                     transmitting_node_list = list(set(transmitting_node_list))  # remove duplicates
 
-                    all_drones_send_to_me = [msg[2] for msg in self.certain_channel.items]
+                    all_drones_send_to_me = [msg[2] for msg in self.inbox.items]
 
                     sinr_list = sinr_calculator(self, all_drones_send_to_me, transmitting_node_list)
 
@@ -240,17 +243,18 @@ class Drone:
                     if max_sinr >= config.SNR_THRESHOLD:
                         which_one = all_drones_send_to_me[sinr_list.index(max_sinr)]
 
-                        while self.certain_channel.items:
-                            msg = yield self.certain_channel.get()
+                        while self.inbox.items:
+                            msg = yield self.inbox.get()
                             previous_drone = self.simulator.drones[msg[2]]
 
                             if previous_drone.identifier is which_one:
-                                logging.info('Packet %s (sending to channel at: %s) from UAV: %s is received by UAV: %s at time: %s',
-                                             msg[0], msg[1], msg[2], self.identifier, self.simulator.env.now)
+                                logging.info('Packet %s (sending to channel at: %s) from UAV: %s is received '
+                                             'by UAV: %s at time: %s',msg[0], msg[1], msg[2],
+                                             self.identifier, self.simulator.env.now)
                                 yield self.env.process(self.routing_protocol.packet_reception(msg[0], msg[2]))
-                    else:
-                        while self.certain_channel.items:
-                            yield self.certain_channel.get()
+                    else:  # sinr is lower than threshold
+                        while self.inbox.items:
+                            yield self.inbox.get()
 
                 yield self.env.timeout(5)
             else:

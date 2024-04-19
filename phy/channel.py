@@ -1,7 +1,6 @@
 import logging
 import simpy
 import simpy.core
-from utils import config
 
 
 class Channel:
@@ -19,7 +18,7 @@ class Channel:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/11
-    Updated at: 2024/1/15
+    Updated at: 2024/4/18
     """
 
     def __init__(self, env, capacity=simpy.core.Infinity):
@@ -38,10 +37,6 @@ class Channel:
             logging.error('Pipes does not have any stores')
 
         # the sender "puts" packets to all stores in pipes separately
-        # events = []
-        # for idx in range(0, config.NUMBER_OF_DRONES):
-        #     if idx != value[2]:
-        #         events.append(self.pipes[idx].put(value))
         events = [store.put(value) for store in self.pipes]
         return self.env.all_of(events)
 
@@ -69,9 +64,8 @@ class Channel:
         for dst_id in dst_id_list:
             if not self.pipes[dst_id]:
                 logging.error('There is no store for dst_id')
-
-        for dst_id in dst_id_list:
-            self.pipes[dst_id].put(value)
+            else:
+                self.pipes[dst_id].put(value)
 
     def create_store_for_receiver(self):
         # each receiver needs a store
