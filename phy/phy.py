@@ -45,7 +45,7 @@ class Phy:
         # transmit through the channel
         message = [packet, self.env.now, self.my_drone.identifier, 0]
 
-        self.my_drone.simulator.channel.unicast_put(message, next_hop_id)
+        self.my_drone.simulator.channel.unicast_put(message, next_hop_id)  # send
 
     def broadcast(self, packet):
         """

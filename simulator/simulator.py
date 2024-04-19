@@ -42,7 +42,7 @@ class Simulator:
 
         self.n_drones = n_drones  # total number of drones in the simulation
         self.channel_states = channel_states
-        self.channel = Channel(self.env)
+        self.channel = Channel(self.env)  # inf
 
         self.metrics = Metrics(self)  # use to record the network performance
 

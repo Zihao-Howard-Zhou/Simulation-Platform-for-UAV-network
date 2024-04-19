@@ -67,7 +67,7 @@ class CsmaCa:
         contention_window = min(config.CW_MIN * (2 ** transmission_attempt), config.CW_MAX)
 
         backoff = random.randint(0, contention_window - 1) * config.SLOT_DURATION  # random backoff
-        to_wait = config.DIFS_DURATION + backoff
+        to_wait = config.DIFS_DURATION + backoff  # need to wait
 
         while to_wait:
             # wait until the channel becomes idle
@@ -144,7 +144,7 @@ class CsmaCa:
             yield self.env.timeout(config.ACK_TIMEOUT)
 
             key2 = str(self.my_drone.identifier) + '_' + str(self.wait_ack_process_count)
-            self.wait_ack_process_finish[key2] = 1
+            self.wait_ack_process_finish[key2] = 1  # timeout
 
             logging.info('ACK timeout of packet: %s', pkd.packet_id)
             # timeout expired
@@ -153,7 +153,7 @@ class CsmaCa:
             else:
                 logging.info('Packet: %s is dropped!', pkd.packet_id)
 
-        except simpy.Interrupt:
+        except simpy.Interrupt:  # routing interrupt ack
             # receive ACK in time
             logging.info('UAV: %s receives the ACK for data packet: %s, at: %s',
                          self.my_drone.identifier, pkd.packet_id, self.env.now)
@@ -188,8 +188,8 @@ class CsmaCa:
                 # found channel be occupied, start interrupt
 
                 key = str(self.my_drone.identifier) + '_' + str(self.my_drone.mac_process_count)
-                if not self.my_drone.mac_process_dict[key].triggered:
-                    self.my_drone.mac_process_dict[key].interrupt()
+                if not self.my_drone.mac_process_dict[key].triggered:  # not finish process
+                    self.my_drone.mac_process_dict[key].interrupt()  # interrupt mac send
                     break
             else:
                 pass
