@@ -109,7 +109,7 @@ class Parrot:
             destination = packet.src_drone  # drone that originates the chirp packet
 
             # get the latest sequence number related to this specific destination
-            latest_seq_num = max([self.qtable.q_table[destination.identifier, _][1] for _ in range(config.NUMBER_OF_DRONES)])
+            latest_seq_num = max([self.qtable.q_table[destination.identifier][_][1] for _ in range(config.NUMBER_OF_DRONES)])
             if latest_seq_num >= packet_seq_num or self.my_drone.identifier == src_drone_id:
                 pass
             else:
@@ -150,7 +150,10 @@ class Parrot:
             yield self.simulator.env.timeout(config.SIFS_DURATION)  # switch from receiving to transmitting
 
             # unicast the ack packet immediately without contention for the channel
-            yield self.simulator.env.process(self.my_drone.mac_protocol.phy.unicast(ack_packet, src_drone_id))
+            if not self.my_drone.sleep:
+                yield self.simulator.env.process(self.my_drone.mac_protocol.phy.unicast(ack_packet, src_drone_id))
+            else:
+                pass
 
         elif isinstance(packet, AckPacket):
             key2 = str(self.my_drone.identifier) + '_' + str(self.my_drone.mac_protocol.wait_ack_process_count)

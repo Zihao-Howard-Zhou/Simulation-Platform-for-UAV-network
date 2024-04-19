@@ -106,7 +106,7 @@ class Drone:
         self.mac_process_finish = dict()
         self.mac_process_count = 0
 
-        self.routing_protocol = Gpsr(self.simulator, self)
+        self.routing_protocol = Opar(self.simulator, self)
 
         self.mobility_model = RandomWaypoint3D(self)
 

@@ -1,3 +1,4 @@
+import logging
 import math
 import numpy as np
 from utils import config
@@ -46,7 +47,7 @@ class Qtable:
         # initialize the q-table
         for i in range(config.NUMBER_OF_DRONES):
             for j in range(config.NUMBER_OF_DRONES):
-                self.q_table[i, j] = [0, 0]
+                self.q_table[i][j] = [0, 0]
 
     def update_table(self, chirp_packet, previous_drone_id, cur_time):
         """
@@ -78,6 +79,7 @@ class Qtable:
         prev_q = self.q_table[destination, action][0]
         self.q_table[destination, action][0] = prev_q + self.learning_rate * (gamma * reward - prev_q)
 
+        logging.info('Q table of UAV: %s is: %s', self.my_drone.identifier, self.q_table)
         # print('-----------------------')
         # print('Q table of UAV: ', self.my_drone.identifier)
         # print(self.q_table)

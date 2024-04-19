@@ -4,7 +4,7 @@ import logging
 MAP_LENGTH = 1000  # m, length of the map
 MAP_WIDTH = 1000  # m, width of the map
 MAP_HEIGHT = 120  # m, height of the map
-SIM_TIME = 25 * 1e6  # us, total simulation time (10s)
+SIM_TIME = 15 * 1e6  # us, total simulation time (10s)
 NUMBER_OF_DRONES = 20  # number of drones in the network
 STATIC_CASE = 0
 LOGGING_LEVEL = logging.INFO
@@ -23,8 +23,7 @@ MEAN_ROTOR_VELOCITY = 7.2  # mean rotor induced velocity in hover
 FUSELAGE_DRAG_RATIO = 0.3
 
 # ----------------------- radio parameters ----------------------- #
-TRANSMITTING_POWER = 2  # Watt
-MODULATION_FORMAT = "BPSK"
+TRANSMITTING_POWER = 1  # Watt
 LIGHT_SPEED = 3*1e8  # light speed (m/s)
 CARRIER_FREQUENCY = 1*1e9  # carrier frequency (Hz)
 NOISE_POWER = 4*1e-9  # noise power (Watt)
@@ -46,11 +45,10 @@ HELLO_PACKET_PAYLOAD_LENGTH = 256  # bit
 HELLO_PACKET_LENGTH = HELLO_PACKET_HEADER_LENGTH + HELLO_PACKET_PAYLOAD_LENGTH
 
 # ------------------ physical layer parameters ------------------- #
-BIT_RATE = 10 * 1e6  # 1 Mbit/s
+BIT_RATE = 15 * 1e6  # 15 Mbit/s
 BIT_TRANSMISSION_TIME = 1/BIT_RATE * 1e6
-BANDWIDTH = 20 * 1e6  # 15 MHz
+BANDWIDTH = 2.4 * 1e9  # 2.4 GHz
 NOISE_FLOOR = 1e-9
-COMMUNICATION_RANGE = 250
 SENSING_RANGE = 300
 
 # --------------------- mac layer parameters --------------------- #
@@ -64,4 +62,3 @@ CW_MIN = 16
 CW_MAX = 1024
 ACK_TIMEOUT = 1000  # maximum waiting time for ACK (0.1s)
 MAX_RETRANSMISSION_ATTEMPT = 5
-
