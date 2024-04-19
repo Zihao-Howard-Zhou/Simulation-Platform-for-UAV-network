@@ -33,7 +33,7 @@ class Simulator:
                  total_simulation_time=config.SIM_TIME):
 
         self.env = env
-
+        self.seed = seed
         self.total_simulation_time = total_simulation_time  # total simulation time (ns)
 
         self.n_drones = n_drones  # total number of drones in the simulation
@@ -55,7 +55,7 @@ class Simulator:
         self.drones = []
         for i in range(n_drones):
             print('UAV: ', i, ' initial location is at: ', start_position[i])
-            drone = Drone(env=env, node_id=i, coords=start_position[i], speed=50,
+            drone = Drone(env=env, node_id=i, coords=start_position[i], speed=100,
                           inbox=self.channel.create_store_for_receiver(), simulator=self)
             self.drones.append(drone)
 

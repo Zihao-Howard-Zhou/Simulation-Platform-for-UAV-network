@@ -13,6 +13,7 @@ from routing.qgeo.qgeo import QGeo
 from mac.csma_ca import CsmaCa
 from mobility.gauss_markov_3d import GaussMarkov3D
 from mobility.random_walk_3d import RandomWalk3D
+from mobility.random_waypoint_3d import RandomWaypoint3D
 from energy.energy_model import EnergyModel
 from utils import config
 from phy.large_scale_fading import sinr_calculator
@@ -107,7 +108,7 @@ class Drone:
 
         self.routing_protocol = Gpsr(self.simulator, self)
 
-        self.mobility_model = GaussMarkov3D(self)
+        self.mobility_model = RandomWaypoint3D(self)
 
         self.energy_model = EnergyModel()
         self.residual_energy = 20 * 1e3
