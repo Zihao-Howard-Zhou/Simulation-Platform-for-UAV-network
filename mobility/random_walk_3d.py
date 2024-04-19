@@ -65,7 +65,7 @@ class RandomWalk3D:
                 if type(next_position_x) is np.ndarray:
                     next_position_x = next_position_x[0]
                     next_position_y = next_position_y[0]
-                    next_velocity_z = next_position_z[0]
+                    next_position_z = next_position_z[0]
 
                 next_position = [next_position_x, next_position_y, next_position_z]
 
