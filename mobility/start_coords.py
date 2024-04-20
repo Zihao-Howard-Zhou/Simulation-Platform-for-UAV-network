@@ -13,3 +13,4 @@ def get_random_start_point_3d(sim_seed):
         start_position.append(tuple([position_x, position_y, position_z]))
 
     return start_position
+

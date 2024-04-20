@@ -16,7 +16,7 @@ class Packet:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/11
-    Updated at: 2024/1/16
+    Updated at: 2024/4/20
     """
 
     def __init__(self,
@@ -28,7 +28,7 @@ class Packet:
         self.packet_id = packet_id
         self.packet_length = packet_length
         self.creation_time = creation_time
-        # self.deadline = creation_time + config.PACKET_LIFETIME
+        self.deadline = config.PACKET_LIFETIME
         self.simulator = simulator
         self.__ttl = 0
         # self.__max_ttl = config.MAX_TTL
@@ -36,7 +36,7 @@ class Packet:
         self.number_retransmission_attempt = {}
 
         for drone in self.simulator.drones:
-            self.number_retransmission_attempt[drone.identifier] = 0
+            self.number_retransmission_attempt[drone.identifier] = 0  # initialization
 
         self.time_delivery = None
         self.time_transmitted_at_last_hop = 0
@@ -46,9 +46,6 @@ class Packet:
 
     def get_current_ttl(self):
         return self.__ttl
-
-    # def is_expired(self, current_time):
-    #     return current_time > self.deadline
 
 
 class DataPacket(Packet):
@@ -63,7 +60,7 @@ class DataPacket(Packet):
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/11
-    Updated at: 2024/1/16
+    Updated at: 2024/4/20
     """
 
     def __init__(self,
@@ -79,6 +76,7 @@ class DataPacket(Packet):
         self.dst_drone = dst_drone
 
         self.routing_path = None  # for centralized routing protocols
+        self.next_hop_id = None  # next hop for this data packet
         self.transmission_mode = None  # unicast or multicast or broadcast?
 
 

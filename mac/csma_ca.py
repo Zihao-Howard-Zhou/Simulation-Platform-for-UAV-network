@@ -37,11 +37,12 @@ class CsmaCa:
         env: simulation environment created by simpy
         phy: the installed physical layer
         channel_states:
+        enable_ack:
         wait_ack_process:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/11
-    Updated at: 2024/4/11
+    Updated at: 2024/4/20
     """
 
     def __init__(self, drone):
@@ -50,6 +51,7 @@ class CsmaCa:
         self.env = drone.env
         self.phy = Phy(self)
         self.channel_states = self.simulator.channel_states
+        self.enable_ack = True
 
         self.wait_ack_process_dict = dict()
         self.wait_ack_process_finish = dict()
@@ -65,13 +67,13 @@ class CsmaCa:
 
         transmission_mode = pkd.transmission_mode
 
-        if transmission_mode == 0:  # for unicast
-            # determine the next hop according to the routing protocol
-            next_hop_id = self.my_drone.routing_protocol.next_hop_selection(pkd)
-            logging.info('The next hop of the packet: %s at UAV: %s is: %s',
-                         pkd.packet_id, self.my_drone.identifier, next_hop_id)
-        else:  # for broadcast
-            next_hop_id = None
+        # if transmission_mode == 0:  # for unicast
+        #     # determine the next hop according to the routing protocol
+        #     next_hop_id = self.my_drone.routing_protocol.next_hop_selection(pkd)
+        #     logging.info('The next hop of the packet: %s at UAV: %s is: %s',
+        #                  pkd.packet_id, self.my_drone.identifier, next_hop_id)
+        # else:  # for broadcast
+        #     next_hop_id = None
 
         transmission_attempt = pkd.number_retransmission_attempt[self.my_drone.identifier]
         contention_window = min(config.CW_MIN * (2 ** transmission_attempt), config.CW_MAX)
@@ -109,11 +111,14 @@ class CsmaCa:
                         logging.info('UAV: %s start to wait ACK for packet: %s at time: %s',
                                      self.my_drone.identifier, pkd.packet_id, self.env.now)
 
-                        self.wait_ack_process_count += 1
-                        key2 = str(self.my_drone.identifier) + '_' + str(self.wait_ack_process_count)
-                        self.wait_ack_process = self.env.process(self.wait_ack(pkd))
-                        self.wait_ack_process_dict[key2] = self.wait_ack_process
-                        self.wait_ack_process_finish[key2] = 0
+                        next_hop_id = pkd.next_hop_id
+
+                        if self.enable_ack:
+                            self.wait_ack_process_count += 1
+                            key2 = str(self.my_drone.identifier) + '_' + str(self.wait_ack_process_count)
+                            self.wait_ack_process = self.env.process(self.wait_ack(pkd))
+                            self.wait_ack_process_dict[key2] = self.wait_ack_process
+                            self.wait_ack_process_finish[key2] = 0
 
                         yield self.env.process(self.phy.unicast(pkd, next_hop_id))
 

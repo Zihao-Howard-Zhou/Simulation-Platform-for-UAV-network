@@ -107,11 +107,14 @@ class Dsdv:
         :return: next hop drone
         """
 
+        has_route = True
+
         dst_drone = packet.dst_drone
 
         best_next_hop_id = self.routing_table.has_entry(dst_drone.identifier)
+        packet.next_hop_id = best_next_hop_id
 
-        return best_next_hop_id
+        return has_route, packet
 
     def packet_reception(self, packet, src_drone_id):
         """
@@ -137,7 +140,7 @@ class Dsdv:
                 self.simulator.metrics.datapacket_arrived.add(packet.packet_id)
                 logging.info('Packet: %s is received by destination UAV: %s', packet.packet_id, self.my_drone.identifier)
             else:
-                self.my_drone.fifo_queue.put(packet)
+                self.my_drone.transmitting_queue.put(packet)
 
             GL_ID_ACK_PACKET += 1
             src_drone = self.simulator.drones[src_drone_id]  # previous drone

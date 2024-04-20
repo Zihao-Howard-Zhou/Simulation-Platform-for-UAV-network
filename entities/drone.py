@@ -7,6 +7,7 @@ import queue
 from entities.packet import DataPacket
 from routing.dsdv.dsdv import Dsdv
 from routing.gpsr.gpsr import Gpsr
+from routing.grad.grad import Grad
 from routing.opar.opar import Opar
 from routing.parrot.parrot import Parrot
 from routing.qgeo.qgeo import QGeo
@@ -67,14 +68,14 @@ class Drone:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/11
-    Updated at: 2024/4/18
+    Updated at: 2024/4/20
     """
 
     def __init__(self,
                  env,
-                 node_id: int,
-                 coords: list,
-                 speed: float,
+                 node_id,
+                 coords,
+                 speed,
                  inbox,
                  simulator):
         self.simulator = simulator
@@ -99,34 +100,38 @@ class Drone:
         self.inbox = inbox
 
         self.buffer = simpy.Resource(env, capacity=1)
-        self.fifo_queue = queue.Queue()
+        self.transmitting_queue = queue.Queue()
+        self.waiting_list = []
 
         self.mac_protocol = CsmaCa(self)
         self.mac_process_dict = dict()
         self.mac_process_finish = dict()
         self.mac_process_count = 0
 
-        self.routing_protocol = Opar(self.simulator, self)
+        self.routing_protocol = Grad(self.simulator, self)
 
-        self.mobility_model = RandomWaypoint3D(self)
+        self.mobility_model = GaussMarkov3D(self)
 
         self.energy_model = EnergyModel()
-        self.residual_energy = 20 * 1e3
+        self.residual_energy = 50 * 1e3
         self.sleep = False
 
         if self.identifier != 0:
             self.env.process(self.generate_data_packet())
 
         self.env.process(self.feed_packet())
+        # self.env.process(self.check_waiting_queue())
         self.env.process(self.energy_monitor())
         self.env.process(self.receive())
 
     def generate_data_packet(self, traffic_pattern='Uniform'):
         """
-        Generate one data packet, it should be noted that only when the current packet has been sent can
-        the next packet be started
+        Generate one data packet, it should be noted that only when the current packet has been sent can the next
+        packet be started. When the drone generates a data packet, it will first put it into the "transmitting_queue",
+        the drone reads a data packet from the head of the queue every very short time through "feed_packet()" function.
+
         :param traffic_pattern: characterize the time interval between generating data packets
-        :return: None
+        :return: none
         """
 
         global GLOBAL_DATA_PACKET_ID
@@ -146,9 +151,10 @@ class Drone:
                 GLOBAL_DATA_PACKET_ID += 1  # packet id
 
                 # randomly choose a destination
-                all_candidate_list = [i for i in range(config.NUMBER_OF_DRONES)]
-                all_candidate_list.remove(self.identifier)
-                dst_id = random.choice(all_candidate_list)
+                # all_candidate_list = [i for i in range(config.NUMBER_OF_DRONES)]
+                # all_candidate_list.remove(self.identifier)
+                # dst_id = random.choice(all_candidate_list)
+                dst_id = 0
 
                 destination = self.simulator.drones[dst_id]  # obtain the destination drone
 
@@ -159,18 +165,87 @@ class Drone:
 
                 self.simulator.metrics.datapacket_generated_num += 1
 
-                logging.info('------> At time: %s, UAV: %s generates a data packet whose dst is: %s, and pkd id is: %s',
-                             self.env.now, self.identifier, destination.identifier, pkd.packet_id)
+                logging.info('------> At time: %s, UAV: %s generates a data packet (id: %s, dst: %s)',
+                             self.env.now, self.identifier, pkd.packet_id, destination.identifier)
 
-                yield self.env.process(self.packet_coming(pkd))  # unicast
+                # yield self.env.process(self.packet_coming(pkd))  # unicast
+                self.transmitting_queue.put(pkd)
             else:  # cannot generate packets if "my_drone" is in sleep state
                 break
 
+    def feed_packet(self):
+        """
+        Firstly, the data packets generated of received will be put into the "transmitting_queue", every very short
+        time, the drone will read the data packet in the head of the "transmitting_queue". Then the drone will check
+        if the data packet is expired (exceed its maximum lifetime in the network) or if the data packet exceeds its
+        maximum re-transmission attempts. If the above inspection passes, routing protocol is executed to determine
+        the next hop drone. If next hop is found, then this data packet is ready to transmit, otherwise, it will be put
+        into the "waiting_queue".
+
+        :return: none
+        """
+
+        while True:
+            if not self.sleep:  # if drone still has enough energy to relay packets
+                yield self.env.timeout(10)  # for speed up the simulation
+                if not self.transmitting_queue.empty():
+                    data_packet = self.transmitting_queue.get()  # get the packet at the head of the queue
+                    if self.env.now < data_packet.creation_time + data_packet.deadline:
+                        if data_packet.number_retransmission_attempt[self.identifier] < config.MAX_RETRANSMISSION_ATTEMPT:
+                            has_route, packet = self.routing_protocol.next_hop_selection(data_packet)
+
+                            if has_route:
+                                logging.info('At time: %s, UAV: %s determine the next hop of data packet (id: %s), '
+                                             'which is: %s, and this packet will wait buffer resource.',
+                                             self.env.now, self.identifier, data_packet.packet_id,
+                                             data_packet.next_hop_id)
+
+                                yield self.env.process(self.packet_coming(packet))
+                            else:
+                                logging.info('Unfortunately, at time: %s, UAV: %s cannot find appropriate next hop of '
+                                             'data packet (id: %s), and it will put the packet into waiting queue ',
+                                             self.env.now, self.identifier, data_packet.packet_id)
+
+                                self.waiting_list.append(data_packet)
+                                yield self.env.process(self.packet_coming(packet))
+                    else:
+                        pass  # means dropping this data packet for expiration
+            else:
+                break  # important to break the while loop
+
+    # def check_waiting_queue(self):
+    #     """
+    #     注意!!!!!!这里应该不能和feed_packet一样,因为feed packet每次都要routing selection,但是这样的话对于reactive protocol就会
+    #     频繁大量发request,这显然是没必要的,因为在这个data packet第一次被put到waiting queue的时候就已经发过request了,因此我们真正要做的
+    #     其实是被动触发,而不是主动定期check waiting queue,当无人机收到来自某个dst的Reply的时候，就立即check waiting queue中所有想要去
+    #     这个dst的packet,全部取出来加到transmitting queue中,这样就ok
+    #     :return:
+    #     """
+    #     while True:
+    #         if not self.sleep:
+    #             yield self.env.timeout(10)
+    #             if not self.waiting_queue.empty():
+    #                 data_packet = self.waiting_queue.get()
+    #                 if self.env.now < data_packet.creation_time + data_packet.deadline:
+    #                     has_route = self.routing_protocol.next_hop_selection(data_packet)
+    #
+    #                     if has_route:
+    #                         yield self.env.process(self.packet_coming(data_packet))
+    #                     else:
+    #                         self.waiting_queue.put(data_packet)
+    #                 else:
+    #                     pass  # means dropping this data packet for expiration
+    #         else:
+    #             break
+
     def packet_coming(self, pkd):
         """
-        When drone generates a packet or receives a data packet that is not bound for itself, yield it
+        When drone has a packet ready to transmit, yield it.
+        The requirement of "ready" is:
+        1) this packet is a control packet or 2) drone knows the next hop of the data packet
+
         :param pkd: packet that waits to enter the buffer of drone
-        :return: None
+        :return: none
         """
 
         if not self.sleep:
@@ -202,18 +277,6 @@ class Drone:
                 yield mac_process
         else:
             pass
-
-    def feed_packet(self):
-        while True:
-            if not self.sleep:  # if drone still has enough energy to relay packets
-                yield self.env.timeout(10)  # for speed up the simulation
-                if not self.fifo_queue.empty():
-                    data_packet = self.fifo_queue.get()
-                    if data_packet.number_retransmission_attempt[self.identifier] < config.MAX_RETRANSMISSION_ATTEMPT:
-
-                        yield self.env.process(self.packet_coming(data_packet))
-            else:
-                break
 
     def energy_monitor(self):
         while True:

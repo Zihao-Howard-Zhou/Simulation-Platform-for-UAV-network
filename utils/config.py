@@ -1,10 +1,10 @@
 import logging
 
 # --------------------- simulation parameters --------------------- #
-MAP_LENGTH = 1000  # m, length of the map
-MAP_WIDTH = 1000  # m, width of the map
-MAP_HEIGHT = 120  # m, height of the map
-SIM_TIME = 15 * 1e6  # us, total simulation time (10s)
+MAP_LENGTH = 500  # m, length of the map
+MAP_WIDTH = 500  # m, width of the map
+MAP_HEIGHT = 50  # m, height of the map 120
+SIM_TIME = 10 * 1e6  # us, total simulation time (10s)
 NUMBER_OF_DRONES = 20  # number of drones in the network
 STATIC_CASE = 0
 LOGGING_LEVEL = logging.INFO
@@ -33,7 +33,7 @@ RADIO_SENSITIVITY = 1e-10  # power under which signal is not sensed
 
 # ---------------------- packet parameters ----------------------- #
 MAX_TTL = 15
-PACKET_LIFETIME = 10*1e6
+PACKET_LIFETIME = 5*1e6  # 5s
 PACKET_HEADER_LENGTH = 128  # bit
 DATA_PACKET_PAYLOAD_LENGTH = 1024*8  # bit
 DATA_PACKET_LENGTH = PACKET_HEADER_LENGTH + DATA_PACKET_PAYLOAD_LENGTH
