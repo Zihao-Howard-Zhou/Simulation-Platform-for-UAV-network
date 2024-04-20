@@ -26,6 +26,7 @@ You can even ```run main.py``` directly with one click to get a sneak peek. But 
 <img src="https://github.com/ZihaoZhouSCUT/Simulation-Platform-for-UAV-network/blob/master/img/structure.png" width="800px">
 </div>
 
+## Core logic
 <div align="center">
 <img src="https://github.com/ZihaoZhouSCUT/Simulation-Platform-for-UAV-network/blob/master/img/transmiting_procedure.png" width="800px">
 </div>
