@@ -213,31 +213,6 @@ class Drone:
             else:
                 break  # important to break the while loop
 
-    # def check_waiting_queue(self):
-    #     """
-    #     注意!!!!!!这里应该不能和feed_packet一样,因为feed packet每次都要routing selection,但是这样的话对于reactive protocol就会
-    #     频繁大量发request,这显然是没必要的,因为在这个data packet第一次被put到waiting queue的时候就已经发过request了,因此我们真正要做的
-    #     其实是被动触发,而不是主动定期check waiting queue,当无人机收到来自某个dst的Reply的时候，就立即check waiting queue中所有想要去
-    #     这个dst的packet,全部取出来加到transmitting queue中,这样就ok
-    #     :return:
-    #     """
-    #     while True:
-    #         if not self.sleep:
-    #             yield self.env.timeout(10)
-    #             if not self.waiting_queue.empty():
-    #                 data_packet = self.waiting_queue.get()
-    #                 if self.env.now < data_packet.creation_time + data_packet.deadline:
-    #                     has_route = self.routing_protocol.next_hop_selection(data_packet)
-    #
-    #                     if has_route:
-    #                         yield self.env.process(self.packet_coming(data_packet))
-    #                     else:
-    #                         self.waiting_queue.put(data_packet)
-    #                 else:
-    #                     pass  # means dropping this data packet for expiration
-    #         else:
-    #             break
-
     def packet_coming(self, pkd):
         """
         When drone has a packet ready to transmit, yield it.
