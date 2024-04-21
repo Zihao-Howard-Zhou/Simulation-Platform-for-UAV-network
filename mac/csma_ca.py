@@ -15,34 +15,32 @@ logging.basicConfig(filename='running_log.log',
 
 class CsmaCa:
     """
-    Medium access control protocol: CSMA/CA (Carrier Sense Multiple Access With Collision Avoidance)
+    Medium access control protocol: CSMA/CA (Carrier Sense Multiple Access With Collision Avoidance) without RTS/CTS
 
-    The basic flow of the CSMA/CA protocol is as follows:
-        1. When a node has a data packet to send, it first needs to wait until the channel is idle
-        2. When the channel is idle, the node starts a timer and waits for "DIFS+backoff" periods of time
-        3. If the entire decrement of the timer to 0 is not interrupted, then the node can occupy the channel and start
+    The basic flow of the CSMA/CA (without RTS/CTS) is as follows:
+        1) when a node has a packet to send, it first needs to wait until the channel is idle
+        2) when the channel is idle, the node starts a timer and waits for "DIFS+backoff" periods of time, where the
+           length of backoff is related to the number of re-transmissions
+        3) if the entire decrement of the timer to 0 is not interrupted, then the node can occupy the channel and start
            sending the data packet
-        4. If the countdown is interrupted, it means that the node loses the game. The node should freeze the timer and
-           wait for channel idle again before starting its timer
-        5. The size of the contention window changes with the number of re-transmissions
+        4) if the countdown is interrupted, it means that the node loses the game. The node should freeze the timer and
+           wait for channel idle again before re-starting its timer
 
-    Notes:
-        1. When the next hop is determined according to the routing table or sth else, due to the backoff operation of
-           CSMA/CA, the next hop may be out of the communication range when the packet can actually be sent
-        2. Interrupting process and interrupted process need to correspond one to one
-
-    Attributes:
+    Main attributes:
         my_drone: the drone that installed the CSMA/CA protocol
         simulator: the simulation platform that contains everything
         env: simulation environment created by simpy
         phy: the installed physical layer
-        channel_states:
-        enable_ack:
-        wait_ack_process:
+        channel_states: used to determine if the channel is idle
+        enable_ack: use ack or not
+
+    References:
+        [1] J. Li, et al., "Packet Delay in UAV Wireless Networks Under Non-saturated Traffic and Channel Fading
+            Conditions," Wireless Personal Communications, vol. 72, no. 2, pp. 1105-1123, 2013,
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/11
-    Updated at: 2024/4/20
+    Updated at: 2024/4/21
     """
 
     def __init__(self, drone):
@@ -62,18 +60,8 @@ class CsmaCa:
         """
         Control when drone can send packet
         :param pkd: the packet that needs to send
-        :return: None
+        :return: none
         """
-
-        transmission_mode = pkd.transmission_mode
-
-        # if transmission_mode == 0:  # for unicast
-        #     # determine the next hop according to the routing protocol
-        #     next_hop_id = self.my_drone.routing_protocol.next_hop_selection(pkd)
-        #     logging.info('The next hop of the packet: %s at UAV: %s is: %s',
-        #                  pkd.packet_id, self.my_drone.identifier, next_hop_id)
-        # else:  # for broadcast
-        #     next_hop_id = None
 
         transmission_attempt = pkd.number_retransmission_attempt[self.my_drone.identifier]
         contention_window = min(config.CW_MIN * (2 ** transmission_attempt), config.CW_MAX)
@@ -144,7 +132,7 @@ class CsmaCa:
         If ACK is received within the specified time, the transmission is successful, otherwise,
         a re-transmission will be originated
         :param pkd: the data packet that waits for ACK
-        :return: None
+        :return: none
         """
 
         try:
@@ -170,7 +158,7 @@ class CsmaCa:
         Wait until the channel becomes idle
         :param sender_drone: the drone that is about to send packet
         :param drones: a list, which contains all the drones in the simulation
-        :return:
+        :return: none
         """
 
         while not check_channel_availability(self.channel_states, sender_drone, drones):
@@ -183,7 +171,7 @@ class CsmaCa:
         countdown process should be interrupted
         :param channel_states: a dictionary, indicates the use of the channel by different drones
         :param drones: a list, contains all drones in the simulation
-        :return: None
+        :return: none
         """
 
         logging.info('At time: %s, UAV: %s starts to listen the channel and perform backoff',
