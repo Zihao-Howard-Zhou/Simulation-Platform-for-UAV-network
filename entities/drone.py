@@ -33,11 +33,10 @@ class Drone:
     """
     Drone implementation
 
-    Drones in the simulation are served as routers. Every drone can be selected as a potential source node, destination and
+    Drones in the simulation are served as routers. Each drone can be selected as a potential source node, destination and
     relaying node. Each drone needs to install the corresponding routing module, MAC module, mobility module and energy
-    module, etc. At the same time, each drone also has its own queue and can only send one data packet in the queue at
-    a time, so subsequent data packets need queuing for queue resources, which is used to reflect the queue delay in the
-    drone network
+    module, etc. At the same time, each drone also has its own queue and can only send one packet at a time, so
+    subsequent data packets need queuing for queue resources, which is used to reflect the queue delay in the drone network
 
     Attributes:
         simulator: the simulation platform that contains everything
@@ -108,7 +107,7 @@ class Drone:
         self.mac_process_finish = dict()
         self.mac_process_count = 0
 
-        self.routing_protocol = Grad(self.simulator, self)
+        self.routing_protocol = Gpsr(self.simulator, self)
 
         self.mobility_model = GaussMarkov3D(self)
 
@@ -296,7 +295,7 @@ class Drone:
 
                             if previous_drone.identifier is which_one:
                                 logging.info('Packet %s (sending to channel at: %s) from UAV: %s is received '
-                                             'by UAV: %s at time: %s',msg[0], msg[1], msg[2],
+                                             'by UAV: %s at time: %s', msg[0], msg[1], msg[2],
                                              self.identifier, self.simulator.env.now)
                                 yield self.env.process(self.routing_protocol.packet_reception(msg[0], msg[2]))
                     else:  # sinr is lower than threshold
