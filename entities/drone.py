@@ -68,7 +68,7 @@ class Drone:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/11
-    Updated at: 2024/4/20
+    Updated at: 2024/4/21
     """
 
     def __init__(self,
@@ -175,12 +175,15 @@ class Drone:
 
     def feed_packet(self):
         """
-        Firstly, the data packets generated of received will be put into the "transmitting_queue", every very short
-        time, the drone will read the data packet in the head of the "transmitting_queue". Then the drone will check
-        if the data packet is expired (exceed its maximum lifetime in the network) or if the data packet exceeds its
-        maximum re-transmission attempts. If the above inspection passes, routing protocol is executed to determine
-        the next hop drone. If next hop is found, then this data packet is ready to transmit, otherwise, it will be put
-        into the "waiting_queue".
+        It should be noted that this function is designed for those packets which need to compete for wireless channel
+
+        Firstly, all packets received or generated will be put into the "transmitting_queue", every very short
+        time, the drone will read the packet in the head of the "transmitting_queue". Then the drone will check
+        if the packet is expired (exceed its maximum lifetime in the network), check the type of packet:
+        1) data packet: check if the data packet exceeds its maximum re-transmission attempts. If the above inspection
+           passes, routing protocol is executed to determine the next hop drone. If next hop is found, then this data
+           packet is ready to transmit, otherwise, it will be put into the "waiting_queue".
+        2) control packet: no need to determine next hop, so it will directly start waiting for buffer
 
         :return: none
         """
@@ -189,25 +192,30 @@ class Drone:
             if not self.sleep:  # if drone still has enough energy to relay packets
                 yield self.env.timeout(10)  # for speed up the simulation
                 if not self.transmitting_queue.empty():
-                    data_packet = self.transmitting_queue.get()  # get the packet at the head of the queue
-                    if self.env.now < data_packet.creation_time + data_packet.deadline:
-                        if data_packet.number_retransmission_attempt[self.identifier] < config.MAX_RETRANSMISSION_ATTEMPT:
-                            has_route, packet = self.routing_protocol.next_hop_selection(data_packet)
+                    packet = self.transmitting_queue.get()  # get the packet at the head of the queue
 
-                            if has_route:
-                                logging.info('At time: %s, UAV: %s determine the next hop of data packet (id: %s), '
-                                             'which is: %s, and this packet will wait buffer resource.',
-                                             self.env.now, self.identifier, data_packet.packet_id,
-                                             data_packet.next_hop_id)
+                    if self.env.now < packet.creation_time + packet.deadline:
+                        if isinstance(packet, DataPacket):
+                            if packet.number_retransmission_attempt[self.identifier] < config.MAX_RETRANSMISSION_ATTEMPT:
+                                # it should be noted that "final_packet" may be the data packet itself or may be a control
+                                # packet, depending on whether the routing protocol can find an appropriate next hop
+                                has_route, final_packet = self.routing_protocol.next_hop_selection(packet)
 
-                                yield self.env.process(self.packet_coming(packet))
-                            else:
-                                logging.info('Unfortunately, at time: %s, UAV: %s cannot find appropriate next hop of '
-                                             'data packet (id: %s), and it will put the packet into waiting queue ',
-                                             self.env.now, self.identifier, data_packet.packet_id)
+                                if has_route:
+                                    logging.info('At time: %s, UAV: %s obtain the next hop of data packet (id: %s), '
+                                                 'which is: %s, and this packet will wait buffer resource.',
+                                                 self.env.now, self.identifier, packet.packet_id, packet.next_hop_id)
 
-                                self.waiting_list.append(data_packet)
-                                yield self.env.process(self.packet_coming(packet))
+                                    yield self.env.process(self.packet_coming(final_packet))  # actually the data packet
+                                else:
+                                    logging.info('Unfortunately, at time: %s, UAV: %s cannot find appropriate next ' 
+                                        'hop of data packet (id: %s), and it will put the packet into waiting queue.',
+                                        self.env.now, self.identifier, packet.packet_id)
+
+                                    self.waiting_list.append(packet)
+                                    yield self.env.process(self.packet_coming(final_packet))  # actually the control packet
+                        else:  # control packet but not ack
+                            yield self.env.process(self.packet_coming(packet))
                     else:
                         pass  # means dropping this data packet for expiration
             else:
