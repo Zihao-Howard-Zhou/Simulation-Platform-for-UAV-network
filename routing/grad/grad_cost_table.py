@@ -35,7 +35,7 @@ class GradCostTable:
         self.env = env
         self.my_drone = my_drone
         self.cost_table = defaultdict(list)
-        self.entry_life_time = 8 * 1e6  # unit: us (5s)
+        self.entry_life_time = 2 * 1e6  # unit: us (2s)
 
     # determine if the cost table is empty
     def is_empty(self):

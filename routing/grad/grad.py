@@ -128,7 +128,8 @@ class Grad:
 
                     grad_message.transmission_mode = 1  # broadcast
                     self.simulator.metrics.control_packet_num += 1
-                    yield self.simulator.env.process(self.my_drone.packet_coming(grad_message))
+
+                    self.my_drone.transmitting_queue.put(grad_message)
 
                 else:
                     logging.info('At time: %s, UAV: %s receives a REQUEST message from UAV: %s',
@@ -139,7 +140,7 @@ class Grad:
                             self.flag[packet_copy.packet_id] = 1  # mark as "already broadcast"
 
                             self.simulator.metrics.control_packet_num += 1
-                            yield self.simulator.env.process(self.my_drone.packet_coming(packet_copy))
+                            self.my_drone.transmitting_queue.put(packet_copy)
 
             elif msg_type == "M_DATA":
                 data_packet = packet_copy.attached_data_packet
@@ -157,7 +158,7 @@ class Grad:
                                 logging.info('At time: %s, UAV: %s further forward the data packet',
                                              self.simulator.env.now, self.my_drone.identifier)
 
-                                yield self.simulator.env.process(self.my_drone.packet_coming(packet_copy))
+                                self.my_drone.transmitting_queue.put(packet_copy)
                         else:
                             pass
                     else:
@@ -180,7 +181,8 @@ class Grad:
                             est_cost = self.cost_table.get_est_cost(target.identifier)
                             if est_cost <= packet_copy.remaining_value:
                                 self.simulator.metrics.control_packet_num += 1
-                                yield self.simulator.env.process(self.my_drone.packet_coming(packet_copy))
+
+                                self.my_drone.transmitting_queue.put(packet_copy)
                         else:
                             pass
                     else:
@@ -188,3 +190,5 @@ class Grad:
 
         else:
             logging.warning('Unknown message type!')
+
+        yield self.simulator.env.timeout(1)

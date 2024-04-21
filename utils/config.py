@@ -1,11 +1,11 @@
 import logging
 
 # --------------------- simulation parameters --------------------- #
-MAP_LENGTH = 500  # m, length of the map
-MAP_WIDTH = 500  # m, width of the map
-MAP_HEIGHT = 50  # m, height of the map 120
-SIM_TIME = 10 * 1e6  # us, total simulation time (10s)
-NUMBER_OF_DRONES = 20  # number of drones in the network
+MAP_LENGTH = 1000  # m, length of the map
+MAP_WIDTH = 1000  # m, width of the map
+MAP_HEIGHT = 120  # m, height of the map 120
+SIM_TIME = 15 * 1e6  # us, total simulation time (10s)
+NUMBER_OF_DRONES = 15  # number of drones in the network
 STATIC_CASE = 0
 LOGGING_LEVEL = logging.INFO
 
@@ -45,9 +45,9 @@ HELLO_PACKET_PAYLOAD_LENGTH = 256  # bit
 HELLO_PACKET_LENGTH = HELLO_PACKET_HEADER_LENGTH + HELLO_PACKET_PAYLOAD_LENGTH
 
 # ------------------ physical layer parameters ------------------- #
-BIT_RATE = 15 * 1e6  # 15 Mbit/s
+BIT_RATE = 54 * 1e6  # 54 Mbit/s
 BIT_TRANSMISSION_TIME = 1/BIT_RATE * 1e6
-BANDWIDTH = 2.4 * 1e9  # 2.4 GHz
+BANDWIDTH = 20 * 1e6  # 20 MHz
 NOISE_FLOOR = 1e-9
 SENSING_RANGE = 300
 
@@ -60,5 +60,5 @@ MAX_MAC_PAYLOAD_LENGTH = 2312*8
 ACK_LENGTH = MAC_HEADER_LENGTH
 CW_MIN = 16
 CW_MAX = 1024
-ACK_TIMEOUT = 1000  # maximum waiting time for ACK (0.1s)
+ACK_TIMEOUT = 1 * 1e3  # maximum waiting time for ACK (1ms)
 MAX_RETRANSMISSION_ATTEMPT = 5

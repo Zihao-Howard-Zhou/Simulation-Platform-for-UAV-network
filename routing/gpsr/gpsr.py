@@ -58,11 +58,12 @@ class Gpsr:
                      self.simulator.env.now, self.my_drone.identifier)
 
         self.simulator.metrics.control_packet_num += 1
-        yield self.simulator.env.process(my_drone.packet_coming(hello_pkd))
+        self.my_drone.transmitting_queue.put(hello_pkd)
 
     def broadcast_hello_packet_periodically(self):
         while True:
-            self.simulator.env.process(self.broadcast_hello_packet(self.my_drone))
+            # self.simulator.env.process(self.broadcast_hello_packet(self.my_drone))
+            self.broadcast_hello_packet(self.my_drone)
             jitter = random.randint(1000, 2000)  # delay jitter
             yield self.simulator.env.timeout(self.hello_interval+jitter)
 
