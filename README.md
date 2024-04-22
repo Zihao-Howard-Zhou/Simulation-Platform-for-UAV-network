@@ -1,4 +1,8 @@
 <div align="center">
+<img src="https://github.com/ZihaoZhouSCUT/Simulation-Platform-for-UAV-network/blob/master/img/logo.png" width="300px">
+</div>
+
+<div align="center">
   <h1>Simulation Platform for UAV network</h1>
 
   <img src="https://img.shields.io/badge/Github-%40ZihaoZhouSCUT-blue" height="20">
