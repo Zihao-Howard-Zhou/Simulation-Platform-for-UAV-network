@@ -12,6 +12,7 @@ from routing.opar.opar import Opar
 from routing.parrot.parrot import Parrot
 from routing.qgeo.qgeo import QGeo
 from mac.csma_ca import CsmaCa
+from mac.pure_aloha import PureAloha
 from mobility.gauss_markov_3d import GaussMarkov3D
 from mobility.random_walk_3d import RandomWalk3D
 from mobility.random_waypoint_3d import RandomWaypoint3D
@@ -105,7 +106,7 @@ class Drone:
         self.transmitting_queue = queue.Queue()
         self.waiting_list = []
 
-        self.mac_protocol = CsmaCa(self)
+        self.mac_protocol = PureAloha(self)
         self.mac_process_dict = dict()
         self.mac_process_finish = dict()
         self.mac_process_count = 0

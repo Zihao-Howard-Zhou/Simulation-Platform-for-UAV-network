@@ -132,6 +132,7 @@ class Gpsr:
             key2 = str(self.my_drone.identifier) + '_' + str(self.my_drone.mac_protocol.wait_ack_process_count)
 
             if self.my_drone.mac_protocol.wait_ack_process_finish[key2] == 0:
-                logging.info('At time: %s, the wait_ack process (id: %s) of UAV: %s is interrupted by UAV: %s',
-                             self.simulator.env.now, key2, self.my_drone.identifier, src_drone_id)
-                self.my_drone.mac_protocol.wait_ack_process_dict[key2].interrupt()
+                if not self.my_drone.mac_protocol.wait_ack_process_dict[key2].triggered:
+                    logging.info('At time: %s, the wait_ack process (id: %s) of UAV: %s is interrupted by UAV: %s',
+                                 self.simulator.env.now, key2, self.my_drone.identifier, src_drone_id)
+                    self.my_drone.mac_protocol.wait_ack_process_dict[key2].interrupt()
