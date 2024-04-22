@@ -50,24 +50,27 @@ class Drone:
         direction_mean: mean direction
         pitch_mean: mean pitch
         velocity_mean: mean velocity
-        inbox: a "Store" in simpy, used to collect the packets from other drones
+        inbox: a "Store" in simpy, used to receive the packets from other drones (calculate SINR)
         buffer: used to describe the queuing delay of sending packet
-        fifo_queue: when the next hop node receives the packet, it should first temporarily store the packet in
-                    "fifo_queue" instead of immediately yield "packet_coming" process. It can prevent the buffer
+        transmitting_queue: when the next hop node receives the packet, it should first temporarily store the packet in
+                    "transmitting_queue" instead of immediately yield "packet_coming" process. It can prevent the buffer
                     resource of the previous hop node from being occupied all the time
+        waiting_list: for reactive routing protocol, if there is no available next hop, it will put the data packet into
+                      "waiting_list". Once the routing information bound for a destination is obtained, drone will get
+                      the data packets related to this destination, and put them into "transmitting_queue"
         mac_protocol: installed mac protocol (CSMA/CA, ALOHA, etc.)
-        mac_process_dict: a dictionary, used to store the mac_process that is triggered each time
+        mac_process_dict: a dictionary, used to store the mac_process that is launched each time
         mac_process_finish: a dictionary, used to indicate the completion of the process
-        mac_process_count: used to distinguish between different processes
-        routing_protocol: installed routing protocol (GPSR, DSDV, etc.)
-        mobility_model: installed mobility model (3-D Gauss-markov, random waypoint, etc.)
-        energy_model: installed energy consumption model
+        mac_process_count: used to distinguish between different "mac_send" processes
+        routing_protocol: routing protocol installed (GPSR, DSDV, etc.)
+        mobility_model: mobility model installed (3-D Gauss-markov, 3-D random waypoint, etc.)
+        energy_model: energy consumption model installed
         residual_energy: the residual energy of drone in Joule
         sleep: if the drone is in a "sleep" state, it cannot perform packet sending and receiving operations.
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/11
-    Updated at: 2024/4/21
+    Updated at: 2024/4/22
     """
 
     def __init__(self,
@@ -112,14 +115,13 @@ class Drone:
         self.mobility_model = GaussMarkov3D(self)
 
         self.energy_model = EnergyModel()
-        self.residual_energy = 50 * 1e3
+        self.residual_energy = config.INITIAL_ENERGY
         self.sleep = False
 
         if self.identifier != 0:
             self.env.process(self.generate_data_packet())
 
         self.env.process(self.feed_packet())
-        # self.env.process(self.check_waiting_queue())
         self.env.process(self.energy_monitor())
         self.env.process(self.receive())
 
@@ -263,7 +265,7 @@ class Drone:
     def energy_monitor(self):
         while True:
             yield self.env.timeout(1*1e5)  # report residual energy every 0.1s
-            if self.residual_energy <= 2000:
+            if self.residual_energy <= config.ENERGY_THRESHOLD:
                 self.sleep = True
                 # print('UAV: ', self.identifier, ' run out of energy at: ', self.env.now)
 
