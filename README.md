@@ -1,5 +1,5 @@
 <div align="center">
-<img src="https://github.com/ZihaoZhouSCUT/Simulation-Platform-for-UAV-network/blob/master/img/logo.png" width="150px">
+<img src="https://github.com/ZihaoZhouSCUT/Simulation-Platform-for-UAV-network/blob/master/img/logo.png" width="200px">
 </div>
 
 <div align="center">
