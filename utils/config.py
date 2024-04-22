@@ -21,6 +21,8 @@ AIRCRAFT_WEIGHT = 100  # Newton
 ROTOR_BLADE_TIP_SPEED = 500
 MEAN_ROTOR_VELOCITY = 7.2  # mean rotor induced velocity in hover
 FUSELAGE_DRAG_RATIO = 0.3
+INITIAL_ENERGY = 50 * 1e3  # in joule
+ENERGY_THRESHOLD = 2000  # in joule
 
 # ----------------------- radio parameters ----------------------- #
 TRANSMITTING_POWER = 1  # Watt
