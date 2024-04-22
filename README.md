@@ -3,7 +3,7 @@
 </div>
 
 <div align="center">
-  <h1>Simulation Platform for UAV network</h1>
+  <h1>Simulation Platform for Flying Ad-hoc Networks</h1>
 
   <img src="https://img.shields.io/badge/Github-%40ZihaoZhouSCUT-blue" height="20">
   <img src="https://img.shields.io/badge/Contribution-Welcome-yellowgreen" height="20">
