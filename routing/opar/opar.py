@@ -98,7 +98,7 @@ class Opar:
                 drone1 = self.simulator.drones[min_distance_node]
                 drone2 = self.simulator.drones[j]
 
-                if (visited_list[j] is False) and (cost[min_distance_node, j] != np.inf):
+                if (visited_list[j] is False) and (cost[min_distance_node, j] != np.inf):  # has edge and not visited
                     delta_temp = link_lifetime_predictor(drone1, drone2, self.max_comm_range)
 
                     if delta_temp <= minimum_link_lifetime:
