@@ -4,8 +4,8 @@ import logging
 MAP_LENGTH = 1000  # m, length of the map
 MAP_WIDTH = 1000  # m, width of the map
 MAP_HEIGHT = 120  # m, height of the map 120
-SIM_TIME = 15 * 1e6  # us, total simulation time (10s)
-NUMBER_OF_DRONES = 25  # number of drones in the network
+SIM_TIME = 10 * 1e6  # us, total simulation time (10s)
+NUMBER_OF_DRONES = 20  # number of drones in the network
 STATIC_CASE = 0
 LOGGING_LEVEL = logging.INFO
 
@@ -21,14 +21,14 @@ AIRCRAFT_WEIGHT = 100  # Newton
 ROTOR_BLADE_TIP_SPEED = 500
 MEAN_ROTOR_VELOCITY = 7.2  # mean rotor induced velocity in hover
 FUSELAGE_DRAG_RATIO = 0.3
-INITIAL_ENERGY = 50 * 1e3  # in joule
+INITIAL_ENERGY = 50 * 1e4  # in joule
 ENERGY_THRESHOLD = 2000  # in joule
 
 # ----------------------- radio parameters ----------------------- #
 TRANSMITTING_POWER = 1  # Watt
 LIGHT_SPEED = 3*1e8  # light speed (m/s)
 CARRIER_FREQUENCY = 1*1e9  # carrier frequency (Hz)
-NOISE_POWER = 4*1e-9  # noise power (Watt)
+NOISE_POWER = 4*1e-11  # noise power (Watt)
 RADIO_SWITCHING_TIME = 100  # us, the switching time of the transceiver mode
 SNR_THRESHOLD = 2  # dB
 RADIO_SENSITIVITY = 1e-10  # power under which signal is not sensed
@@ -50,8 +50,7 @@ HELLO_PACKET_LENGTH = HELLO_PACKET_HEADER_LENGTH + HELLO_PACKET_PAYLOAD_LENGTH
 BIT_RATE = 54 * 1e6  # 54 Mbit/s
 BIT_TRANSMISSION_TIME = 1/BIT_RATE * 1e6
 BANDWIDTH = 20 * 1e6  # 20 MHz
-NOISE_FLOOR = 1e-9
-SENSING_RANGE = 300
+SENSING_RANGE = 750
 
 # --------------------- mac layer parameters --------------------- #
 SLOT_DURATION = 50  # 50 microseconds, 802.11g 2.4 GHz

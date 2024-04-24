@@ -28,6 +28,7 @@ def sinr_calculator(my_drone, main_drones_list, all_transmitting_drones_list):
     sinr_list = []  # record the sinr of all transmitter
     receiver = my_drone
 
+    logging.info('Main node list: %s', main_drones_list)
     for transmitter_id in main_drones_list:
         transmitter = simulator.drones[transmitter_id]
         interference_list = all_transmitting_drones_list[:]
@@ -40,8 +41,17 @@ def sinr_calculator(my_drone, main_drones_list, all_transmitting_drones_list):
         if len(interference_list) != 0:
             for interference_id in interference_list:
                 interference = simulator.drones[interference_id]
+
+                logging.info('Main node is: %s, interference node is: %s, distance between them is: %s, main link' 
+                             ' distance is: %s, interference link distance is: %s',
+                             transmitter_id, interference_id, euclidean_distance(transmitter.coords, interference.coords),
+                             euclidean_distance(transmitter.coords, receiver.coords),
+                             euclidean_distance(interference.coords, receiver.coords))
+
                 interference_link_path_loss = general_path_loss(receiver, interference)
                 interference_power += transmit_power * interference_link_path_loss
+        else:
+            logging.info('No interference')
 
         sinr = 10 * math.log10(receive_power / (noise_power + interference_power))
         sinr_list.append(sinr)

@@ -40,7 +40,7 @@ class CsmaCa:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/11
-    Updated at: 2024/4/21
+    Updated at: 2024/4/23
     """
 
     def __init__(self, drone):
@@ -108,10 +108,15 @@ class CsmaCa:
                             self.wait_ack_process_dict[key2] = self.wait_ack_process
                             self.wait_ack_process_finish[key2] = 0
 
-                        yield self.env.process(self.phy.unicast(pkd, next_hop_id))
+                        # yield self.env.process(self.phy.unicast(pkd, next_hop_id))
+                        self.phy.unicast(pkd, next_hop_id)
+                        yield self.env.timeout(pkd.packet_length / config.BIT_RATE * 1e6)
 
                     elif transmission_mode == 1:
-                        yield self.env.process(self.phy.broadcast(pkd))
+                        # yield self.env.process(self.phy.broadcast(pkd))
+                        self.phy.broadcast(pkd)
+                        yield self.env.timeout(pkd.packet_length / config.BIT_RATE * 1e6)
+
             except simpy.Interrupt:
                 already_wait = self.env.now - start_time
                 logging.info('UAV: %s was interrupted at: %s, already waits for: %s, original to_wait is: %s',

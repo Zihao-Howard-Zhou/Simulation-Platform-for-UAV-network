@@ -36,6 +36,8 @@ class Metrics:
         self.delivery_time = []
         self.deliver_time_dict = defaultdict()
 
+        self.collision_num = 0
+
     def print_metrics(self):
         # calculate the average end-to-end delay
         for key in self.deliver_time_dict.keys():
@@ -51,3 +53,4 @@ class Metrics:
         print('PDR is: ', pdr, ' %')
         print('Average end-to-end delay is: ', e2e_delay, ' ms')
         print('Routing load is: ', rl)
+        print('Collisiion num is: ', self.collision_num)

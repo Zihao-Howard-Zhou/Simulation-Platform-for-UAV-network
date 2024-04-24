@@ -30,7 +30,7 @@ class Phy:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/11
-    Updated at: 2024/4/08
+    Updated at: 2024/4/23
     """
 
     def __init__(self, mac):
@@ -47,15 +47,12 @@ class Phy:
         :return: none
         """
 
-        # a transmission delay should be considered
-        yield self.env.timeout(packet.packet_length / config.BIT_RATE * 1e6)
-
         # energy consumption
         energy_consumption = (packet.packet_length / config.BIT_RATE) * config.TRANSMITTING_POWER
         self.my_drone.residual_energy -= energy_consumption
 
         # transmit through the channel
-        message = (packet, self.env.now, self.my_drone.identifier)
+        message = [packet, self.env.now, self.my_drone.identifier, 0]
 
         self.my_drone.simulator.channel.unicast_put(message, next_hop_id)
 
@@ -66,15 +63,12 @@ class Phy:
         :return: none
         """
 
-        # a transmission delay should be considered
-        yield self.env.timeout(packet.packet_length / config.BIT_RATE * 1e6)
-
         # energy consumption
         energy_consumption = (packet.packet_length / config.BIT_RATE) * config.TRANSMITTING_POWER
         self.my_drone.residual_energy -= energy_consumption
 
         # transmit through the channel
-        message = (packet, self.env.now, self.my_drone.identifier)
+        message = [packet, self.env.now, self.my_drone.identifier, 0]
 
         self.my_drone.simulator.channel.broadcast_put(message)
 
@@ -94,6 +88,6 @@ class Phy:
         self.my_drone.residual_energy -= energy_consumption
 
         # transmit through the channel
-        message = (packet, self.env.now, self.my_drone.identifier)
+        message = [packet, self.env.now, self.my_drone.identifier]
 
         self.my_drone.simulator.channel.multicast_put(message, dst_id_list)

@@ -18,6 +18,7 @@ from mobility.random_walk_3d import RandomWalk3D
 from mobility.random_waypoint_3d import RandomWaypoint3D
 from energy.energy_model import EnergyModel
 from utils import config
+from utils.util_function import has_intersection
 from phy.large_scale_fading import sinr_calculator
 
 # config logging
@@ -71,7 +72,7 @@ class Drone:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/11
-    Updated at: 2024/4/22
+    Updated at: 2024/4/24
     """
 
     def __init__(self,
@@ -111,7 +112,7 @@ class Drone:
         self.mac_process_finish = dict()
         self.mac_process_count = 0
 
-        self.routing_protocol = Gpsr(self.simulator, self)
+        self.routing_protocol = Dsdv(self.simulator, self)
 
         self.mobility_model = GaussMarkov3D(self)
 
@@ -131,7 +132,6 @@ class Drone:
         Generate one data packet, it should be noted that only when the current packet has been sent can the next
         packet be started. When the drone generates a data packet, it will first put it into the "transmitting_queue",
         the drone reads a data packet from the head of the queue every very short time through "feed_packet()" function.
-
         :param traffic_pattern: characterize the time interval between generating data packets
         :return: none
         """
@@ -170,7 +170,6 @@ class Drone:
                 logging.info('------> At time: %s, UAV: %s generates a data packet (id: %s, dst: %s)',
                              self.env.now, self.identifier, pkd.packet_id, destination.identifier)
 
-                # yield self.env.process(self.packet_coming(pkd))  # unicast
                 self.transmitting_queue.put(pkd)
             else:  # cannot generate packets if "my_drone" is in sleep state
                 break
@@ -273,38 +272,85 @@ class Drone:
     def receive(self):
         while True:
             if not self.sleep:
-                if self.inbox.items:  # non-empty list means that someone wants to transmit packet to me
-                    # get the list of all drones currently transmitting packets
+                # delete packets that have been processed and do not interfere with
+                # the transmission and reception of all current packets
+                self.update_inbox()
+
+                flag = 0  # used to indicate if I receive a complete packet
+                all_drones_send_to_me = []
+                time_span = []
+                potential_packet = []
+                for item in self.inbox:
+                    packet = item[0]
+                    insertion_time = item[1]
+                    transmitter = item[2]
+                    processed = item[3]  # indicate if this packet has been processed
+                    transmitting_time = packet.packet_length / config.BIT_RATE * 1e6
+                    if not processed:
+                        if self.env.now >= insertion_time + transmitting_time:
+                            flag = 1
+                            all_drones_send_to_me.append(transmitter)
+                            time_span.append([insertion_time, insertion_time + transmitting_time])
+                            potential_packet.append(packet)
+                            item[3] = 1
+                        else:
+                            pass
+                    else:
+                        pass
+
+                if len(all_drones_send_to_me) > 1:
+                    self.simulator.metrics.collision_num += 1
+                    print(self.simulator.metrics.collision_num)
+                    print(all_drones_send_to_me)
+
+                if flag:
+                    # find the transmitters of all packets currently transmitted on the channel
                     transmitting_node_list = []
                     for drone in self.simulator.drones:
-                        if drone.inbox.items:
-                            temp = [msg[2] for msg in drone.inbox.items]
-                            transmitting_node_list += temp
+                        for item2 in drone.inbox:
+                            packet2 = item2[0]
+                            insertion_time2 = item2[1]
+                            transmitter2 = item2[2]
+                            transmitting_time2 = packet2.packet_length / config.BIT_RATE * 1e6
+                            interval = [insertion_time2, insertion_time2 + transmitting_time2]
+
+                            for item3 in time_span:
+                                if has_intersection(interval, item3):
+                                    transmitting_node_list.append(transmitter2)
 
                     transmitting_node_list = list(set(transmitting_node_list))  # remove duplicates
 
-                    all_drones_send_to_me = [msg[2] for msg in self.inbox.items]
-
                     sinr_list = sinr_calculator(self, all_drones_send_to_me, transmitting_node_list)
 
-                    # Receive the packet of the transmitting node corresponding to the maximum SINR
+                    # receive the packet of the transmitting node corresponding to the maximum SINR
                     max_sinr = max(sinr_list)
                     if max_sinr >= config.SNR_THRESHOLD:
-                        which_one = all_drones_send_to_me[sinr_list.index(max_sinr)]
+                        which_one = sinr_list.index(max_sinr)
 
-                        while self.inbox.items:
-                            msg = yield self.inbox.get()
-                            previous_drone = self.simulator.drones[msg[2]]
+                        pkd = potential_packet[which_one]
+                        sender = all_drones_send_to_me[which_one]
 
-                            if previous_drone.identifier is which_one:
-                                logging.info('Packet %s (sending to channel at: %s) from UAV: %s is received '
-                                             'by UAV: %s at time: %s', msg[0], msg[1], msg[2],
-                                             self.identifier, self.simulator.env.now)
-                                yield self.env.process(self.routing_protocol.packet_reception(msg[0], msg[2]))
+                        logging.info('Packet %s from UAV: %s is received by UAV: %s at time: %s',
+                                     pkd, sender, self.identifier, self.simulator.env.now)
+
+                        # transmission delay
+                        yield self.env.timeout(pkd.packet_length / config.BIT_RATE * 1e6)
+
+                        yield self.env.process(self.routing_protocol.packet_reception(pkd, sender))
+
                     else:  # sinr is lower than threshold
-                        while self.inbox.items:
-                            yield self.inbox.get()
+                        # self.simulator.metrics.collision_num += 1
+                        pass
 
                 yield self.env.timeout(5)
             else:
                 break
+
+    def update_inbox(self):
+        max_transmission_time = (config.DATA_PACKET_LENGTH / config.BIT_RATE) * 1e6
+        for item in self.inbox:
+            insertion_time = item[1]
+            received = item[3]
+            if insertion_time + 2 * max_transmission_time < self.env.now:
+                if received:
+                    self.inbox.remove(item)
