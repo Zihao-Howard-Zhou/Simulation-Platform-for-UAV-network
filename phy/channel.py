@@ -1,4 +1,5 @@
 import logging
+import copy
 from collections import defaultdict
 
 
@@ -6,9 +7,19 @@ class Channel:
     """
     Wireless channel of the physical layer
 
+    Format of pipes:
+    {UAV 0: [ [message 1], [message 2], ...],
+     UAV 1: [ [message 1], [message 3], ...],
+     ...
+     UAV N: [ [message m], [message n], ...]}
+
+    Attributes:
+        env: simulation environment created by simpy
+        pipes: control the inboxes of all drones, format is shown above
+
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/11
-    Updated at: 2024/4/23
+    Updated at: 2024/4/25
     """
 
     def __init__(self, env):
@@ -26,8 +37,9 @@ class Channel:
             logging.error('No inboxes available!')
 
         # the sender "puts" packets to all inboxes in pipes separately
-        for inbox in self.pipes.values():
-            inbox.append(value)
+        for key in self.pipes.keys():
+            value_copy = copy.copy(value)  # must be a copy of "value"
+            self.pipes[key].append(value_copy)
 
     def unicast_put(self, value, dst_id):
         """
@@ -51,10 +63,11 @@ class Channel:
         """
 
         for dst_id in dst_id_list:
-            if not self.pipes[dst_id]:
+            if dst_id not in self.pipes.keys():
                 logging.error('There is no inbox for dst_id')
             else:
-                self.pipes[dst_id].append(value)
+                value_copy = copy.copy(value)  # must be a copy of "value"
+                self.pipes[dst_id].append(value_copy)
 
     def create_inbox_for_receiver(self, identifier):
         # each receiver needs a list as its inbox

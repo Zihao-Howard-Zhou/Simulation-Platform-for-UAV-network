@@ -72,7 +72,7 @@ class Drone:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/11
-    Updated at: 2024/4/24
+    Updated at: 2024/4/25
     """
 
     def __init__(self,
@@ -107,12 +107,12 @@ class Drone:
         self.transmitting_queue = queue.Queue()
         self.waiting_list = []
 
-        self.mac_protocol = PureAloha(self)
+        self.mac_protocol = CsmaCa(self)
         self.mac_process_dict = dict()
         self.mac_process_finish = dict()
         self.mac_process_count = 0
 
-        self.routing_protocol = Dsdv(self.simulator, self)
+        self.routing_protocol = Gpsr(self.simulator, self)
 
         self.mobility_model = GaussMarkov3D(self)
 
@@ -120,9 +120,7 @@ class Drone:
         self.residual_energy = config.INITIAL_ENERGY
         self.sleep = False
 
-        if self.identifier != 0:
-            self.env.process(self.generate_data_packet())
-
+        self.env.process(self.generate_data_packet())
         self.env.process(self.feed_packet())
         self.env.process(self.energy_monitor())
         self.env.process(self.receive())
@@ -153,10 +151,10 @@ class Drone:
                 GLOBAL_DATA_PACKET_ID += 1  # packet id
 
                 # randomly choose a destination
-                # all_candidate_list = [i for i in range(config.NUMBER_OF_DRONES)]
-                # all_candidate_list.remove(self.identifier)
-                # dst_id = random.choice(all_candidate_list)
-                dst_id = 0
+                all_candidate_list = [i for i in range(config.NUMBER_OF_DRONES)]
+                all_candidate_list.remove(self.identifier)
+                dst_id = random.choice(all_candidate_list)
+                # dst_id = 0
 
                 destination = self.simulator.drones[dst_id]  # obtain the destination drone
 
@@ -276,27 +274,7 @@ class Drone:
                 # the transmission and reception of all current packets
                 self.update_inbox()
 
-                flag = 0  # used to indicate if I receive a complete packet
-                all_drones_send_to_me = []
-                time_span = []
-                potential_packet = []
-                for item in self.inbox:
-                    packet = item[0]
-                    insertion_time = item[1]
-                    transmitter = item[2]
-                    processed = item[3]  # indicate if this packet has been processed
-                    transmitting_time = packet.packet_length / config.BIT_RATE * 1e6
-                    if not processed:
-                        if self.env.now >= insertion_time + transmitting_time:
-                            flag = 1
-                            all_drones_send_to_me.append(transmitter)
-                            time_span.append([insertion_time, insertion_time + transmitting_time])
-                            potential_packet.append(packet)
-                            item[3] = 1
-                        else:
-                            pass
-                    else:
-                        pass
+                flag, all_drones_send_to_me, time_span, potential_packet = self.trigger()
 
                 if len(all_drones_send_to_me) > 1:
                     self.simulator.metrics.collision_num += 1
@@ -307,16 +285,16 @@ class Drone:
                     # find the transmitters of all packets currently transmitted on the channel
                     transmitting_node_list = []
                     for drone in self.simulator.drones:
-                        for item2 in drone.inbox:
-                            packet2 = item2[0]
-                            insertion_time2 = item2[1]
-                            transmitter2 = item2[2]
-                            transmitting_time2 = packet2.packet_length / config.BIT_RATE * 1e6
-                            interval = [insertion_time2, insertion_time2 + transmitting_time2]
+                        for item in drone.inbox:
+                            packet = item[0]
+                            insertion_time = item[1]
+                            transmitter = item[2]
+                            transmitting_time = packet.packet_length / config.BIT_RATE * 1e6
+                            interval = [insertion_time, insertion_time + transmitting_time]
 
-                            for item3 in time_span:
-                                if has_intersection(interval, item3):
-                                    transmitting_node_list.append(transmitter2)
+                            for interval2 in time_span:
+                                if has_intersection(interval, interval2):
+                                    transmitting_node_list.append(transmitter)
 
                     transmitting_node_list = list(set(transmitting_node_list))  # remove duplicates
 
@@ -330,8 +308,8 @@ class Drone:
                         pkd = potential_packet[which_one]
                         sender = all_drones_send_to_me[which_one]
 
-                        logging.info('Packet %s from UAV: %s is received by UAV: %s at time: %s',
-                                     pkd, sender, self.identifier, self.simulator.env.now)
+                        logging.info('Packet %s from UAV: %s is received by UAV: %s at time: %s, sinr is: %s',
+                                     pkd, sender, self.identifier, self.simulator.env.now, max_sinr)
 
                         # transmission delay
                         yield self.env.timeout(pkd.packet_length / config.BIT_RATE * 1e6)
@@ -354,3 +332,31 @@ class Drone:
             if insertion_time + 2 * max_transmission_time < self.env.now:
                 if received:
                     self.inbox.remove(item)
+
+    def trigger(self):
+        flag = 0  # used to indicate if I receive a complete packet
+        all_drones_send_to_me = []
+        time_span = []
+        potential_packet = []
+
+        for item in self.inbox:
+            packet = item[0]  # not sure yet whether it has been completely transmitted
+            insertion_time = item[1]  # transmission start time
+            transmitter = item[2]
+            processed = item[3]  # indicate if this packet has been processed
+            transmitting_time = packet.packet_length / config.BIT_RATE * 1e6
+
+            if not processed:  # this packet has not been processed yet
+                if self.env.now >= insertion_time + transmitting_time:  # it has been transmitted completely
+                    flag = 1
+                    all_drones_send_to_me.append(transmitter)
+                    time_span.append([insertion_time, insertion_time + transmitting_time])
+                    potential_packet.append(packet)
+                    item[3] = 1
+                else:
+                    pass
+            else:
+                pass
+
+        return flag, all_drones_send_to_me, time_span, potential_packet
+

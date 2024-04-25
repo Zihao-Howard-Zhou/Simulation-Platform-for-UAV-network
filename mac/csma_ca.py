@@ -40,7 +40,7 @@ class CsmaCa:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/11
-    Updated at: 2024/4/23
+    Updated at: 2024/4/25
     """
 
     def __init__(self, drone):
