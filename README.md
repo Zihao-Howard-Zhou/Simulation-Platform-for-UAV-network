@@ -68,6 +68,12 @@ The following figure demonstrates the packets transmission flow when pure aloha 
 <img src="https://github.com/ZihaoZhouSCUT/Simulation-Platform-for-UAV-network/blob/master/img/pure_aloha.png" width="800px">
 </div>
 
+From the above illustration we can see that, it is not only two drones sending packets at the same time that cause packet collisions. If there is an overlap in the transmission time of two data packets, it means that collision occurrs. So in our project, each drone checks its inbox every very short interval and has several important things to do (as shown in the following figure):
+
+1. delete the packet records in its inbox whose distance from the current time is greater than twice the maximum packet transmission delay. This reduces computational overhead because these packets are guaranteed to have already been processed and will not interfere with packets that have not yet been processed
+2. check the packet records in the inbox to see which packet has been transmitted in its entirety
+3. if there is such a record, then find other packets that overlap with this packet in transmission time in the inbox records of all drones, and use them to calculate SINR.
+
 ### Mobility model
 Mobility model is one of the most important mudules to show the characteristics of UAV network more realistically. In this project, **Gauss-Markov 3D mobility model**, **Random Walk 3D mobility model** and **Random Waypoint 3D mobility model** have been implemented. Specifically, since it is quite difficult to achieve continuous movement of drone in discrete time simulation, we set a "position_update_interval" to update the positions of drones periodically, that is, it is assumed that the drone moves continuously within this time interval. If the time interval "position_update_interval" is smaller, the simulation accuracy will be higher, but the corresponding simulation time will be longer. There will be a trade-off. Besides, the time interval that drone updates its direction can also be set manually. The trajectories of a single drone within 100 second of the simulation under the two mobility models are shown as follows:
 
