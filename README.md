@@ -42,6 +42,11 @@ When packet gets the buffer resource, MAC protocol will be performed to access t
 </div>
 
 ## Module overview
+### Routing protocol
+xxx
+
+### Media access control (MAC) protocol
+
 ### Mobility model
 Mobility model is one of the most important mudules to show the characteristics of UAV network more realistically. In this project, **Gauss-Markov 3D mobility model**, **Random Walk 3D mobility model** and **Random Waypoint 3D mobility model** have been implemented. Specifically, since it is quite difficult to achieve continuous movement of drone in discrete time simulation, we set a "position_update_interval" to update the positions of drones periodically, that is, it is assumed that the drone moves continuously within this time interval. If the time interval "position_update_interval" is smaller, the simulation accuracy will be higher, but the corresponding simulation time will be longer. There will be a trade-off. Besides, the time interval that drone updates its direction can also be set manually. The trajectories of a single drone within 100 second of the simulation under the two mobility models are shown as follows:
 
@@ -55,7 +60,7 @@ The energy model of our platform is based on the work of Y. Zeng, et al. The fig
 <img src="https://github.com/ZihaoZhouSCUT/Simulation-Platform-for-UAV-network/blob/master/img/energy_model.png", width="400px">
 </div>
 
-### Routing protocol
+## Performance evaluation
 In our current version, we support **GPSR (greedy perimeter stateless routing)**, **OPAR (optimized predictive and adaptive routing)** and **PARRoT (predictive ad-hoc routing fueled by reinforcement learning and trajectory knowledge)** for users to test. Among them, GPSR chooes the next hop solely based on the location information. By modelling the routing problem as a binary linear programming, OPAR takes hop count and link lifetime into account when selecting the next hop. Introducing reinforcement learning (Q-Learning) into routing protocol, PARRoT chooses next hop according to the maximum Q-value, but it needs time for Q-value to converage. We preliminarily tested the performance of three routing protocols by changing the flight speed of the drone. Packet delivery ratio (PDR) and average end-to-end (E2E) delay were recorded.
 
 <div align="center">
