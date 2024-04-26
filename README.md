@@ -57,7 +57,12 @@ In this project, **Carrier-sense multiple access with collision avoidance (CSMA/
 <img src="https://github.com/ZihaoZhouSCUT/Simulation-Platform-for-UAV-network/blob/master/img/csmaca.png" width="800px">
 </div>
 
-The following figure demonstrates the packets transmission flow when pure aloha is adopted. 
+The following figure demonstrates the packets transmission flow when pure aloha is adopted. When a drone installed a pure aloha protocol wants to transmit packet:
+
+1. it just sends it, without listening to the channel and random backoff
+2. after sending the packet, the node starts to wait for the ACK packet
+3. if it receives ACK in time, the "mac_send" process will finish
+4. if not, the node will wait a random amount of time, according to the number of re-transmissions attempts, and then sends packet again
 
 <div align="center">
 <img src="https://github.com/ZihaoZhouSCUT/Simulation-Platform-for-UAV-network/blob/master/img/pure_aloha.png" width="800px">
