@@ -31,6 +31,7 @@ You can even ```run main.py``` directly with one click to get a sneak peek. But 
 </div>
 
 ## Core logic
+### Transmitting logic
 <div align="center">
 <img src="https://github.com/ZihaoZhouSCUT/Simulation-Platform-for-UAV-network/blob/master/img/transmitting_procedure.png" width="800px">
 </div>
