@@ -46,7 +46,11 @@ When packet gets the buffer resource, MAC protocol will be performed to access t
 xxx
 
 ### Media access control (MAC) protocol
-In this project, **Carrier-sense multiple access with collision avoidance (CSMA/CA)** and **Pure aloha** have been implemented. I will give a brief overview of the version implemented in this project, and focus on how signal interference and collision are implemented in this project. The following picture shows the example of packets transmission when CSMA/CA (without RTS/CTS) protocol is adopted.
+In this project, **Carrier-sense multiple access with collision avoidance (CSMA/CA)** and **Pure aloha** have been implemented. I will give a brief overview of the version implemented in this project, and focus on how signal interference and collision are implemented in this project. The following picture shows the example of packets transmission when CSMA/CA (without RTS/CTS) protocol is adopted. When a drone wants to transmit packet:
+1. it first needs to wait until the channel is idle
+2. when the channel is idle, the drone starts a timer and waits for "DIFS+backoff" periods of time, where the length of backoff is related to the number of re-transmissions
+3. if the entire decrement of the timer to 0 is not interrupted, then the drone can occupy the channel and start sending the packet
+4. if the countdown is interrupted, it means that the drone loses the game. The drone then freeze the timer and wait for channel idle again before re-starting its timer
 
 <div align="center">
 <img src="https://github.com/ZihaoZhouSCUT/Simulation-Platform-for-UAV-network/blob/master/img/csmaca.png" width="800px">
