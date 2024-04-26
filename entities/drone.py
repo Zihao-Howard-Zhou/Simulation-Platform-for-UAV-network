@@ -87,10 +87,10 @@ class Drone:
         self.identifier = node_id
         self.coords = coords
 
-        random.seed(2024+self.identifier)
+        random.seed(2024 + self.identifier)
         self.direction = random.uniform(0, 2 * np.pi)
 
-        random.seed(2025+self.identifier)
+        random.seed(2025 + self.identifier)
         self.pitch = random.uniform(-0.05, 0.05)
         self.speed = speed
         self.velocity = [self.speed * math.cos(self.direction) * math.cos(self.pitch),
@@ -207,12 +207,13 @@ class Drone:
 
                                     yield self.env.process(self.packet_coming(final_packet))  # actually the data packet
                                 else:
-                                    logging.info('Unfortunately, at time: %s, UAV: %s cannot find appropriate next ' 
-                                        'hop of data packet (id: %s), and it will put the packet into waiting queue.',
-                                        self.env.now, self.identifier, packet.packet_id)
+                                    logging.info('Unfortunately, at time: %s, UAV: %s cannot find appropriate next '
+                                                 'hop of data packet (id: %s), and it will put the packet into waiting '
+                                                 'queue.', self.env.now, self.identifier, packet.packet_id)
 
                                     self.waiting_list.append(packet)
-                                    yield self.env.process(self.packet_coming(final_packet))  # actually the control packet
+                                    yield self.env.process(
+                                        self.packet_coming(final_packet))  # actually the control packet
                         else:  # control packet but not ack
                             yield self.env.process(self.packet_coming(packet))
                     else:
@@ -225,7 +226,6 @@ class Drone:
         When drone has a packet ready to transmit, yield it.
         The requirement of "ready" is:
         1) this packet is a control packet or 2) drone knows the next hop of the data packet
-
         :param pkd: packet that waits to enter the buffer of drone
         :return: none
         """
@@ -262,7 +262,7 @@ class Drone:
 
     def energy_monitor(self):
         while True:
-            yield self.env.timeout(1*1e5)  # report residual energy every 0.1s
+            yield self.env.timeout(1 * 1e5)  # report residual energy every 0.1s
             if self.residual_energy <= config.ENERGY_THRESHOLD:
                 self.sleep = True
                 # print('UAV: ', self.identifier, ' run out of energy at: ', self.env.now)
@@ -359,4 +359,3 @@ class Drone:
                 pass
 
         return flag, all_drones_send_to_me, time_span, potential_packet
-
