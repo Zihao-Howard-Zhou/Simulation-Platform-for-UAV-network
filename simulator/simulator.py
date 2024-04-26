@@ -56,7 +56,7 @@ class Simulator:
         for i in range(n_drones):
             print('UAV: ', i, ' initial location is at: ', start_position[i])
             drone = Drone(env=env, node_id=i, coords=start_position[i], speed=50,
-                          inbox=self.channel.create_store_for_receiver(), simulator=self)
+                          inbox=self.channel.create_inbox_for_receiver(i), simulator=self)
             self.drones.append(drone)
 
         self.env.process(self.show_performance())

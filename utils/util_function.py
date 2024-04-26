@@ -1,16 +1,31 @@
+import logging
+
 from utils import config
 
 
 def euclidean_distance(p1, p2):
     """
-    Calculate the 3-D euclidean distance between two nodes
+    Calculate the 3-D Euclidean distance between two nodes
     :param p1: the first point
     :param p2: the second point
-    :return: euclidean distance between p1 and p2
+    :return: Euclidean distance between p1 and p2
     """
 
     dist = ((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2 + (p1[2] - p2[2]) ** 2) ** 0.5
     return dist
+
+
+def has_intersection(interval1, interval2):
+    if interval2[0] <= interval1[0] <= interval2[1]:
+        return True
+    if interval2[0] <= interval1[1] <= interval2[1]:
+        return True
+    if interval1[0] <= interval2[0] <= interval1[1]:
+        return True
+    if interval1[0] <= interval2[1] <= interval1[1]:
+        return True
+
+    return False
 
 
 def check_channel_availability(channel_states, sender_drone, drones):

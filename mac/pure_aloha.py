@@ -45,6 +45,7 @@ class PureAloha:
         self.wait_ack_process = None
 
     def mac_send(self, pkd):
+        yield self.env.timeout(0.01)
         key = str(self.my_drone.identifier) + '_' + str(self.my_drone.mac_process_count)  # label of the process
         self.my_drone.mac_process_finish[key] = 1  # mark the process as "finished"
 
@@ -66,10 +67,14 @@ class PureAloha:
                 self.wait_ack_process_dict[key2] = self.wait_ack_process
                 self.wait_ack_process_finish[key2] = 0
 
-            yield self.env.process(self.phy.unicast(pkd, next_hop_id))
+            # yield self.env.process(self.phy.unicast(pkd, next_hop_id))
+            self.phy.unicast(pkd, next_hop_id)
+            yield self.env.timeout(pkd.packet_length / config.BIT_RATE * 1e6)
 
         elif transmission_mode == 1:
-            yield self.env.process(self.phy.broadcast(pkd))
+            # yield self.env.process(self.phy.broadcast(pkd))
+            self.phy.broadcast(pkd)
+            yield self.env.timeout(pkd.packet_length / config.BIT_RATE * 1e6)
 
     def wait_ack(self, pkd):
         """
@@ -85,13 +90,13 @@ class PureAloha:
             key2 = str(self.my_drone.identifier) + '_' + str(self.wait_ack_process_count)
             self.wait_ack_process_finish[key2] = 1
 
-            logging.info('ACK timeout of packet: s', pkd.packet_id)
+            logging.info('ACK timeout of packet: %s', pkd.packet_id)
             # timeout expired
             if pkd.number_retransmission_attempt[self.my_drone.identifier] < config.MAX_RETRANSMISSION_ATTEMPT:
                 # random wait
                 transmission_attempt = pkd.number_retransmission_attempt[self.my_drone.identifier]
                 r = random.randint(0, 2 ** transmission_attempt)
-                waiting_time = r * config.ACK_TIMEOUT
+                waiting_time = r * 100
 
                 yield self.env.timeout(waiting_time)
                 yield self.env.process(self.my_drone.packet_coming(pkd))  # resend
