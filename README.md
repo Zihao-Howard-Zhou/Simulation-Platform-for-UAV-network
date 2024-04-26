@@ -32,6 +32,8 @@ You can even ```run main.py``` directly with one click to get a sneak peek. But 
 
 ## Core logic
 ### Transmitting logic
+The following figure shows the main procedure of packets transmissions in FlyNet. "Drone's buffer" is a resource in SimPy whose capacity is one, which means that drone can send at most one packet at a time. If there are many packets need to be transmitted, they need to queue for buffer resources according to the time order of arrival to the drone. We can simulate the queuing delay by this mechanism.
+
 <div align="center">
 <img src="https://github.com/ZihaoZhouSCUT/Simulation-Platform-for-UAV-network/blob/master/img/transmitting_procedure.png" width="800px">
 </div>
