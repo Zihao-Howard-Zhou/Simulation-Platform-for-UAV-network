@@ -46,16 +46,36 @@ When packet gets the buffer resource, MAC protocol will be performed to access t
 xxx
 
 ### Media access control (MAC) protocol
-In this project, **Carrier-sense multiple access with collision avoidance (CSMA/CA)** and **Pure aloha** have been implemented. I will give a brief overview of the version implemented in this project, and focus on how signal interference and collision are implemented in this project. The following picture shows the example of packets transmission when CSMA/CA (without RTS/CTS) protocol is adopted.
+In this project, **Carrier-sense multiple access with collision avoidance (CSMA/CA)** and **Pure aloha** have been implemented. I will give a brief overview of the version implemented in this project, and focus on how signal interference and collision are implemented in this project. The following picture shows the example of packets transmission when CSMA/CA (without RTS/CTS) protocol is adopted. When a drone wants to transmit packet:
+
+1. it first needs to wait until the channel is idle
+2. when the channel is idle, the drone starts a timer and waits for "DIFS+backoff" periods of time, where the length of backoff is related to the number of re-transmissions
+3. if the entire decrement of the timer to 0 is not interrupted, then the drone can occupy the channel and start sending the packet
+4. if the countdown is interrupted, it means that the drone loses the game. The drone then freeze the timer and wait for channel idle again before re-starting its timer
 
 <div align="center">
 <img src="https://github.com/ZihaoZhouSCUT/Simulation-Platform-for-UAV-network/blob/master/img/csmaca.png" width="800px">
 </div>
 
-The following figure demonstrates the packets transmission flow when pure aloha is adopted. 
+The following figure demonstrates the packets transmission flow when pure aloha is adopted. When a drone installed a pure aloha protocol wants to transmit packet:
+
+1. it just sends it, without listening to the channel and random backoff
+2. after sending the packet, the node starts to wait for the ACK packet
+3. if it receives ACK in time, the "mac_send" process will finish
+4. if not, the node will wait a random amount of time, according to the number of re-transmissions attempts, and then sends packet again
 
 <div align="center">
 <img src="https://github.com/ZihaoZhouSCUT/Simulation-Platform-for-UAV-network/blob/master/img/pure_aloha.png" width="800px">
+</div>
+
+From the above illustration we can see that, it is not only two drones sending packets at the same time that cause packet collisions. If there is an overlap in the transmission time of two data packets, it means that collision occurrs. So in our project, each drone checks its inbox every very short interval and has several important things to do (as shown in the following figure):
+
+1. delete the packet records in its inbox whose distance from the current time is greater than twice the maximum packet transmission delay. This reduces computational overhead because these packets are guaranteed to have already been processed and will not interfere with packets that have not yet been processed
+2. check the packet records in the inbox to see which packet has been transmitted in its entirety
+3. if there is such a record, then find other packets that overlap with this packet in transmission time in the inbox records of all drones, and use them to calculate SINR.
+
+<div align="center">
+<img src="https://github.com/ZihaoZhouSCUT/Simulation-Platform-for-UAV-network/blob/master/img/reception_logic.png" width="800px">
 </div>
 
 ### Mobility model
