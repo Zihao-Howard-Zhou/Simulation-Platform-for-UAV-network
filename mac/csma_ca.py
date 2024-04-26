@@ -108,12 +108,10 @@ class CsmaCa:
                             self.wait_ack_process_dict[key2] = self.wait_ack_process
                             self.wait_ack_process_finish[key2] = 0
 
-                        # yield self.env.process(self.phy.unicast(pkd, next_hop_id))
                         self.phy.unicast(pkd, next_hop_id)
                         yield self.env.timeout(pkd.packet_length / config.BIT_RATE * 1e6)
 
                     elif transmission_mode == 1:
-                        # yield self.env.process(self.phy.broadcast(pkd))
                         self.phy.broadcast(pkd)
                         yield self.env.timeout(pkd.packet_length / config.BIT_RATE * 1e6)
 
@@ -182,7 +180,6 @@ class CsmaCa:
         logging.info('At time: %s, UAV: %s starts to listen the channel and perform backoff',
                      self.env.now, self.my_drone.identifier)
 
-        # while self.finish_one_round_transmission is False:
         key = str(self.my_drone.identifier) + '_' + str(self.my_drone.mac_process_count)
         while self.my_drone.mac_process_finish[key] == 0:  # interrupt only if the process is not complete
             if check_channel_availability(channel_states, self.my_drone, drones) is False:

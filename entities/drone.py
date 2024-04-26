@@ -112,7 +112,7 @@ class Drone:
         self.mac_process_finish = dict()
         self.mac_process_count = 0
 
-        self.routing_protocol = Gpsr(self.simulator, self)
+        self.routing_protocol = Grad(self.simulator, self)
 
         self.mobility_model = GaussMarkov3D(self)
 
@@ -278,8 +278,8 @@ class Drone:
 
                 if len(all_drones_send_to_me) > 1:
                     self.simulator.metrics.collision_num += 1
-                    print(self.simulator.metrics.collision_num)
-                    print(all_drones_send_to_me)
+                    # print(self.simulator.metrics.collision_num)
+                    # print(all_drones_send_to_me)
 
                 if flag:
                     # find the transmitters of all packets currently transmitted on the channel
@@ -317,7 +317,6 @@ class Drone:
                         yield self.env.process(self.routing_protocol.packet_reception(pkd, sender))
 
                     else:  # sinr is lower than threshold
-                        # self.simulator.metrics.collision_num += 1
                         pass
 
                 yield self.env.timeout(5)
