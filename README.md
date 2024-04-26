@@ -75,7 +75,7 @@ From the above illustration we can see that, it is not only two drones sending p
 3. if there is such a record, then find other packets that overlap with this packet in transmission time in the inbox records of all drones, and use them to calculate SINR.
 
 <div align="center">
-<img src="https://github.com/ZihaoZhouSCUT/Simulation-Platform-for-UAV-network/blob/master/img/pure_aloha.png" width="800px">
+<img src="https://github.com/ZihaoZhouSCUT/Simulation-Platform-for-UAV-network/blob/master/img/reception_logic.png" width="800px">
 </div>
 
 ### Mobility model
