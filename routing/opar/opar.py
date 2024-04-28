@@ -246,7 +246,6 @@ class Opar:
 
             # unicast the ack packet immediately without contention for the channel
             if not self.my_drone.sleep:
-                # yield self.simulator.env.process(self.my_drone.mac_protocol.phy.unicast(ack_packet, src_drone_id))
                 self.my_drone.mac_protocol.phy.unicast(ack_packet, src_drone_id)
                 yield self.simulator.env.timeout(ack_packet.packet_length / config.BIT_RATE * 1e6)
             else:

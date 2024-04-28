@@ -112,7 +112,7 @@ class Drone:
         self.mac_process_finish = dict()
         self.mac_process_count = 0
 
-        self.routing_protocol = Grad(self.simulator, self)
+        self.routing_protocol = Gpsr(self.simulator, self)
 
         self.mobility_model = GaussMarkov3D(self)
 
@@ -154,7 +154,6 @@ class Drone:
                 all_candidate_list = [i for i in range(config.NUMBER_OF_DRONES)]
                 all_candidate_list.remove(self.identifier)
                 dst_id = random.choice(all_candidate_list)
-                # dst_id = 0
 
                 destination = self.simulator.drones[dst_id]  # obtain the destination drone
 
