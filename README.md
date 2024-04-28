@@ -43,7 +43,11 @@ When packet gets the buffer resource, MAC protocol will be performed to access t
 
 ## Module overview
 ### Routing protocol
-In this project, **Greedy Perimeter Stateless Routing (GPSR)**, **Gradient Routing (GRAd)**, **Destination-Sequenced Distance Vector routing (DSDV)** and some **Reinforcement-Learning based Routing Protocol** have been implemented.
+In this project, **Greedy Perimeter Stateless Routing (GPSR)**, **Gradient Routing (GRAd)**, **Destination-Sequenced Distance Vector routing (DSDV)** and some **Reinforcement-Learning based Routing Protocol** have been implemented. The following figure illustrates the routing procedure of GRAd and GPSR. More detail information can be found in the corresponding papers.
+
+<div align="center">
+<img src="https://github.com/ZihaoZhouSCUT/Simulation-Platform-for-UAV-network/blob/master/img/routing.png" width="800px">
+</div>
 
 ### Media access control (MAC) protocol
 In this project, **Carrier-sense multiple access with collision avoidance (CSMA/CA)** and **Pure aloha** have been implemented. I will give a brief overview of the version implemented in this project, and focus on how signal interference and collision are implemented in this project. The following picture shows the example of packets transmission when CSMA/CA (without RTS/CTS) protocol is adopted. When a drone wants to transmit packet:
