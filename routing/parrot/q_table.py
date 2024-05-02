@@ -49,13 +49,12 @@ class Qtable:
             for j in range(config.NUMBER_OF_DRONES):
                 self.q_table[i][j] = [0, 0]
 
-    def update_table(self, chirp_packet, previous_drone_id, cur_time):
+    def update_table(self, chirp_packet, previous_drone_id):
         """
         Update the Q-table according to the chirp packet when the packet is fresh
         :param chirp_packet: the received chirp packet
         :param previous_drone_id: the drone that transmits this chirp packet to me
-        :param cur_time: the moment when the packet is received
-        :return: None
+        :return: none
         """
 
         packet_seq_num = chirp_packet.packet_id  # get the sequence number of the packet

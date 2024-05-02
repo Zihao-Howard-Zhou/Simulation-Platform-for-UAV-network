@@ -21,7 +21,7 @@ class Parrot:
     """
     Main procedure of PARRoT (v1.0)
 
-    Trajectory prediction has not been implemented!
+    Question: At what stage is the trajectory prediction value used in this paper [1]?
 
     Attributes:
         simulator: the simulation platform that contains everything
@@ -42,7 +42,7 @@ class Parrot:
     def __init__(self, simulator, my_drone):
         self.simulator = simulator
         self.my_drone = my_drone
-        self.chirp_interval = 0.5 * 1e6  # broadcast chirp packet every 0.5s
+        self.chirp_interval = 0.1 * 1e6  # broadcast chirp packet every 0.5s
         self.qtable = Qtable(self.simulator.env, my_drone)
         self.neighbor_table = ParrotNeighborTable(self.simulator.env, my_drone)
         self.simulator.env.process(self.broadcast_chirp_packet_periodically())
@@ -61,17 +61,17 @@ class Parrot:
                                    current_position=self.my_drone.coords, predicted_position=0,
                                    reward=1.0, cohesion=cohesion,
                                    simulator=self.simulator)
-        chirp_packet.transmission_mode = 1
+        chirp_packet.transmission_mode = 1  # for broadcast
 
         logging.info('At time: %s, UAV: %s has chirp packet to broadcast',
                      self.simulator.env.now, self.my_drone.identifier)
 
         self.simulator.metrics.control_packet_num += 1
-        yield self.simulator.env.process(my_drone.packet_coming(chirp_packet))
+        self.my_drone.transmitting_queue.put(chirp_packet)
 
     def broadcast_chirp_packet_periodically(self):
         while True:
-            self.simulator.env.process(self.broadcast_chirp_packet(self.my_drone))
+            self.broadcast_chirp_packet(self.my_drone)
             jitter = random.randint(1000, 2000)  # delay jitter
             yield self.simulator.env.timeout(self.chirp_interval+jitter)
 
@@ -81,11 +81,14 @@ class Parrot:
         :param packet: the data packet that needs to be sent
         :return: id of next hop drone
         """
+        has_route = True
 
         dst_drone = packet.dst_drone
         best_next_hop_id = self.qtable.take_action(self.my_drone, dst_drone)
 
-        return best_next_hop_id
+        packet.next_hop_id = best_next_hop_id
+
+        return has_route, packet
 
     def packet_reception(self, packet, src_drone_id):
         """
@@ -95,7 +98,7 @@ class Parrot:
         reception function in the network layer
         :param packet: the received packet
         :param src_drone_id: previous hop
-        :return: None
+        :return: none
         """
 
         global GL_ID_ACK_PACKET
@@ -105,21 +108,20 @@ class Parrot:
         if isinstance(packet, ChirpPacket):
             self.neighbor_table.add_neighbor(packet, current_time)  # update neighbor table
 
-            packet_seq_num = packet.packet_id  # get the sequence number of the packet
+            packet_seq_num = packet.packet_id  # get the sequence number of the packet (will not change when flooding)
             destination = packet.src_drone  # drone that originates the chirp packet
 
             # get the latest sequence number related to this specific destination
-            latest_seq_num = max([self.qtable.q_table[destination.identifier][_][1] for _ in range(config.NUMBER_OF_DRONES)])
+            latest_seq_num = max([self.qtable.q_table[destination.identifier, _][1] for _ in range(config.NUMBER_OF_DRONES)])
             if latest_seq_num >= packet_seq_num or self.my_drone.identifier == src_drone_id:
                 pass
             else:
                 logging.info('At time: %s, UAV: %s receives the CHIRP packet from UAV: %s to %s , Q(%s, %s) is updated, '
                              'the reward is: %s, and the cohesion is: %s',
                              current_time, self.my_drone.identifier, src_drone_id, destination.identifier,
-                             destination.identifier, src_drone_id,
-                             packet.reward, packet.cohesion)
+                             destination.identifier, src_drone_id, packet.reward, packet.cohesion)
 
-                self.qtable.update_table(packet, src_drone_id, current_time)
+                self.qtable.update_table(packet, src_drone_id)
 
                 reward = max([self.qtable.q_table[destination.identifier, _][0] for _ in range(self.simulator.n_drones)])
                 cohesion = self.neighbor_table.cohesion
@@ -131,7 +133,7 @@ class Parrot:
                                            cohesion=cohesion, simulator=self.simulator)
 
                 self.simulator.metrics.control_packet_num += 1
-                self.my_drone.fifo_queue.put(chirp_packet)
+                self.my_drone.transmitting_queue.put(chirp_packet)
 
         elif isinstance(packet, DataPacket):
             if packet.dst_drone.identifier == self.my_drone.identifier:
@@ -139,7 +141,7 @@ class Parrot:
                 self.simulator.metrics.datapacket_arrived.add(packet.packet_id)
                 logging.info('Packet: %s is received by destination UAV: %s', packet.packet_id, self.my_drone.identifier)
             else:
-                self.my_drone.fifo_queue.put(packet)
+                self.my_drone.transmitting_queue.put(packet)
 
             GL_ID_ACK_PACKET += 1
             src_drone = self.simulator.drones[src_drone_id]  # previous drone
@@ -151,7 +153,8 @@ class Parrot:
 
             # unicast the ack packet immediately without contention for the channel
             if not self.my_drone.sleep:
-                yield self.simulator.env.process(self.my_drone.mac_protocol.phy.unicast(ack_packet, src_drone_id))
+                self.my_drone.mac_protocol.phy.unicast(ack_packet, src_drone_id)
+                yield self.simulator.env.timeout(ack_packet.packet_length / config.BIT_RATE * 1e6)
             else:
                 pass
 
