@@ -117,14 +117,13 @@ class Drone:
         self.mac_process_finish = dict()  # a dictionary, used to indicate the completion of the process
         self.mac_process_count = 0  # distinguish between different processes
 
-        self.routing_protocol = Gpsr(self.simulator, self)
+        self.routing_protocol = QGeo(self.simulator, self)
 
         self.mobility_model = GaussMarkov3D(self)  # mov and energy consume
 
         self.energy_model = EnergyModel()
         self.residual_energy = config.INITIAL_ENERGY
         self.sleep = False
-
 
         self.env.process(self.generate_data_packet())
         self.env.process(self.feed_packet())
@@ -309,8 +308,6 @@ class Drone:
                                     transmitting_node_list.append(transmitter)
 
                     transmitting_node_list = list(set(transmitting_node_list))  # remove duplicates
-
-                    all_drones_send_to_me = [msg[2] for msg in self.inbox.items]
 
                     # is same index to all_drones_send_to_me
                     sinr_list = sinr_calculator(self, all_drones_send_to_me, transmitting_node_list)

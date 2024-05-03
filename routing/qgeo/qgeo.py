@@ -59,11 +59,11 @@ class QGeo:
                      self.simulator.env.now, self.my_drone.identifier)
 
         self.simulator.metrics.control_packet_num += 1
-        yield self.simulator.env.process(my_drone.packet_coming(hello_pkd))
+        self.my_drone.transmitting_queue.put(hello_pkd)
 
     def broadcast_hello_packet_periodically(self):
         while True:
-            self.simulator.env.process(self.broadcast_hello_packet(self.my_drone))
+            self.broadcast_hello_packet(self.my_drone)
             jitter = random.randint(1000, 2000)  # delay jitter
             yield self.simulator.env.timeout(self.hello_interval + jitter)
 
@@ -73,7 +73,7 @@ class QGeo:
         :param packet: the data packet that needs to be sent
         :return: next hop drone
         """
-
+        has_route = True
         # update neighbor table
         self.neighbor_table.purge()
 
@@ -82,7 +82,9 @@ class QGeo:
         # choose best next hop according to the neighbor table
         best_next_hop_id = self.neighbor_table.best_neighbor(self.my_drone, dst_drone)
 
-        return best_next_hop_id
+        packet.next_hop_id = best_next_hop_id
+
+        return has_route, packet
 
     def packet_reception(self, packet, src_drone_id):
         """
@@ -109,7 +111,7 @@ class QGeo:
                 logging.info('Packet: %s is received by destination UAV: %s', packet.packet_id,
                              self.my_drone.identifier)
             else:
-                self.my_drone.fifo_queue.put(packet)
+                self.my_drone.transmitting_queue.put(packet)
 
             GL_ID_ACK_PACKET += 1
             src_drone = self.simulator.drones[src_drone_id]  # previous drone
@@ -123,7 +125,8 @@ class QGeo:
 
             # unicast the ack packet immediately without contention for the channel
             if not self.my_drone.sleep:
-                yield self.simulator.env.process(self.my_drone.mac_protocol.phy.unicast(ack_packet, src_drone_id))
+                self.my_drone.mac_protocol.phy.unicast(ack_packet, src_drone_id)
+                yield self.simulator.env.timeout(ack_packet.packet_length / config.BIT_RATE * 1e6)
             else:
                 pass
 
