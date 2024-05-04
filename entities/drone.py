@@ -11,6 +11,7 @@ from routing.grad.grad import Grad
 from routing.opar.opar import Opar
 from routing.parrot.parrot import Parrot
 from routing.qgeo.qgeo import QGeo
+from routing.new.tepr import Tepr
 from mac.csma_ca import CsmaCa
 from mac.pure_aloha import PureAloha
 from mobility.gauss_markov_3d import GaussMarkov3D
@@ -35,16 +36,18 @@ class Drone:
     """
     Drone implementation
 
-    Drones in the simulation are served as routers. Each drone can be selected as a potential source node, destination and
-    relaying node. Each drone needs to install the corresponding routing module, MAC module, mobility module and energy
-    module, etc. At the same time, each drone also has its own queue and can only send one packet at a time, so
-    subsequent data packets need queuing for queue resources, which is used to reflect the queue delay in the drone network
+    Drones in the simulation are served as routers. Each drone can be selected as a potential source node, destination
+    and relaying node. Each drone needs to install the corresponding routing module, MAC module, mobility module and
+    energy module, etc. At the same time, each drone also has its own queue and can only send one packet at a time, so
+    subsequent data packets need queuing for queue resources, which is used to reflect the queue delay in the drone
+    network
 
     Attributes:
         simulator: the simulation platform that contains everything
         env: simulation environment created by simpy
         identifier: used to uniquely represent a drone
         coords: the 3-D position of the drone
+        start_coords: the initial position of drone
         direction: current direction of the drone
         pitch: current pitch of the drone
         speed: current speed of the drone
@@ -72,7 +75,7 @@ class Drone:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/11
-    Updated at: 2024/4/25
+    Updated at: 2024/5/1
     """
 
     def __init__(self,
@@ -86,6 +89,7 @@ class Drone:
         self.env = env
         self.identifier = node_id
         self.coords = coords
+        self.start_coords = coords
 
         random.seed(2024 + self.identifier)
         self.direction = random.uniform(0, 2 * np.pi)
@@ -148,17 +152,19 @@ class Drone:
                     rate = 2  # on average, 2 packets are generated in 1s
                     yield self.env.timeout(round(random.expovariate(rate) * 1e6))
 
-                GLOBAL_DATA_PACKET_ID += 1  # packet id
+                GLOBAL_DATA_PACKET_ID += 1  # data packet id
 
                 # randomly choose a destination
                 all_candidate_list = [i for i in range(config.NUMBER_OF_DRONES)]
                 all_candidate_list.remove(self.identifier)
                 dst_id = random.choice(all_candidate_list)
-
                 destination = self.simulator.drones[dst_id]  # obtain the destination drone
 
-                pkd = DataPacket(self, dst_drone=destination, creation_time=self.env.now,
-                                 data_packet_id=GLOBAL_DATA_PACKET_ID, data_packet_length=config.DATA_PACKET_LENGTH,
+                pkd = DataPacket(self,
+                                 dst_drone=destination,
+                                 creation_time=self.env.now,
+                                 data_packet_id=GLOBAL_DATA_PACKET_ID,
+                                 data_packet_length=config.DATA_PACKET_LENGTH,
                                  simulator=self.simulator)
                 pkd.transmission_mode = 0  # the default transmission mode of data packet is "unicast" (0)
 
@@ -197,7 +203,7 @@ class Drone:
                             if packet.number_retransmission_attempt[self.identifier] < config.MAX_RETRANSMISSION_ATTEMPT:
                                 # it should be noted that "final_packet" may be the data packet itself or may be a control
                                 # packet, depending on whether the routing protocol can find an appropriate next hop
-                                has_route, final_packet = self.routing_protocol.next_hop_selection(packet)
+                                has_route, final_packet, enquire = self.routing_protocol.next_hop_selection(packet)
 
                                 if has_route:
                                     logging.info('At time: %s, UAV: %s obtain the next hop of data packet (id: %s), '
@@ -211,20 +217,25 @@ class Drone:
                                                  'queue.', self.env.now, self.identifier, packet.packet_id)
 
                                     self.waiting_list.append(packet)
-                                    yield self.env.process(
-                                        self.packet_coming(final_packet))  # actually the control packet
+
+                                    if enquire:
+                                        # actually the control packet
+                                        yield self.env.process(self.packet_coming(final_packet))
+
                         else:  # control packet but not ack
                             yield self.env.process(self.packet_coming(packet))
                     else:
                         pass  # means dropping this data packet for expiration
-            else:
+            else:  # this drone runs out of energy
                 break  # important to break the while loop
 
     def packet_coming(self, pkd):
         """
         When drone has a packet ready to transmit, yield it.
+
         The requirement of "ready" is:
-        1) this packet is a control packet or 2) drone knows the next hop of the data packet
+            1) this packet is a control packet, or
+            2) drone knows the next hop of the data packet
         :param pkd: packet that waits to enter the buffer of drone
         :return: none
         """
@@ -305,16 +316,19 @@ class Drone:
                         which_one = sinr_list.index(max_sinr)
 
                         pkd = potential_packet[which_one]
-                        sender = all_drones_send_to_me[which_one]
 
-                        logging.info('Packet %s from UAV: %s is received by UAV: %s at time: %s, sinr is: %s',
-                                     pkd, sender, self.identifier, self.simulator.env.now, max_sinr)
+                        if pkd.get_current_ttl() < config.MAX_TTL:
+                            sender = all_drones_send_to_me[which_one]
 
-                        # transmission delay
-                        yield self.env.timeout(pkd.packet_length / config.BIT_RATE * 1e6)
+                            logging.info('Packet %s from UAV: %s is received by UAV: %s at time: %s, sinr is: %s',
+                                         pkd, sender, self.identifier, self.simulator.env.now, max_sinr)
 
-                        yield self.env.process(self.routing_protocol.packet_reception(pkd, sender))
+                            # transmission delay
+                            yield self.env.timeout(pkd.packet_length / config.BIT_RATE * 1e6)
 
+                            yield self.env.process(self.routing_protocol.packet_reception(pkd, sender))
+                        else:
+                            logging.info('Packet %s is dropped due to exceeding max TTL', pkd.packet_id)
                     else:  # sinr is lower than threshold
                         pass
 

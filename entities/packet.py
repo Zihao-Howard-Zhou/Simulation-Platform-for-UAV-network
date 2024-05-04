@@ -9,14 +9,16 @@ class Packet:
     Attributes:
         packet_id: identifier of the packet, used to uniquely represent a packet
         creation_time: the generation time of the packet
-        deadline:
+        deadline: maximum segment lifetime of packet, in second
         __ttl: current "Time to live (TTL)"
-        __max_ttl: maximum value of TTL
+        number_retransmission_attempt: record the number of retransmissions of packet on different drones
         time_delivery: the time at which the packet arrives at its destination
+        time_transmitted_at_last_hop: the transmitting time at last drone
+        transmission_mode: unicast or multicast or broadcast?
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/11
-    Updated at: 2024/4/20
+    Updated at: 2024/5/4
     """
 
     def __init__(self,
@@ -31,7 +33,6 @@ class Packet:
         self.deadline = config.PACKET_LIFETIME
         self.simulator = simulator
         self.__ttl = 0
-        # self.__max_ttl = config.MAX_TTL
 
         self.number_retransmission_attempt = {}
 
@@ -40,6 +41,7 @@ class Packet:
 
         self.time_delivery = None
         self.time_transmitted_at_last_hop = 0
+        self.transmission_mode = None
 
     def increase_ttl(self):
         self.__ttl += 1
@@ -55,12 +57,12 @@ class DataPacket(Packet):
     Attributes:
         src_drone: source drone that originates the data packet
         dst_drone: destination drone of this data packet
-        creation_time: the generation time of the packet
-        data_packet_id: identifier of the packet, used to uniquely represent a packet
+        routing_path: record to whole routing path in centralized routing protocol
+        next_hop_id: identifier of the next hop drone
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/11
-    Updated at: 2024/4/20
+    Updated at: 2024/5/4
     """
 
     def __init__(self,
@@ -77,7 +79,6 @@ class DataPacket(Packet):
 
         self.routing_path = None  # for centralized routing protocols
         self.next_hop_id = None  # next hop for this data packet
-        self.transmission_mode = None  # unicast or multicast or broadcast?
 
 
 class AckPacket(Packet):
