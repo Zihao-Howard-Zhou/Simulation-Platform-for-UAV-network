@@ -36,7 +36,7 @@ class Parrot:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/3/25
-    Updated at: 2024/4/11
+    Updated at: 2024/5/4
     """
 
     def __init__(self, simulator, my_drone):
@@ -82,13 +82,17 @@ class Parrot:
         :return: id of next hop drone
         """
         has_route = True
+        enquire = False  # "True" when reactive protocol is adopted
 
         dst_drone = packet.dst_drone
         best_next_hop_id = self.qtable.take_action(self.my_drone, dst_drone)
 
-        packet.next_hop_id = best_next_hop_id
+        if best_next_hop_id is self.my_drone.identifier:
+            has_route = False  # no available next hop
+        else:
+            packet.next_hop_id = best_next_hop_id  # it has an available next hop drone
 
-        return has_route, packet
+        return has_route, packet, enquire
 
     def packet_reception(self, packet, src_drone_id):
         """

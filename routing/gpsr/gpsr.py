@@ -34,7 +34,7 @@ class Gpsr:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/11
-    Updated at: 2024/4/20
+    Updated at: 2024/5/4
     """
 
     def __init__(self, simulator, my_drone):
@@ -43,6 +43,7 @@ class Gpsr:
         self.hello_interval = 0.5 * 1e6  # broadcast hello packet every 0.5s
         self.neighbor_table = GpsrNeighborTable(self.simulator.env, my_drone)
         self.simulator.env.process(self.broadcast_hello_packet_periodically())
+        self.simulator.env.process(self.check_waiting_list())
 
     def broadcast_hello_packet(self, my_drone):
         global GL_ID_HELLO_PACKET
@@ -62,7 +63,6 @@ class Gpsr:
 
     def broadcast_hello_packet_periodically(self):
         while True:
-            # self.simulator.env.process(self.broadcast_hello_packet(self.my_drone))
             self.broadcast_hello_packet(self.my_drone)
             jitter = random.randint(1000, 2000)  # delay jitter
             yield self.simulator.env.timeout(self.hello_interval+jitter)
@@ -70,12 +70,12 @@ class Gpsr:
     def next_hop_selection(self, packet):
         """
         Select the next hop according to the routing protocol
-
         :param packet: the data packet that needs to be sent
-        :return: next hop drone
+        :return: next hop drone id
         """
 
         has_route = True
+        enquire = False  # "True" when reactive protocol is adopted
 
         # update neighbor table
         self.neighbor_table.purge()
@@ -84,9 +84,13 @@ class Gpsr:
 
         # choose best next hop according to the neighbor table
         best_next_hop_id = self.neighbor_table.best_neighbor(self.my_drone, dst_drone)
-        packet.next_hop_id = best_next_hop_id
 
-        return has_route, packet
+        if best_next_hop_id is self.my_drone.identifier:
+            has_route = False  # no available next hop
+        else:
+            packet.next_hop_id = best_next_hop_id  # it has an available next hop drone
+
+        return has_route, packet, enquire
 
     def packet_reception(self, packet, src_drone_id):
         """
@@ -116,14 +120,18 @@ class Gpsr:
 
             GL_ID_ACK_PACKET += 1
             src_drone = self.simulator.drones[src_drone_id]  # previous drone
-            ack_packet = AckPacket(src_drone=self.my_drone, dst_drone=src_drone, ack_packet_id=GL_ID_ACK_PACKET,
+            ack_packet = AckPacket(src_drone=self.my_drone,
+                                   dst_drone=src_drone,
+                                   ack_packet_id=GL_ID_ACK_PACKET,
                                    ack_packet_length=config.ACK_PACKET_LENGTH,
-                                   ack_packet=packet, simulator=self.simulator)
+                                   ack_packet=packet,
+                                   simulator=self.simulator)
 
             yield self.simulator.env.timeout(config.SIFS_DURATION)  # switch from receiving to transmitting
 
             # unicast the ack packet immediately without contention for the channel
             if not self.my_drone.sleep:
+                ack_packet.increase_ttl()
                 self.my_drone.mac_protocol.phy.unicast(ack_packet, src_drone_id)
                 yield self.simulator.env.timeout(ack_packet.packet_length / config.BIT_RATE * 1e6)
             else:
@@ -137,3 +145,21 @@ class Gpsr:
                     logging.info('At time: %s, the wait_ack process (id: %s) of UAV: %s is interrupted by UAV: %s',
                                  self.simulator.env.now, key2, self.my_drone.identifier, src_drone_id)
                     self.my_drone.mac_protocol.wait_ack_process_dict[key2].interrupt()
+
+    def check_waiting_list(self):
+        while True:
+            if not self.my_drone.sleep:
+                yield self.simulator.env.timeout(0.6 * 1e6)
+                for waiting_pkd in self.my_drone.waiting_list:
+                    if self.simulator.env.now < waiting_pkd.creation_time + waiting_pkd.deadline:
+                        self.my_drone.waiting_list.remove(waiting_pkd)
+                    else:
+                        dst_drone = waiting_pkd.dst_drone
+                        best_next_hop_id = self.neighbor_table.best_neighbor(self.my_drone, dst_drone)
+                        if best_next_hop_id != self.my_drone.identifier:
+                            self.my_drone.transmitting_queue.put(waiting_pkd)
+                            self.my_drone.waiting_list.remove(waiting_pkd)
+                        else:
+                            pass
+            else:
+                break

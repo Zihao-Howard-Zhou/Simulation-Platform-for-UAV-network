@@ -67,18 +67,26 @@ class Grad:
 
         dst_drone = packet.dst_drone  # the destination of the data packet
         has_route = self.cost_table.has_entry(dst_drone.identifier)
+        enquire = True
 
         if has_route:
             remaining_value = self.cost_table.get_est_cost(dst_drone.identifier)
 
             GL_ID_GRAD_MESSAGE += 1
-            grad_message = GradMessage(src_drone=self.my_drone, dst_drone=dst_drone, creation_time=self.simulator.env.now,
-                                       id_message=GL_ID_GRAD_MESSAGE, message_length=100, message_type="M_DATA",
-                                       accrued_cost=0, remaining_value=remaining_value, simulator=self.simulator)
+            grad_message = GradMessage(src_drone=self.my_drone,
+                                       dst_drone=dst_drone,
+                                       creation_time=self.simulator.env.now,
+                                       id_message=GL_ID_GRAD_MESSAGE,
+                                       message_length=100,
+                                       message_type="M_DATA",
+                                       accrued_cost=0,
+                                       remaining_value=remaining_value,
+                                       simulator=self.simulator)
+
             grad_message.attached_data_packet = packet
             grad_message.transmission_mode = 1  # broadcast
 
-            return has_route, grad_message
+            return has_route, grad_message, enquire
         else:
             # there is no entry related to "dst_drone" in the cost table
             self.my_drone.waiting_list.append(packet)  # put the data packet into waiting list
@@ -91,7 +99,7 @@ class Grad:
             grad_message.transmission_mode = 1  # broadcast
             self.simulator.metrics.control_packet_num += 1
 
-            return has_route, grad_message
+            return has_route, grad_message, enquire
 
     def packet_reception(self, packet, src_drone_id):
         global GL_ID_GRAD_MESSAGE

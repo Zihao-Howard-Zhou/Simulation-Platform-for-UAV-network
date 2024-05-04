@@ -34,7 +34,7 @@ class Dsdv:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/4/14
-    Updated at: 2024/4/17
+    Updated at: 2024/5/4
     """
 
     def __init__(self, simulator, my_drone):
@@ -48,8 +48,7 @@ class Dsdv:
     def detect_broken_link_periodically(self, my_drone):
         """
         If a node finds that it has not received a hello packet from a neighbor for more than a period of time, it can
-        be considered that the link is broken and an update packet needs to be broadcast immediately.
-
+        be considered that the link is broken and an update packet needs to be broadcast immediately
         :param my_drone: the node that installs the protocol
         :return: none
         """
@@ -62,7 +61,8 @@ class Dsdv:
 
             if flag == 1:
                 GL_ID_HELLO_PACKET += 1
-                hello_pkd = DsdvHelloPacket(src_drone=my_drone, creation_time=self.simulator.env.now,
+                hello_pkd = DsdvHelloPacket(src_drone=my_drone,
+                                            creation_time=self.simulator.env.now,
                                             id_hello_packet=GL_ID_HELLO_PACKET,
                                             hello_packet_length=config.HELLO_PACKET_LENGTH,
                                             routing_table=self.routing_table.routing_table,
@@ -81,7 +81,8 @@ class Dsdv:
         GL_ID_HELLO_PACKET += 1
 
         self.routing_table.routing_table[self.my_drone.identifier][2] += 2  # important!
-        hello_pkd = DsdvHelloPacket(src_drone=my_drone, creation_time=self.simulator.env.now,
+        hello_pkd = DsdvHelloPacket(src_drone=my_drone,
+                                    creation_time=self.simulator.env.now,
                                     id_hello_packet=GL_ID_HELLO_PACKET,
                                     hello_packet_length=config.HELLO_PACKET_LENGTH,
                                     routing_table=self.routing_table.routing_table,
@@ -108,13 +109,17 @@ class Dsdv:
         """
 
         has_route = True
+        enquire = False  # "True" when reactive protocol is adopted
 
         dst_drone = packet.dst_drone
 
         best_next_hop_id = self.routing_table.has_entry(dst_drone.identifier)
-        packet.next_hop_id = best_next_hop_id
+        if best_next_hop_id is self.my_drone.identifier:
+            has_route = False  # no available next hop
+        else:
+            packet.next_hop_id = best_next_hop_id  # it has an available next hop drone
 
-        return has_route, packet
+        return has_route, packet, enquire
 
     def packet_reception(self, packet, src_drone_id):
         """
@@ -144,14 +149,18 @@ class Dsdv:
 
             GL_ID_ACK_PACKET += 1
             src_drone = self.simulator.drones[src_drone_id]  # previous drone
-            ack_packet = AckPacket(src_drone=self.my_drone, dst_drone=src_drone, ack_packet_id=GL_ID_ACK_PACKET,
+            ack_packet = AckPacket(src_drone=self.my_drone,
+                                   dst_drone=src_drone,
+                                   ack_packet_id=GL_ID_ACK_PACKET,
                                    ack_packet_length=config.ACK_PACKET_LENGTH,
-                                   ack_packet=packet, simulator=self.simulator)
+                                   ack_packet=packet,
+                                   simulator=self.simulator)
 
             yield self.simulator.env.timeout(config.SIFS_DURATION)  # switch from receiving to transmitting
 
             # unicast the ack packet immediately without contention for the channel
             if not self.my_drone.sleep:
+                ack_packet.increase_ttl()
                 self.my_drone.mac_protocol.phy.unicast(ack_packet, src_drone_id)
                 yield self.simulator.env.timeout(ack_packet.packet_length / config.BIT_RATE * 1e6)
             else:
