@@ -17,10 +17,11 @@ class RandomWaypoint3D:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/4/19
-    Updated at: 2024/4/19
+    Updated at: 2024/5/1
     """
 
     def __init__(self, drone):
+        self.model_identifier = 'RandomWaypoint'
         self.my_drone = drone
         self.position_update_interval = 1 * 1e5  # 0.1s
         self.pause_time = 1 * 1e6  # 1s
@@ -137,6 +138,7 @@ class RandomWaypoint3D:
             drone.residual_energy -= energy_consumption
 
     def show_trajectory(self):
+        print(self.waypoint_coords)
         x = []
         y = []
         z = []

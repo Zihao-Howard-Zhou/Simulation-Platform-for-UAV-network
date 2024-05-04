@@ -16,6 +16,7 @@ class GaussMarkov3D:
     motion direction frequently. 3) The last parameter is to control the randomness of the mobility.
 
     Attributes:
+        model_identifier: model name
         my_drone: the drone that installed the mobility model
         position_update_interval: unit: microsecond, determine how often the drone updates its position
         direction_update_interval: unit: microsecond, determine how often the drone changes its direction
@@ -30,10 +31,11 @@ class GaussMarkov3D:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/17
-    Updated at: 2024/2/11
+    Updated at: 2024/5/1
     """
 
     def __init__(self, drone):
+        self.model_identifier = 'GaussMarkov'
         self.my_drone = drone
         self.position_update_interval = 1*1e5  # 0.1s
         self.direction_update_interval = 5*1e5  # 0.5s
@@ -55,7 +57,7 @@ class GaussMarkov3D:
 
         self.my_drone.simulator.env.process(self.mobility_update(self.my_drone))
         self.trajectory = []
-        self.my_drone.simulator.env.process(self.show_trajectory())
+        # self.my_drone.simulator.env.process(self.show_trajectory())
 
     def mobility_update(self, drone):
         while True:
