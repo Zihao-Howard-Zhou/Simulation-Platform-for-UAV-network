@@ -5,8 +5,9 @@ MAP_LENGTH = 1000  # m, length of the map
 MAP_WIDTH = 1000  # m, width of the map
 MAP_HEIGHT = 120  # m, height of the map 120
 SIM_TIME = 15 * 1e6  # us, total simulation time (10s)
-NUMBER_OF_DRONES = 15  # number of drones in the network
+NUMBER_OF_DRONES = 10  # number of drones in the network
 STATIC_CASE = 0
+HETEROGENEOUS = 0  # heterogeneous network support (in terms of speed)
 LOGGING_LEVEL = logging.INFO
 
 # ---------- hardware parameters of drone (rotary-wing) -----------#
@@ -21,13 +22,13 @@ AIRCRAFT_WEIGHT = 100  # Newton
 ROTOR_BLADE_TIP_SPEED = 500
 MEAN_ROTOR_VELOCITY = 7.2  # mean rotor induced velocity in hover
 FUSELAGE_DRAG_RATIO = 0.3
-INITIAL_ENERGY = 50 * 1e4  # in joule
+INITIAL_ENERGY = 20 * 1e3  # in joule
 ENERGY_THRESHOLD = 2000  # in joule
 
 # ----------------------- radio parameters ----------------------- #
 TRANSMITTING_POWER = 1  # Watt
-LIGHT_SPEED = 3*1e8  # light speed (m/s)
-CARRIER_FREQUENCY = 1*1e9  # carrier frequency (Hz)
+LIGHT_SPEED = 3 * 1e8  # light speed (m/s)
+CARRIER_FREQUENCY = 1 * 1e9  # carrier frequency (Hz)
 NOISE_POWER = 4*1e-9  # noise power (Watt)
 RADIO_SWITCHING_TIME = 100  # us, the switching time of the transceiver mode
 SNR_THRESHOLD = 2  # dB
@@ -35,9 +36,9 @@ RADIO_SENSITIVITY = 1e-10  # power under which signal is not sensed
 
 # ---------------------- packet parameters ----------------------- #
 MAX_TTL = 15
-PACKET_LIFETIME = 5*1e6  # 5s
+PACKET_LIFETIME = 10 * 1e6  # 10s
 PACKET_HEADER_LENGTH = 128  # bit
-DATA_PACKET_PAYLOAD_LENGTH = 1024*8  # bit
+DATA_PACKET_PAYLOAD_LENGTH = 1024 * 8  # bit
 DATA_PACKET_LENGTH = PACKET_HEADER_LENGTH + DATA_PACKET_PAYLOAD_LENGTH
 
 ACK_PACKET_LENGTH = 128  # bit
