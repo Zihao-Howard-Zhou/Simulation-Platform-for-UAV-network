@@ -28,7 +28,7 @@ class PureAloha:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/4/22
-    Updated at: 2024/4/22
+    Updated at: 2024/5/1
     """
 
     def __init__(self, drone):
@@ -67,12 +67,12 @@ class PureAloha:
                 self.wait_ack_process_dict[key2] = self.wait_ack_process
                 self.wait_ack_process_finish[key2] = 0
 
-            # yield self.env.process(self.phy.unicast(pkd, next_hop_id))
+            pkd.increase_ttl()
             self.phy.unicast(pkd, next_hop_id)
             yield self.env.timeout(pkd.packet_length / config.BIT_RATE * 1e6)
 
         elif transmission_mode == 1:
-            # yield self.env.process(self.phy.broadcast(pkd))
+            pkd.increase_ttl()
             self.phy.broadcast(pkd)
             yield self.env.timeout(pkd.packet_length / config.BIT_RATE * 1e6)
 
