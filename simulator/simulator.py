@@ -1,3 +1,4 @@
+import random
 from phy.channel import Channel
 from entities.drone import Drone
 from simulator.metrics import Metrics
@@ -44,18 +45,23 @@ class Simulator:
 
         start_position = start_coords.get_random_start_point_3d(seed)
 
-        fig = plt.figure()
-        ax = Axes3D(fig)
-        for xx in range(len(start_position)):
-            pose = start_position[xx]
-            ax.scatter3D(pose[0], pose[1], pose[2])
-
-        plt.show()
+        # fig = plt.figure()
+        # ax = Axes3D(fig)
+        # for xx in range(len(start_position)):
+        #     pose = start_position[xx]
+        #     ax.scatter3D(pose[0], pose[1], pose[2])
+        #
+        # plt.show()
 
         self.drones = []
         for i in range(n_drones):
-            print('UAV: ', i, ' initial location is at: ', start_position[i])
-            drone = Drone(env=env, node_id=i, coords=start_position[i], speed=35,
+            if config.HETEROGENEOUS:
+                speed = random.randint(5, 60)
+            else:
+                speed = 10
+
+            print('UAV: ', i, ' initial location is at: ', start_position[i], ' speed is: ', speed)
+            drone = Drone(env=env, node_id=i, coords=start_position[i], speed=speed,
                           inbox=self.channel.create_inbox_for_receiver(i), simulator=self)
             self.drones.append(drone)
 
