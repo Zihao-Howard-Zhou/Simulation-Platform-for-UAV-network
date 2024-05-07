@@ -15,13 +15,7 @@ class Channel:
 
     Attributes:
         env: simulation environment created by simpy
-<<<<<<< HEAD
         pipes: control the inboxes of all drones, format is shown above
-=======
-        capacity: maximum number of packets that a single store can hold
-        pipes: list, contain store for each receiver
-                every drone has a store to receive packages, pipes contain all store
->>>>>>> afc7fd8 (0423)
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/11

@@ -106,7 +106,7 @@ class Drone:
         self.pitch_mean = self.pitch
         self.velocity_mean = self.speed
 
-        self.inbox = inbox
+        self.inbox = inbox  # channel.pipe data[key] = [packet, send_time, src, rec_flag]
 
         self.buffer = simpy.Resource(env, capacity=1)  # send buffer, get from buffer need request, simulate wait time
         self.transmitting_queue = queue.Queue()  # receive queue, for retransmission

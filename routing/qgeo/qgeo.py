@@ -132,7 +132,7 @@ class QGeo:
 
         elif isinstance(packet, QGeoAckPacket):
             # update Q-table
-            self.update_q_table(packet, src_drone_id)
+            self.update_q_table(packet, src_drone_id)  # ackpkg include which pkg to ack
 
             key2 = str(self.my_drone.identifier) + '_' + str(self.my_drone.mac_protocol.wait_ack_process_count)
 
@@ -158,8 +158,8 @@ class QGeo:
         position_shift_next_hop = [v * t for v, t in zip(cur_vel_next_hop, time_interval)]
         position_shift_myself = [v * t for v, t in zip(cur_vel_myself, time_interval)]
 
-        future_pos_myself = cur_pos_myself + position_shift_myself
-        future_pos_next_hop = cur_pos_next_hop + position_shift_next_hop
+        future_pos_myself = list(cur_pos_myself) + position_shift_myself
+        future_pos_next_hop = list(cur_pos_next_hop) + position_shift_next_hop
 
         future_distance = euclidean_distance(future_pos_myself, future_pos_next_hop)
 
