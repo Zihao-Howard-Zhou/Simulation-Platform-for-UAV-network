@@ -91,15 +91,15 @@ class Drone:
         self.coords = coords
         self.start_coords = coords
 
-        random.seed(2024 + self.identifier)
-        self.direction = random.uniform(0, 2 * np.pi)
+        random.seed(2024+self.identifier)
+        self.direction = random.uniform(0, 2 * np.pi)  # random direction
 
         random.seed(2025 + self.identifier)
         self.pitch = random.uniform(-0.05, 0.05)
         self.speed = speed
         self.velocity = [self.speed * math.cos(self.direction) * math.cos(self.pitch),
                          self.speed * math.sin(self.direction) * math.cos(self.pitch),
-                         self.speed * math.sin(self.pitch)]
+                         self.speed * math.sin(self.pitch)]  # x, y, z
 
         self.direction_mean = self.direction
         self.pitch_mean = self.pitch
@@ -107,22 +107,23 @@ class Drone:
 
         self.inbox = inbox
 
-        self.buffer = simpy.Resource(env, capacity=1)
-        self.transmitting_queue = queue.Queue()
+        self.buffer = simpy.Resource(env, capacity=1)  # send buffer, get from buffer need request, simulate wait time
+        self.transmitting_queue = queue.Queue()  # receive queue, for retransmission
         self.waiting_list = []
 
         self.mac_protocol = CsmaCa(self)
-        self.mac_process_dict = dict()
-        self.mac_process_finish = dict()
-        self.mac_process_count = 0
+        self.mac_process_dict = dict()  # a dictionary, used to store the mac_process that is triggered each time
+        self.mac_process_finish = dict()  # a dictionary, used to indicate the completion of the process
+        self.mac_process_count = 0  # distinguish between different processes
 
         self.routing_protocol = Gpsr(self.simulator, self)
 
-        self.mobility_model = GaussMarkov3D(self)
+        self.mobility_model = GaussMarkov3D(self)  # mov and energy consume
 
         self.energy_model = EnergyModel()
         self.residual_energy = config.INITIAL_ENERGY
         self.sleep = False
+
 
         self.env.process(self.generate_data_packet())
         self.env.process(self.feed_packet())
@@ -141,7 +142,7 @@ class Drone:
         global GLOBAL_DATA_PACKET_ID
 
         while True:
-            if not self.sleep:
+            if not self.sleep:  # has energy
                 if traffic_pattern == 'Uniform':
                     # the drone generates a data packet every 0.5s with jitter
                     yield self.env.timeout(random.randint(500000, 505000))
@@ -166,7 +167,7 @@ class Drone:
                                  data_packet_id=GLOBAL_DATA_PACKET_ID,
                                  data_packet_length=config.DATA_PACKET_LENGTH,
                                  simulator=self.simulator)
-                pkd.transmission_mode = 0  # the default transmission mode of data packet is "unicast" (0)
+                pkd.transmission_mode = 0  # the default transmission mode of data packet is "unicast" (0).broadcast(1)
 
                 self.simulator.metrics.datapacket_generated_num += 1
 
@@ -245,8 +246,10 @@ class Drone:
             logging.info('Packet: %s waiting for UAV: %s buffer resource at: %s',
                          pkd.packet_id, self.identifier, arrival_time)
 
+
             with self.buffer.request() as request:
                 yield request  # wait to enter to buffer
+
 
                 logging.info('Packet: %s has been added to the buffer at: %s of UAV: %s, waiting time is: %s',
                              pkd.packet_id, self.env.now, self.identifier, self.env.now - arrival_time)
@@ -310,7 +313,8 @@ class Drone:
 
                     sinr_list = sinr_calculator(self, all_drones_send_to_me, transmitting_node_list)
 
-                    # receive the packet of the transmitting node corresponding to the maximum SINR
+
+                    # Receive the packet of the transmitting node corresponding to the maximum SINR
                     max_sinr = max(sinr_list)
                     if max_sinr >= config.SNR_THRESHOLD:
                         which_one = sinr_list.index(max_sinr)

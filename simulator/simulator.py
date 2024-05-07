@@ -13,10 +13,13 @@ class Simulator:
     Description: simulation environment
 
     Attributes:
+        seed: for 3D position generation
         env: simpy environment
-        total_simulation_time: discrete time steps, in nanosecond
+        channel_states: channel states for every drone
         n_drones: number of the drones
+
         channel_states: a dictionary, used to describe the channel usage
+
         channel: wireless channel
         metrics: Metrics class, used to record the network performance
         drones: a list, contains all drone instances
@@ -43,7 +46,7 @@ class Simulator:
 
         self.metrics = Metrics(self)  # use to record the network performance
 
-        start_position = start_coords.get_random_start_point_3d(seed)
+        start_position = start_coords.get_random_start_point_3d(seed) # random generation
 
         # fig = plt.figure()
         # ax = Axes3D(fig)
@@ -54,6 +57,7 @@ class Simulator:
         # plt.show()
 
         self.drones = []
+        # for every drone: create entity : id, start pos, speed, self store
         for i in range(n_drones):
             if config.HETEROGENEOUS:
                 speed = random.randint(5, 60)
