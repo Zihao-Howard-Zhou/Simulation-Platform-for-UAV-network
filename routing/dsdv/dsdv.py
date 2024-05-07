@@ -57,9 +57,9 @@ class Dsdv:
 
         while True:
             yield self.simulator.env.timeout(0.5 * 1e6)  # detect the broken link every 0.5s
-            flag = self.routing_table.purge()
+            flag = self.routing_table.purge()  # clear old item, if changed, flag = 1
 
-            if flag == 1:
+            if flag == 1:  # significant changed, send hello packet
                 GL_ID_HELLO_PACKET += 1
                 hello_pkd = DsdvHelloPacket(src_drone=my_drone,
                                             creation_time=self.simulator.env.now,
@@ -113,6 +113,7 @@ class Dsdv:
 
         dst_drone = packet.dst_drone
 
+        # if inaccessible, send to self?
         best_next_hop_id = self.routing_table.has_entry(dst_drone.identifier)
         if best_next_hop_id is self.my_drone.identifier:
             has_route = False  # no available next hop

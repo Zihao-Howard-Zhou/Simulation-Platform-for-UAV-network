@@ -36,11 +36,12 @@ class Drone:
     """
     Drone implementation
 
-    Drones in the simulation are served as routers. Each drone can be selected as a potential source node, destination
+
+    Drones in the simulation are served as routers. Every drone can be selected as a potential source node, destination
     and relaying node. Each drone needs to install the corresponding routing module, MAC module, mobility module and
-    energy module, etc. At the same time, each drone also has its own queue and can only send one packet at a time, so
-    subsequent data packets need queuing for queue resources, which is used to reflect the queue delay in the drone
-    network
+    energy module, etc. At the same time, each drone also has its own queue and can only send one data packet in the
+    queue at a time, so subsequent data packets need queuing for queue resources, which is used to reflect the queue
+    delay in the drone network
 
     Attributes:
         simulator: the simulation platform that contains everything
@@ -119,6 +120,7 @@ class Drone:
         self.routing_protocol = Gpsr(self.simulator, self)
 
         self.mobility_model = GaussMarkov3D(self)  # mov and energy consume
+
 
         self.energy_model = EnergyModel()
         self.residual_energy = config.INITIAL_ENERGY
@@ -246,10 +248,8 @@ class Drone:
             logging.info('Packet: %s waiting for UAV: %s buffer resource at: %s',
                          pkd.packet_id, self.identifier, arrival_time)
 
-
             with self.buffer.request() as request:
                 yield request  # wait to enter to buffer
-
 
                 logging.info('Packet: %s has been added to the buffer at: %s of UAV: %s, waiting time is: %s',
                              pkd.packet_id, self.env.now, self.identifier, self.env.now - arrival_time)
@@ -311,8 +311,10 @@ class Drone:
 
                     transmitting_node_list = list(set(transmitting_node_list))  # remove duplicates
 
-                    sinr_list = sinr_calculator(self, all_drones_send_to_me, transmitting_node_list)
+                    all_drones_send_to_me = [msg[2] for msg in self.inbox.items]
 
+                    # is same index to all_drones_send_to_me
+                    sinr_list = sinr_calculator(self, all_drones_send_to_me, transmitting_node_list)
 
                     # Receive the packet of the transmitting node corresponding to the maximum SINR
                     max_sinr = max(sinr_list)

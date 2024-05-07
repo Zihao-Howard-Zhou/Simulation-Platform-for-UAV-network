@@ -84,10 +84,11 @@ class DsdvRoutingTable:
         for key in list(self.routing_table):
             if key is not self.my_drone.identifier:
                 updated_time = self.get_updated_time(key)
-                if updated_time + self.entry_life_time < self.env.now:
+                if updated_time + self.entry_life_time < self.env.now:  # update time is old
                     expired_next_hop = self.routing_table[key][0]  # expired next hop
 
                     # all entries through this next hop should be set to invalid
+                    # key2 is destination
                     for key2 in list(self.routing_table):
                         if self.routing_table[key2][0] == expired_next_hop:
                             self.routing_table[key2][1] = float('inf')
@@ -107,7 +108,6 @@ class DsdvRoutingTable:
             next_hop_id = self.routing_table[dst_id][0]
         else:
             next_hop_id = self.my_drone.identifier
-
         return next_hop_id
 
     # print routing table
