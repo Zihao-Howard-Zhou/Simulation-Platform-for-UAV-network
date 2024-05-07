@@ -76,12 +76,12 @@ class GradCostTable:
         seq_num = grad_message.seq_num
         accrued_cost = grad_message.accrued_cost
 
-        if originator_id is not self.my_drone.identifier:
+        if originator_id is not self.my_drone.identifier:  # not self
             if originator_id not in self.cost_table.keys():  # no matching entry is found
                 self.cost_table[originator_id] = [seq_num, accrued_cost, cur_time]  # create a new entry
             elif self.cost_table[originator_id][0] < seq_num:  # incoming message is fresher
                 self.cost_table[originator_id] = [seq_num, accrued_cost, cur_time]  # entry is updated
-            elif accrued_cost < self.cost_table[originator_id][1]:
+            elif accrued_cost < self.cost_table[originator_id][1]:  # cost lower, update
                 self.cost_table[originator_id][1] = accrued_cost
                 self.cost_table[originator_id][2] = cur_time
         else:

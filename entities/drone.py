@@ -121,7 +121,6 @@ class Drone:
 
         self.mobility_model = GaussMarkov3D(self)  # mov and energy consume
 
-
         self.energy_model = EnergyModel()
         self.residual_energy = config.INITIAL_ENERGY
         self.sleep = False

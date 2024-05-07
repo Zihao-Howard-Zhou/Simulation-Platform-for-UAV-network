@@ -8,6 +8,7 @@ MAP_HEIGHT = 120  # m, height of the map 120
 SIM_TIME = 15 * 1e6  # us, total simulation time (10s)
 NUMBER_OF_DRONES = 10  # number of drones in the network
 
+
 STATIC_CASE = 0
 HETEROGENEOUS = 0  # heterogeneous network support (in terms of speed)
 LOGGING_LEVEL = logging.INFO

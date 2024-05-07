@@ -73,6 +73,7 @@ class Grad:
             remaining_value = self.cost_table.get_est_cost(dst_drone.identifier)
 
             GL_ID_GRAD_MESSAGE += 1
+
             grad_message = GradMessage(src_drone=self.my_drone,
                                        dst_drone=dst_drone,
                                        creation_time=self.simulator.env.now,
