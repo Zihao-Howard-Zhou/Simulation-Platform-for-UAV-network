@@ -6,7 +6,9 @@ class QGeoNeighborTable:
     """
     Neighbor table of QGeo (Q-Learning based Geographic routing protocol)
 
-    Main function: 1) determine the available (optional) neighbor, 2) determine if local maximum (void area) is occurred
+    Main function:
+        1) determine the available (optional) neighbor
+        2) determine if local maximum (void area) is occurred
 
     References:
         [1] Jung W S, Yim J, Ko Y B., "QGeo: Q-learning-based geographic ad hoc routing protocol for unmanned robotic
@@ -14,15 +16,15 @@ class QGeoNeighborTable:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/4/17
-    Updated at: 2024/4/17
+    Updated at: 2024/5/8
     """
 
     def __init__(self, env, my_drone):
         self.env = env
         self.my_drone = my_drone
         self.neighbor_table = defaultdict(list)
-        self.q_table = 0.5 * np.ones((my_drone.simulator.n_drones, my_drone.simulator.n_drones))
-        self.entry_life_time = 1 * 1e6  # unit: us (1s)
+        self.q_table = 0.5 * np.ones((my_drone.simulator.n_drones, my_drone.simulator.n_drones))  # initialization
+        self.entry_life_time = 2.5 * 1e6  # unit: us
 
     # determine if the neighbor table is empty
     def is_empty(self):

@@ -1,3 +1,4 @@
+import copy
 import logging
 import math
 import numpy as np
@@ -126,6 +127,7 @@ class Opar:
         return path
 
     def next_hop_selection(self, packet):
+        enquire = False
         has_route = True
 
         if packet.src_drone is self.my_drone:  # if it is the source, optimization should be executed
@@ -213,7 +215,7 @@ class Opar:
 
         packet.next_hop_id = best_next_hop_id
 
-        return has_route, packet
+        return has_route, packet, enquire
 
     def packet_reception(self, packet, src_drone_id):
         """
@@ -229,18 +231,24 @@ class Opar:
         global GL_ID_ACK_PACKET
 
         if isinstance(packet, DataPacket):
-            if packet.dst_drone.identifier == self.my_drone.identifier:
-                self.simulator.metrics.deliver_time_dict[packet.packet_id] = self.simulator.env.now - packet.creation_time
-                self.simulator.metrics.datapacket_arrived.add(packet.packet_id)
-                logging.info('Packet: %s is received by destination UAV: %s', packet.packet_id, self.my_drone.identifier)
+            packet_copy = copy.copy(packet)
+            if packet_copy.dst_drone.identifier == self.my_drone.identifier:
+                self.simulator.metrics.deliver_time_dict[packet_copy.packet_id] \
+                    = self.simulator.env.now - packet_copy.creation_time
+                self.simulator.metrics.datapacket_arrived.add(packet_copy.packet_id)
+                logging.info('Packet: %s is received by destination UAV: %s',
+                             packet_copy.packet_id, self.my_drone.identifier)
             else:
-                self.my_drone.transmitting_queue.put(packet)
+                self.my_drone.transmitting_queue.put(packet_copy)
 
             GL_ID_ACK_PACKET += 1
             src_drone = self.simulator.drones[src_drone_id]  # previous drone
-            ack_packet = AckPacket(src_drone=self.my_drone, dst_drone=src_drone, ack_packet_id=GL_ID_ACK_PACKET,
+            ack_packet = AckPacket(src_drone=self.my_drone,
+                                   dst_drone=src_drone,
+                                   ack_packet_id=GL_ID_ACK_PACKET,
                                    ack_packet_length=config.ACK_PACKET_LENGTH,
-                                   ack_packet=packet, simulator=self.simulator)
+                                   ack_packet=packet_copy,
+                                   simulator=self.simulator)
 
             yield self.simulator.env.timeout(config.SIFS_DURATION)  # switch from receiving to transmitting
 

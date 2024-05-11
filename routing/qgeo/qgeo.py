@@ -1,3 +1,4 @@
+import copy
 import random
 import logging
 from entities.packet import DataPacket
@@ -44,12 +45,14 @@ class QGeo:
         self.learning_rate = 0.5
         self.neighbor_table = QGeoNeighborTable(self.simulator.env, my_drone)
         self.simulator.env.process(self.broadcast_hello_packet_periodically())
+        self.simulator.env.process(self.check_waiting_list())
 
     def broadcast_hello_packet(self, my_drone):
         global GL_ID_HELLO_PACKET
 
         GL_ID_HELLO_PACKET += 1
-        hello_pkd = QGeoHelloPacket(src_drone=my_drone, creation_time=self.simulator.env.now,
+        hello_pkd = QGeoHelloPacket(src_drone=my_drone,
+                                    creation_time=self.simulator.env.now,
                                     id_hello_packet=GL_ID_HELLO_PACKET,
                                     hello_packet_length=config.HELLO_PACKET_LENGTH,
                                     simulator=self.simulator)
@@ -59,11 +62,11 @@ class QGeo:
                      self.simulator.env.now, self.my_drone.identifier)
 
         self.simulator.metrics.control_packet_num += 1
-        yield self.simulator.env.process(my_drone.packet_coming(hello_pkd))
+        self.my_drone.transmitting_queue.put(hello_pkd)
 
     def broadcast_hello_packet_periodically(self):
         while True:
-            self.simulator.env.process(self.broadcast_hello_packet(self.my_drone))
+            self.broadcast_hello_packet(self.my_drone)
             jitter = random.randint(1000, 2000)  # delay jitter
             yield self.simulator.env.timeout(self.hello_interval + jitter)
 
@@ -73,6 +76,8 @@ class QGeo:
         :param packet: the data packet that needs to be sent
         :return: next hop drone
         """
+        enquire = False
+        has_route = True
 
         # update neighbor table
         self.neighbor_table.purge()
@@ -82,7 +87,12 @@ class QGeo:
         # choose best next hop according to the neighbor table
         best_next_hop_id = self.neighbor_table.best_neighbor(self.my_drone, dst_drone)
 
-        return best_next_hop_id
+        if best_next_hop_id is self.my_drone.identifier:
+            has_route = False  # no available next hop
+        else:
+            packet.next_hop_id = best_next_hop_id  # it has an available next hop drone
+
+        return has_route, packet, enquire
 
     def packet_reception(self, packet, src_drone_id):
         """
@@ -103,27 +113,35 @@ class QGeo:
             # self.neighbor_table.print_neighbor(self.my_drone)
 
         elif isinstance(packet, DataPacket):
-            if packet.dst_drone.identifier == self.my_drone.identifier:
-                self.simulator.metrics.deliver_time_dict[packet.packet_id] = self.simulator.env.now - packet.creation_time
-                self.simulator.metrics.datapacket_arrived.add(packet.packet_id)
-                logging.info('Packet: %s is received by destination UAV: %s', packet.packet_id,
-                             self.my_drone.identifier)
+            packet_copy = copy.copy(packet)
+            if packet_copy.dst_drone.identifier == self.my_drone.identifier:
+                self.simulator.metrics.deliver_time_dict[packet_copy.packet_id] \
+                    = self.simulator.env.now - packet_copy.creation_time
+                self.simulator.metrics.datapacket_arrived.add(packet_copy.packet_id)
+                logging.info('Packet: %s is received by destination UAV: %s',
+                             packet_copy.packet_id, self.my_drone.identifier)
             else:
-                self.my_drone.fifo_queue.put(packet)
+                self.my_drone.transmitting_queue.put(packet_copy)
 
             GL_ID_ACK_PACKET += 1
             src_drone = self.simulator.drones[src_drone_id]  # previous drone
-            max_q = self.neighbor_table.get_max_q_value(packet.dst_drone.identifier)
-            void_area = self.neighbor_table.judge_void_area(packet.dst_drone)  # determine if next hop is local minimum
-            ack_packet = QGeoAckPacket(src_drone=self.my_drone, dst_drone=src_drone, ack_packet_id=GL_ID_ACK_PACKET,
-                                       ack_packet_length=config.ACK_PACKET_LENGTH, max_q=max_q, void_area=void_area,
-                                       ack_packet=packet, simulator=self.simulator)
+            max_q = self.neighbor_table.get_max_q_value(packet_copy.dst_drone.identifier)
+            void_area = self.neighbor_table.judge_void_area(packet_copy.dst_drone)  # determine if next hop is local minimum
+            ack_packet = QGeoAckPacket(src_drone=self.my_drone,
+                                       dst_drone=src_drone,
+                                       ack_packet_id=GL_ID_ACK_PACKET,
+                                       ack_packet_length=config.ACK_PACKET_LENGTH,
+                                       max_q=max_q,
+                                       void_area=void_area,
+                                       ack_packet=packet,
+                                       simulator=self.simulator)
 
             yield self.simulator.env.timeout(config.SIFS_DURATION)  # switch from receiving to transmitting
 
             # unicast the ack packet immediately without contention for the channel
             if not self.my_drone.sleep:
-                yield self.simulator.env.process(self.my_drone.mac_protocol.phy.unicast(ack_packet, src_drone_id))
+                self.my_drone.mac_protocol.phy.unicast(ack_packet, src_drone_id)
+                yield self.simulator.env.timeout(ack_packet.packet_length / config.BIT_RATE * 1e6)
             else:
                 pass
 
@@ -143,11 +161,11 @@ class QGeo:
         # next hello interval
         future_time = (self.hello_interval * (self.simulator.env.now / self.hello_interval + 1)) / 1e6
 
-        cur_pos_myself = self.my_drone.coords
-        cur_pos_next_hop = self.neighbor_table.get_neighbor_position(next_hop_id)
+        cur_pos_myself = list(self.my_drone.coords)
+        cur_pos_next_hop = list(self.neighbor_table.get_neighbor_position(next_hop_id))
 
-        cur_vel_myself = self.my_drone.velocity
-        cur_vel_next_hop = self.neighbor_table.get_neighbor_velocity(next_hop_id)
+        cur_vel_myself = list(self.my_drone.velocity)
+        cur_vel_next_hop = list(self.neighbor_table.get_neighbor_velocity(next_hop_id))
 
         update_time_next_hop = self.neighbor_table.get_updated_time(next_hop_id) / 1e6
         time_interval = [future_time - update_time_next_hop] * 3  # three dimensions
@@ -191,3 +209,21 @@ class QGeo:
         self.neighbor_table.q_table[next_hop_id][dst_drone.identifier] = \
             (1 - self.learning_rate) * self.neighbor_table.q_table[next_hop_id][dst_drone.identifier] + \
             self.learning_rate * (reward + gamma * max_q)
+
+    def check_waiting_list(self):
+        while True:
+            if not self.my_drone.sleep:
+                yield self.simulator.env.timeout(0.6 * 1e6)
+                for waiting_pkd in self.my_drone.waiting_list:
+                    if self.simulator.env.now < waiting_pkd.creation_time + waiting_pkd.deadline:
+                        self.my_drone.waiting_list.remove(waiting_pkd)
+                    else:
+                        dst_drone = waiting_pkd.dst_drone
+                        best_next_hop_id = self.neighbor_table.best_neighbor(self.my_drone, dst_drone)
+                        if best_next_hop_id != self.my_drone.identifier:
+                            self.my_drone.transmitting_queue.put(waiting_pkd)
+                            self.my_drone.waiting_list.remove(waiting_pkd)
+                        else:
+                            pass
+            else:
+                break

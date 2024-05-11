@@ -1,3 +1,4 @@
+import copy
 import random
 import logging
 from entities.packet import DataPacket, AckPacket
@@ -34,7 +35,7 @@ class Gpsr:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/11
-    Updated at: 2024/5/4
+    Updated at: 2024/5/12
     """
 
     def __init__(self, simulator, my_drone):
@@ -111,12 +112,15 @@ class Gpsr:
             # self.neighbor_table.print_neighbor(self.my_drone)
 
         elif isinstance(packet, DataPacket):
-            if packet.dst_drone.identifier == self.my_drone.identifier:
-                self.simulator.metrics.deliver_time_dict[packet.packet_id] = self.simulator.env.now - packet.creation_time
-                self.simulator.metrics.datapacket_arrived.add(packet.packet_id)
-                logging.info('Packet: %s is received by destination UAV: %s', packet.packet_id, self.my_drone.identifier)
+            packet_copy = copy.copy(packet)
+            if packet_copy.dst_drone.identifier == self.my_drone.identifier:
+                self.simulator.metrics.deliver_time_dict[packet_copy.packet_id] = \
+                    self.simulator.env.now - packet_copy.creation_time
+                self.simulator.metrics.datapacket_arrived.add(packet_copy.packet_id)
+                logging.info('Packet: %s is received by destination UAV: %s',
+                             packet_copy.packet_id, self.my_drone.identifier)
             else:
-                self.my_drone.transmitting_queue.put(packet)
+                self.my_drone.transmitting_queue.put(packet_copy)
 
             GL_ID_ACK_PACKET += 1
             src_drone = self.simulator.drones[src_drone_id]  # previous drone
@@ -124,7 +128,7 @@ class Gpsr:
                                    dst_drone=src_drone,
                                    ack_packet_id=GL_ID_ACK_PACKET,
                                    ack_packet_length=config.ACK_PACKET_LENGTH,
-                                   ack_packet=packet,
+                                   ack_packet=packet_copy,
                                    simulator=self.simulator)
 
             yield self.simulator.env.timeout(config.SIFS_DURATION)  # switch from receiving to transmitting
