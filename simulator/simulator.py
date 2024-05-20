@@ -58,7 +58,7 @@ class Simulator:
             if config.HETEROGENEOUS:
                 speed = random.randint(5, 60)
             else:
-                speed = 10
+                speed = 20
 
             print('UAV: ', i, ' initial location is at: ', start_position[i], ' speed is: ', speed)
             drone = Drone(env=env, node_id=i, coords=start_position[i], speed=speed,

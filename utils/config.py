@@ -1,10 +1,10 @@
 import logging
 
 # --------------------- simulation parameters --------------------- #
-MAP_LENGTH = 1000  # m, length of the map
-MAP_WIDTH = 1000  # m, width of the map
+MAP_LENGTH = 700  # m, length of the map
+MAP_WIDTH = 700  # m, width of the map
 MAP_HEIGHT = 120  # m, height of the map 120
-SIM_TIME = 15 * 1e6  # us, total simulation time (10s)
+SIM_TIME = 10 * 1e6  # us, total simulation time (10s)
 NUMBER_OF_DRONES = 10  # number of drones in the network
 STATIC_CASE = 0
 HETEROGENEOUS = 0  # heterogeneous network support (in terms of speed)

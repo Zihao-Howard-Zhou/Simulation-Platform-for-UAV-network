@@ -50,7 +50,7 @@ class Grad:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/4/20
-    Updated at: 2024/4/20
+    Updated at: 2024/5/20
     """
 
     def __init__(self, simulator, my_drone):
@@ -92,9 +92,15 @@ class Grad:
             self.my_drone.waiting_list.append(packet)  # put the data packet into waiting list
 
             GL_ID_GRAD_MESSAGE += 1
-            grad_message = GradMessage(src_drone=self.my_drone, dst_drone=dst_drone, creation_time=self.simulator.env.now,
-                                       id_message=GL_ID_GRAD_MESSAGE, message_length=100, message_type="M_REQUEST",
-                                       accrued_cost=0, remaining_value=20, simulator=self.simulator)
+            grad_message = GradMessage(src_drone=self.my_drone,
+                                       dst_drone=dst_drone,
+                                       creation_time=self.simulator.env.now,
+                                       id_message=GL_ID_GRAD_MESSAGE,
+                                       message_length=100,
+                                       message_type="M_REQUEST",
+                                       accrued_cost=0,
+                                       remaining_value=20,
+                                       simulator=self.simulator)
 
             grad_message.transmission_mode = 1  # broadcast
             self.simulator.metrics.control_packet_num += 1
@@ -128,11 +134,15 @@ class Grad:
                     GL_ID_GRAD_MESSAGE += 1
 
                     est_cost = self.cost_table.get_est_cost(originator.identifier)
-                    grad_message = GradMessage(src_drone=self.my_drone, dst_drone=originator,
+                    grad_message = GradMessage(src_drone=self.my_drone,
+                                               dst_drone=originator,
                                                creation_time=self.simulator.env.now,
-                                               id_message=GL_ID_GRAD_MESSAGE, message_length=100,
+                                               id_message=GL_ID_GRAD_MESSAGE,
+                                               message_length=100,
                                                message_type="M_REPLY",
-                                               accrued_cost=0, remaining_value=est_cost, simulator=self.simulator)
+                                               accrued_cost=0,
+                                               remaining_value=est_cost,
+                                               simulator=self.simulator)
 
                     grad_message.transmission_mode = 1  # broadcast
                     self.simulator.metrics.control_packet_num += 1

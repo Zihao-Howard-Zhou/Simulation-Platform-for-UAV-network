@@ -21,7 +21,7 @@ class Metrics:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/11
-    Updated at: 2024/4/15
+    Updated at: 2024/5/20
     """
 
     def __init__(self, simulator):
@@ -50,7 +50,7 @@ class Metrics:
         rl = self.control_packet_num / len(self.datapacket_arrived)
 
         print('Total send: ', self.datapacket_generated_num)
-        print('PDR is: ', pdr, ' %')
+        print('Packet delivery ratio is: ', pdr, ' %')
         print('Average end-to-end delay is: ', e2e_delay, ' ms')
         print('Routing load is: ', rl)
-        print('Collisiion num is: ', self.collision_num)
+        print('Collision num is: ', self.collision_num)
