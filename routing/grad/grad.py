@@ -1,6 +1,7 @@
 import copy
 import logging
 from routing.grad.grad_packet import GradMessage
+from topology.virtual_force.vf_packet import VfPacket
 from routing.grad.grad_cost_table import GradCostTable
 from utils import config
 
@@ -10,9 +11,6 @@ logging.basicConfig(filename='running_log.log',
                     format='%(asctime)s - %(levelname)s - %(message)s',
                     level=config.LOGGING_LEVEL
                     )
-
-GL_ID_GRAD_MESSAGE = 5000
-GL_ID_ACK_PACKET = 10000
 
 
 class Grad:
@@ -61,8 +59,6 @@ class Grad:
         self.my_drone.mac_protocol.enable_ack = False
 
     def next_hop_selection(self, packet):
-        global GL_ID_GRAD_MESSAGE
-
         self.cost_table.purge()  # update cost table
 
         dst_drone = packet.dst_drone  # the destination of the data packet
@@ -72,11 +68,11 @@ class Grad:
         if has_route:
             remaining_value = self.cost_table.get_est_cost(dst_drone.identifier)
 
-            GL_ID_GRAD_MESSAGE += 1
+            config.GL_ID_GRAD_MESSAGE += 1
             grad_message = GradMessage(src_drone=self.my_drone,
                                        dst_drone=dst_drone,
                                        creation_time=self.simulator.env.now,
-                                       id_message=GL_ID_GRAD_MESSAGE,
+                                       id_message=config.GL_ID_GRAD_MESSAGE,
                                        message_length=100,
                                        message_type="M_DATA",
                                        accrued_cost=0,
@@ -91,11 +87,11 @@ class Grad:
             # there is no entry related to "dst_drone" in the cost table
             self.my_drone.waiting_list.append(packet)  # put the data packet into waiting list
 
-            GL_ID_GRAD_MESSAGE += 1
+            config.GL_ID_GRAD_MESSAGE += 1
             grad_message = GradMessage(src_drone=self.my_drone,
                                        dst_drone=dst_drone,
                                        creation_time=self.simulator.env.now,
-                                       id_message=GL_ID_GRAD_MESSAGE,
+                                       id_message=config.GL_ID_GRAD_MESSAGE,
                                        message_length=100,
                                        message_type="M_REQUEST",
                                        accrued_cost=0,
@@ -108,8 +104,6 @@ class Grad:
             return has_route, grad_message, enquire
 
     def packet_reception(self, packet, src_drone_id):
-        global GL_ID_GRAD_MESSAGE
-
         current_time = self.simulator.env.now
 
         if isinstance(packet, GradMessage):
@@ -131,13 +125,13 @@ class Grad:
                                  'launched.', self.simulator.env.now, self.my_drone.identifier, src_drone_id)
 
                     # response the request
-                    GL_ID_GRAD_MESSAGE += 1
+                    config.GL_ID_GRAD_MESSAGE += 1
 
                     est_cost = self.cost_table.get_est_cost(originator.identifier)
                     grad_message = GradMessage(src_drone=self.my_drone,
                                                dst_drone=originator,
                                                creation_time=self.simulator.env.now,
-                                               id_message=GL_ID_GRAD_MESSAGE,
+                                               id_message=config.GL_ID_GRAD_MESSAGE,
                                                message_length=100,
                                                message_type="M_REPLY",
                                                accrued_cost=0,
@@ -205,6 +199,26 @@ class Grad:
                             pass
                     else:
                         pass
+
+        elif isinstance(packet, VfPacket):
+            logging.info('At time %s, UAV: %s receives the vf hello msg from UAV: %s, pkd id is: %s',
+                         self.simulator.env.now, self.my_drone.identifier, src_drone_id, packet.packet_id)
+
+            # update the neighbor table
+            self.my_drone.motion_controller.neighbor_table.add_neighbor(packet, current_time)
+
+            if packet.msg_type == 'hello':
+                config.GL_ID_VF_PACKET += 1
+                ack_packet = VfPacket(src_drone=self.my_drone,
+                                      creation_time=self.simulator.env.now,
+                                      id_hello_packet=config.GL_ID_VF_PACKET,
+                                      hello_packet_length=config.HELLO_PACKET_LENGTH,
+                                      simulator=self.simulator)
+                ack_packet.msg_type = 'ack'
+
+                self.my_drone.transmitting_queue.put(ack_packet)
+            else:
+                pass
 
         else:
             logging.warning('Unknown message type!')

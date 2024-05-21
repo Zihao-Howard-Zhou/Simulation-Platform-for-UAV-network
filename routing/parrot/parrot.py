@@ -2,6 +2,7 @@ import copy
 import random
 import logging
 from entities.packet import DataPacket, AckPacket
+from topology.virtual_force.vf_packet import VfPacket
 from routing.parrot.parrot_packet import ChirpPacket
 from routing.parrot.q_table import Qtable
 from routing.parrot.parrot_neighbor_table import ParrotNeighborTable
@@ -13,9 +14,6 @@ logging.basicConfig(filename='running_log.log',
                     format='%(asctime)s - %(levelname)s - %(message)s',
                     level=config.LOGGING_LEVEL
                     )
-
-GL_ID_CHIRP_PACKET = 5000
-GL_ID_ACK_PACKET = 10000
 
 
 class Parrot:
@@ -49,9 +47,7 @@ class Parrot:
         self.simulator.env.process(self.broadcast_chirp_packet_periodically())
 
     def broadcast_chirp_packet(self, my_drone):
-        global GL_ID_CHIRP_PACKET
-
-        GL_ID_CHIRP_PACKET += 1
+        config.GL_ID_CHIRP_PACKET += 1
 
         cohesion = self.neighbor_table.cohesion
 
@@ -59,7 +55,7 @@ class Parrot:
         # destination, so the reward item in chirp_packet of the initiator is set to 1.0 in this stage
         chirp_packet = ChirpPacket(src_drone=my_drone,
                                    creation_time=self.simulator.env.now,
-                                   id_chirp_packet=GL_ID_CHIRP_PACKET,
+                                   id_chirp_packet=config.GL_ID_CHIRP_PACKET,
                                    current_position=self.my_drone.coords,
                                    predicted_position=0,
                                    reward=1.0,
@@ -109,8 +105,6 @@ class Parrot:
         :return: none
         """
 
-        global GL_ID_ACK_PACKET
-
         current_time = self.simulator.env.now
 
         if isinstance(packet, ChirpPacket):
@@ -158,11 +152,11 @@ class Parrot:
             else:
                 self.my_drone.transmitting_queue.put(packet_copy)
 
-            GL_ID_ACK_PACKET += 1
+            config.GL_ID_ACK_PACKET += 1
             src_drone = self.simulator.drones[src_drone_id]  # previous drone
             ack_packet = AckPacket(src_drone=self.my_drone,
                                    dst_drone=src_drone,
-                                   ack_packet_id=GL_ID_ACK_PACKET,
+                                   ack_packet_id=config.GL_ID_ACK_PACKET,
                                    ack_packet_length=config.ACK_PACKET_LENGTH,
                                    ack_packet=packet_copy,
                                    simulator=self.simulator)
@@ -184,3 +178,23 @@ class Parrot:
                     logging.info('At time: %s, the wait_ack process (id: %s) of UAV: %s is interrupted by UAV: %s',
                                  self.simulator.env.now, key2, self.my_drone.identifier, src_drone_id)
                     self.my_drone.mac_protocol.wait_ack_process_dict[key2].interrupt()
+
+        elif isinstance(packet, VfPacket):
+            logging.info('At time %s, UAV: %s receives the vf hello msg from UAV: %s, pkd id is: %s',
+                         self.simulator.env.now, self.my_drone.identifier, src_drone_id, packet.packet_id)
+
+            # update the neighbor table
+            self.my_drone.motion_controller.neighbor_table.add_neighbor(packet, current_time)
+
+            if packet.msg_type == 'hello':
+                config.GL_ID_VF_PACKET += 1
+                ack_packet = VfPacket(src_drone=self.my_drone,
+                                      creation_time=self.simulator.env.now,
+                                      id_hello_packet=config.GL_ID_VF_PACKET,
+                                      hello_packet_length=config.HELLO_PACKET_LENGTH,
+                                      simulator=self.simulator)
+                ack_packet.msg_type = 'ack'
+
+                self.my_drone.transmitting_queue.put(ack_packet)
+            else:
+                pass

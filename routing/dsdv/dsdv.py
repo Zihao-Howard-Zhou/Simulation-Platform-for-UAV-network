@@ -2,6 +2,7 @@ import copy
 import random
 import logging
 from entities.packet import DataPacket, AckPacket
+from topology.virtual_force.vf_packet import VfPacket
 from routing.dsdv.dsdv_packet import DsdvHelloPacket
 from routing.dsdv.dsdv_routing_table import DsdvRoutingTable
 from utils import config
@@ -12,9 +13,6 @@ logging.basicConfig(filename='running_log.log',
                     format='%(asctime)s - %(levelname)s - %(message)s',
                     level=config.LOGGING_LEVEL
                     )
-
-GL_ID_HELLO_PACKET = 5000
-GL_ID_ACK_PACKET = 10000
 
 
 class Dsdv:
@@ -35,7 +33,7 @@ class Dsdv:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/4/14
-    Updated at: 2024/5/12
+    Updated at: 2024/5/21
     """
 
     def __init__(self, simulator, my_drone):
@@ -54,17 +52,15 @@ class Dsdv:
         :return: none
         """
 
-        global GL_ID_HELLO_PACKET
-
         while True:
             yield self.simulator.env.timeout(0.5 * 1e6)  # detect the broken link every 0.5s
             flag = self.routing_table.purge()
 
             if flag == 1:
-                GL_ID_HELLO_PACKET += 1
+                config.GL_ID_HELLO_PACKET += 1
                 hello_pkd = DsdvHelloPacket(src_drone=my_drone,
                                             creation_time=self.simulator.env.now,
-                                            id_hello_packet=GL_ID_HELLO_PACKET,
+                                            id_hello_packet=config.GL_ID_HELLO_PACKET,
                                             hello_packet_length=config.HELLO_PACKET_LENGTH,
                                             routing_table=self.routing_table.routing_table,
                                             simulator=self.simulator)
@@ -77,14 +73,12 @@ class Dsdv:
                 self.my_drone.transmitting_queue.put(hello_pkd)
 
     def broadcast_hello_packet(self, my_drone):
-        global GL_ID_HELLO_PACKET
-
-        GL_ID_HELLO_PACKET += 1
+        config.GL_ID_HELLO_PACKET += 1
 
         self.routing_table.routing_table[self.my_drone.identifier][2] += 2  # important!
         hello_pkd = DsdvHelloPacket(src_drone=my_drone,
                                     creation_time=self.simulator.env.now,
-                                    id_hello_packet=GL_ID_HELLO_PACKET,
+                                    id_hello_packet=config.GL_ID_HELLO_PACKET,
                                     hello_packet_length=config.HELLO_PACKET_LENGTH,
                                     routing_table=self.routing_table.routing_table,
                                     simulator=self.simulator)
@@ -133,8 +127,6 @@ class Dsdv:
         :return: none
         """
 
-        global GL_ID_ACK_PACKET
-
         current_time = self.simulator.env.now
         if isinstance(packet, DsdvHelloPacket):
             self.routing_table.update_item(packet, current_time)
@@ -151,11 +143,11 @@ class Dsdv:
             else:
                 self.my_drone.transmitting_queue.put(packet_copy)
 
-            GL_ID_ACK_PACKET += 1
+            config.GL_ID_ACK_PACKET += 1
             src_drone = self.simulator.drones[src_drone_id]  # previous drone
             ack_packet = AckPacket(src_drone=self.my_drone,
                                    dst_drone=src_drone,
-                                   ack_packet_id=GL_ID_ACK_PACKET,
+                                   ack_packet_id=config.GL_ID_ACK_PACKET,
                                    ack_packet_length=config.ACK_PACKET_LENGTH,
                                    ack_packet=packet_copy,
                                    simulator=self.simulator)
@@ -178,3 +170,23 @@ class Dsdv:
                     logging.info('At time: %s, the wait_ack process (id: %s) of UAV: %s is interrupted by UAV: %s',
                                  self.simulator.env.now, key2, self.my_drone.identifier, src_drone_id)
                     self.my_drone.mac_protocol.wait_ack_process_dict[key2].interrupt()
+
+        elif isinstance(packet, VfPacket):
+            logging.info('At time %s, UAV: %s receives the vf hello msg from UAV: %s, pkd id is: %s',
+                         self.simulator.env.now, self.my_drone.identifier, src_drone_id, packet.packet_id)
+
+            # update the neighbor table
+            self.my_drone.motion_controller.neighbor_table.add_neighbor(packet, current_time)
+
+            if packet.msg_type == 'hello':
+                config.GL_ID_VF_PACKET += 1
+                ack_packet = VfPacket(src_drone=self.my_drone,
+                                      creation_time=self.simulator.env.now,
+                                      id_hello_packet=config.GL_ID_VF_PACKET,
+                                      hello_packet_length=config.HELLO_PACKET_LENGTH,
+                                      simulator=self.simulator)
+                ack_packet.msg_type = 'ack'
+
+                self.my_drone.transmitting_queue.put(ack_packet)
+            else:
+                pass

@@ -3,6 +3,7 @@ import random
 import logging
 from entities.packet import DataPacket
 from routing.qgeo.qgeo_packet import QGeoHelloPacket, QGeoAckPacket
+from topology.virtual_force.vf_packet import VfPacket
 from routing.qgeo.qgeo_neighbor_table import QGeoNeighborTable
 from utils.util_function import euclidean_distance
 from phy.large_scale_fading import maximum_communication_range
@@ -14,9 +15,6 @@ logging.basicConfig(filename='running_log.log',
                     format='%(asctime)s - %(levelname)s - %(message)s',
                     level=config.LOGGING_LEVEL
                     )
-
-GL_ID_HELLO_PACKET = 5000
-GL_ID_ACK_PACKET = 10000
 
 
 class QGeo:
@@ -48,12 +46,10 @@ class QGeo:
         self.simulator.env.process(self.check_waiting_list())
 
     def broadcast_hello_packet(self, my_drone):
-        global GL_ID_HELLO_PACKET
-
-        GL_ID_HELLO_PACKET += 1
+        config.GL_ID_HELLO_PACKET += 1
         hello_pkd = QGeoHelloPacket(src_drone=my_drone,
                                     creation_time=self.simulator.env.now,
-                                    id_hello_packet=GL_ID_HELLO_PACKET,
+                                    id_hello_packet=config.GL_ID_HELLO_PACKET,
                                     hello_packet_length=config.HELLO_PACKET_LENGTH,
                                     simulator=self.simulator)
         hello_pkd.transmission_mode = 1
@@ -105,8 +101,6 @@ class QGeo:
         :return: none
         """
 
-        global GL_ID_ACK_PACKET
-
         current_time = self.simulator.env.now
         if isinstance(packet, QGeoHelloPacket):
             self.neighbor_table.add_neighbor(packet, current_time)  # update the neighbor table
@@ -123,13 +117,13 @@ class QGeo:
             else:
                 self.my_drone.transmitting_queue.put(packet_copy)
 
-            GL_ID_ACK_PACKET += 1
+            config.GL_ID_ACK_PACKET += 1
             src_drone = self.simulator.drones[src_drone_id]  # previous drone
             max_q = self.neighbor_table.get_max_q_value(packet_copy.dst_drone.identifier)
             void_area = self.neighbor_table.judge_void_area(packet_copy.dst_drone)  # determine if next hop is local minimum
             ack_packet = QGeoAckPacket(src_drone=self.my_drone,
                                        dst_drone=src_drone,
-                                       ack_packet_id=GL_ID_ACK_PACKET,
+                                       ack_packet_id=config.GL_ID_ACK_PACKET,
                                        ack_packet_length=config.ACK_PACKET_LENGTH,
                                        max_q=max_q,
                                        void_area=void_area,
@@ -156,6 +150,26 @@ class QGeo:
                     logging.info('At time: %s, the wait_ack process (id: %s) of UAV: %s is interrupted by UAV: %s',
                                  self.simulator.env.now, key2, self.my_drone.identifier, src_drone_id)
                     self.my_drone.mac_protocol.wait_ack_process_dict[key2].interrupt()
+
+        elif isinstance(packet, VfPacket):
+            logging.info('At time %s, UAV: %s receives the vf hello msg from UAV: %s, pkd id is: %s',
+                         self.simulator.env.now, self.my_drone.identifier, src_drone_id, packet.packet_id)
+
+            # update the neighbor table
+            self.my_drone.motion_controller.neighbor_table.add_neighbor(packet, current_time)
+
+            if packet.msg_type == 'hello':
+                config.GL_ID_VF_PACKET += 1
+                ack_packet = VfPacket(src_drone=self.my_drone,
+                                      creation_time=self.simulator.env.now,
+                                      id_hello_packet=config.GL_ID_VF_PACKET,
+                                      hello_packet_length=config.HELLO_PACKET_LENGTH,
+                                      simulator=self.simulator)
+                ack_packet.msg_type = 'ack'
+
+                self.my_drone.transmitting_queue.put(ack_packet)
+            else:
+                pass
 
     def update_q_table(self, packet, next_hop_id):
         # next hello interval
