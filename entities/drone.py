@@ -11,7 +11,7 @@ from routing.grad.grad import Grad
 from routing.opar.opar import Opar
 from routing.parrot.parrot import Parrot
 from routing.qgeo.qgeo import QGeo
-from routing.qldv.qldv import Qldv
+# from routing.qldv.qldv import Qldv
 from mac.csma_ca import CsmaCa
 from mac.pure_aloha import PureAloha
 from mobility.gauss_markov_3d import GaussMarkov3D
@@ -70,13 +70,14 @@ class Drone:
         mac_process_count: used to distinguish between different "mac_send" processes
         routing_protocol: routing protocol installed (GPSR, DSDV, etc.)
         mobility_model: mobility model installed (3-D Gauss-markov, 3-D random waypoint, etc.)
+        motion_controller: used to control the cooperative movement of drones
         energy_model: energy consumption model installed
         residual_energy: the residual energy of drone in Joule
         sleep: if the drone is in a "sleep" state, it cannot perform packet sending and receiving operations.
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/11
-    Updated at: 2024/5/1
+    Updated at: 2024/5/21
     """
 
     def __init__(self,
@@ -117,7 +118,7 @@ class Drone:
         self.mac_process_finish = dict()
         self.mac_process_count = 0
 
-        self.routing_protocol = Gpsr(self.simulator, self)
+        self.routing_protocol = QGeo(self.simulator, self)
 
         # self.mobility_model = GaussMarkov3D(self)
         self.motion_controller = VfMotionController(self)
