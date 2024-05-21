@@ -15,8 +15,6 @@ logging.basicConfig(filename='running_log.log',
                     level=config.LOGGING_LEVEL
                     )
 
-GL_ID_VF_HELLO_PACKET = 60000
-
 
 class VfMotionController:
     """
@@ -25,7 +23,11 @@ class VfMotionController:
     Attributes:
         simulator: the simulation platform that contains everything
         my_drone: the drone that installed the GPSR
-
+        neighbor_table: used to record the neighbor's information
+        position_update_interval: in microsecond, determine how often the drone updates its position
+        max_step: in meter, the maximum moving distance in each round
+        pause_time: in microsecond, time spent waiting for ACK
+        next_position: the position to which the drone needs to move in each round
 
     References:
         [1] Liu. H, et al.,"Simple Movement Control Algorithm for Bi-connectivity in Robotic Sensor Networks,"
@@ -51,7 +53,7 @@ class VfMotionController:
 
         self.neighbor_table = VfNeighborTable(drone.simulator.env, drone)
         self.position_update_interval = 1 * 1e5
-        self.max_step = 10
+        self.max_step = 20
         self.pause_time = 1 * 1e6
         self.next_position = self.get_next_position()
 
@@ -77,15 +79,13 @@ class VfMotionController:
 
         next_position = list(np.array(self.my_drone.coords) + np.array(position_shift))
 
-        return next_position
+        return next_position, force_direction
 
     def initialization(self):
-        global GL_ID_VF_HELLO_PACKET
-
-        GL_ID_VF_HELLO_PACKET += 1
+        config.GL_ID_VF_PACKET += 1
         hello_msg = VfPacket(src_drone=self.my_drone,
                              creation_time=self.simulator.env.now,
-                             id_hello_packet=GL_ID_VF_HELLO_PACKET,
+                             id_hello_packet=config.GL_ID_VF_PACKET,
                              hello_packet_length=config.HELLO_PACKET_LENGTH,
                              simulator=self.simulator)
         hello_msg.transmission_mode = 1
@@ -105,13 +105,7 @@ class VfMotionController:
 
             # update the position of next time step
             if config.STATIC_CASE == 0:
-                self.neighbor_table.purge()
-                attractive_force = self.neighbor_table.attractive_force()
-                repulsive_force = self.neighbor_table.repulsive_force()
-
-                resultant_force = list(np.array(attractive_force) + np.array(repulsive_force))
-                force_magnitude_list = [math.sqrt(sum([item ** 2 for item in resultant_force]))] * 3
-                force_direction = [a / b for a, b in zip(resultant_force, force_magnitude_list)]
+                self.next_position, force_direction = self.get_next_position()  # update next position
 
                 drone.velocity[0] = drone_speed * force_direction[0]
                 drone.velocity[1] = drone_speed * force_direction[1]
@@ -133,7 +127,6 @@ class VfMotionController:
             next_pos = [next_position_x, next_position_y, next_position_z]
 
             if drone_id == 1:
-                print(next_pos)
                 self.trajectory.append(next_pos)
 
             # judge if the drone has reach the target waypoint

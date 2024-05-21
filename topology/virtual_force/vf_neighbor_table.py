@@ -36,7 +36,7 @@ class VfNeighborTable:
         self.neighbor_table = defaultdict(list)
         self.entry_life_time = 5 * 1e6  # unit: us (5s)
         self.k = 1 * 1e7
-        self.desired_distance = maximum_communication_range() - 100
+        self.desired_distance = 80
 
     def add_neighbor(self, packet, cur_time):
         """
