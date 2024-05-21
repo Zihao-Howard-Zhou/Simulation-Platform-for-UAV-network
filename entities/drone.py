@@ -11,12 +11,13 @@ from routing.grad.grad import Grad
 from routing.opar.opar import Opar
 from routing.parrot.parrot import Parrot
 from routing.qgeo.qgeo import QGeo
-# from routing.qldv.qldv import Qldv
+from routing.qldv.qldv import Qldv
 from mac.csma_ca import CsmaCa
 from mac.pure_aloha import PureAloha
 from mobility.gauss_markov_3d import GaussMarkov3D
 from mobility.random_walk_3d import RandomWalk3D
 from mobility.random_waypoint_3d import RandomWaypoint3D
+from topology.virtual_force.vf_motion_control import VfMotionController
 from energy.energy_model import EnergyModel
 from utils import config
 from utils.util_function import has_intersection
@@ -116,9 +117,10 @@ class Drone:
         self.mac_process_finish = dict()
         self.mac_process_count = 0
 
-        self.routing_protocol = Grad(self.simulator, self)
+        self.routing_protocol = Gpsr(self.simulator, self)
 
-        self.mobility_model = GaussMarkov3D(self)
+        # self.mobility_model = GaussMarkov3D(self)
+        self.motion_controller = VfMotionController(self)
 
         self.energy_model = EnergyModel()
         self.residual_energy = config.INITIAL_ENERGY
