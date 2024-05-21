@@ -149,7 +149,8 @@ class CsmaCa:
             logging.info('ACK timeout of packet: %s', pkd.packet_id)
             # timeout expired
             if pkd.number_retransmission_attempt[self.my_drone.identifier] < config.MAX_RETRANSMISSION_ATTEMPT:
-                yield self.env.process(self.my_drone.packet_coming(pkd))  # resend
+                self.my_drone.transmitting_queue.put(pkd)
+                # yield self.env.process(self.my_drone.packet_coming(pkd))  # resend
             else:
                 logging.info('Packet: %s is dropped!', pkd.packet_id)
 
