@@ -45,20 +45,23 @@ class Simulator:
 
         start_position = start_coords.get_random_start_point_3d(seed)
 
-        # fig = plt.figure()
-        # ax = Axes3D(fig)
-        # for xx in range(len(start_position)):
-        #     pose = start_position[xx]
-        #     ax.scatter3D(pose[0], pose[1], pose[2])
-        #
-        # plt.show()
+        fig = plt.figure()
+        ax = Axes3D(fig)
+        for xx in range(len(start_position)):
+            pose = start_position[xx]
+            ax.scatter3D(pose[0], pose[1], pose[2])
+
+        ax.set_xlim(0, config.MAP_LENGTH)
+        ax.set_ylim(0, config.MAP_WIDTH)
+        ax.set_zlim(0, config.MAP_HEIGHT)
+        plt.show()
 
         self.drones = []
         for i in range(n_drones):
             if config.HETEROGENEOUS:
                 speed = random.randint(5, 60)
             else:
-                speed = 20
+                speed = 50
 
             print('UAV: ', i, ' initial location is at: ', start_position[i], ' speed is: ', speed)
             drone = Drone(env=env, node_id=i, coords=start_position[i], speed=speed,
@@ -75,4 +78,16 @@ class Simulator:
 
     def show_performance(self):
         yield self.env.timeout(self.total_simulation_time - 1)
+
+        fig = plt.figure()
+        ax = Axes3D(fig)
+        for drone in self.drones:
+            pose = drone.coords
+            ax.scatter3D(pose[0], pose[1], pose[2])
+
+        ax.set_xlim(0, config.MAP_LENGTH)
+        ax.set_ylim(0, config.MAP_WIDTH)
+        ax.set_zlim(0, config.MAP_HEIGHT)
+        plt.show()
+
         self.metrics.print_metrics()
