@@ -2,6 +2,7 @@ import copy
 import random
 import logging
 from entities.packet import DataPacket, AckPacket
+from topology.virtual_force.vf_packet import VfPacket
 from routing.gpsr.gpsr_neighbor_table import GpsrNeighborTable
 from routing.gpsr.gpsr_packet import GpsrHelloPacket
 from utils import config
@@ -149,6 +150,24 @@ class Gpsr:
                     logging.info('At time: %s, the wait_ack process (id: %s) of UAV: %s is interrupted by UAV: %s',
                                  self.simulator.env.now, key2, self.my_drone.identifier, src_drone_id)
                     self.my_drone.mac_protocol.wait_ack_process_dict[key2].interrupt()
+
+        elif isinstance(packet, VfPacket):
+            logging.info('At time %s, UAV: %s receives the vf hello msg from UAV: %s, pkd id is: %s',
+                         self.simulator.env.now, self.my_drone.identifier, src_drone_id, packet.packet_id)
+
+            self.my_drone.motion_controller.neighbor_table.add_neighbor(packet, current_time)  # update the neighbor table
+
+            if packet.msg_type == 'hello':
+                ack_packet = VfPacket(src_drone=self.my_drone,
+                                      creation_time=self.simulator.env.now,
+                                      id_hello_packet=10,
+                                      hello_packet_length=config.HELLO_PACKET_LENGTH,
+                                      simulator=self.simulator)
+                ack_packet.msg_type = 'ack'
+
+                self.my_drone.transmitting_queue.put(ack_packet)
+            else:
+                pass
 
     def check_waiting_list(self):
         while True:
