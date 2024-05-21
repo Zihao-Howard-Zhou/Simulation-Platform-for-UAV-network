@@ -1,10 +1,10 @@
 import logging
 
 # --------------------- simulation parameters --------------------- #
-MAP_LENGTH = 700  # m, length of the map
-MAP_WIDTH = 700  # m, width of the map
+MAP_LENGTH = 1500  # m, length of the map
+MAP_WIDTH = 1500  # m, width of the map
 MAP_HEIGHT = 120  # m, height of the map 120
-SIM_TIME = 10 * 1e6  # us, total simulation time (10s)
+SIM_TIME = 20 * 1e6  # us, total simulation time (10s)
 NUMBER_OF_DRONES = 10  # number of drones in the network
 STATIC_CASE = 0
 HETEROGENEOUS = 0  # heterogeneous network support (in terms of speed)
@@ -46,6 +46,13 @@ ACK_PACKET_LENGTH = 128  # bit
 HELLO_PACKET_HEADER_LENGTH = 128  # bit
 HELLO_PACKET_PAYLOAD_LENGTH = 256  # bit
 HELLO_PACKET_LENGTH = HELLO_PACKET_HEADER_LENGTH + HELLO_PACKET_PAYLOAD_LENGTH
+
+# define the range of packet_id of different types of packets
+GL_ID_HELLO_PACKET = 10000
+GL_ID_ACK_PACKET = 20000
+GL_ID_VF_PACKET = 30000
+GL_ID_GRAD_MESSAGE = 40000
+GL_ID_CHIRP_PACKET = 50000
 
 # ------------------ physical layer parameters ------------------- #
 BIT_RATE = 54 * 1e6  # 54 Mbit/s
