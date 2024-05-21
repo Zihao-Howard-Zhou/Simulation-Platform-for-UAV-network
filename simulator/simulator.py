@@ -6,6 +6,7 @@ from mobility import start_coords
 from utils import config
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+from drawing.scatter import scatter_plot
 
 
 class Simulator:
@@ -23,7 +24,7 @@ class Simulator:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/11
-    Updated at: 2024/4/08
+    Updated at: 2024/5/21
     """
 
     def __init__(self,
@@ -45,17 +46,6 @@ class Simulator:
 
         start_position = start_coords.get_random_start_point_3d(seed)
 
-        fig = plt.figure()
-        ax = Axes3D(fig)
-        for xx in range(len(start_position)):
-            pose = start_position[xx]
-            ax.scatter3D(pose[0], pose[1], pose[2])
-
-        ax.set_xlim(0, config.MAP_LENGTH)
-        ax.set_ylim(0, config.MAP_WIDTH)
-        ax.set_zlim(0, config.MAP_HEIGHT)
-        plt.show()
-
         self.drones = []
         for i in range(n_drones):
             if config.HETEROGENEOUS:
@@ -68,6 +58,8 @@ class Simulator:
                           inbox=self.channel.create_inbox_for_receiver(i), simulator=self)
             self.drones.append(drone)
 
+        scatter_plot(self)
+
         self.env.process(self.show_performance())
         self.env.process(self.show_time())
 
@@ -79,15 +71,6 @@ class Simulator:
     def show_performance(self):
         yield self.env.timeout(self.total_simulation_time - 1)
 
-        fig = plt.figure()
-        ax = Axes3D(fig)
-        for drone in self.drones:
-            pose = drone.coords
-            ax.scatter3D(pose[0], pose[1], pose[2])
-
-        ax.set_xlim(0, config.MAP_LENGTH)
-        ax.set_ylim(0, config.MAP_WIDTH)
-        ax.set_zlim(0, config.MAP_HEIGHT)
-        plt.show()
+        scatter_plot(self)
 
         self.metrics.print_metrics()
