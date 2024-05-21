@@ -1,5 +1,6 @@
 from utils import config
 
+
 class Packet:
     """
     Basic properties of the packet
