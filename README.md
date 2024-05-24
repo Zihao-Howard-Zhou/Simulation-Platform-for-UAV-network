@@ -92,20 +92,20 @@ Mobility model is one of the most important mudules to show the characteristics 
 ### Motion control module
 
 <div align="center">
-<img src="https://github.com/ZihaoZhouSCUT/Simulation-Platform-for-UAV-network/blob/master/img/motion_control.png", width="400px">
+<img src="https://github.com/ZihaoZhouSCUT/Simulation-Platform-for-UAV-network/blob/master/img/motion_control.png" width="800px">
 </div>
 
 ### Energy model
 The energy model of our platform is based on the work of Y. Zeng, et al. The figure below shows the power required for different drone flying speeds. The energy consumption is equal to the power multiplied by the flight time at this speed.
 <div align="center">
-<img src="https://github.com/ZihaoZhouSCUT/Simulation-Platform-for-UAV-network/blob/master/img/energy_model.png", width="800px">
+<img src="https://github.com/ZihaoZhouSCUT/Simulation-Platform-for-UAV-network/blob/master/img/energy_model.png" width="400px">
 </div>
 
 ## Performance evaluation
 In our current version, we support **GPSR (greedy perimeter stateless routing)**, **OPAR (optimized predictive and adaptive routing)** and **PARRoT (predictive ad-hoc routing fueled by reinforcement learning and trajectory knowledge)** for users to test. Among them, GPSR chooes the next hop solely based on the location information. By modelling the routing problem as a binary linear programming, OPAR takes hop count and link lifetime into account when selecting the next hop. Introducing reinforcement learning (Q-Learning) into routing protocol, PARRoT chooses next hop according to the maximum Q-value, but it needs time for Q-value to converage. We preliminarily tested the performance of three routing protocols by changing the flight speed of the drone. Packet delivery ratio (PDR) and average end-to-end (E2E) delay were recorded.
 
 <div align="center">
-<img src="https://github.com/ZihaoZhouSCUT/Simulation-Platform-for-UAV-network/blob/master/img/routing_model.png", width="1600px">
+<img src="https://github.com/ZihaoZhouSCUT/Simulation-Platform-for-UAV-network/blob/master/img/routing_model.png" width="800px">
 </div>
 
 ## Design your own protocol
