@@ -11,7 +11,6 @@ from routing.grad.grad import Grad
 from routing.opar.opar import Opar
 from routing.parrot.parrot import Parrot
 from routing.qgeo.qgeo import QGeo
-# from routing.qldv.qldv import Qldv
 from mac.csma_ca import CsmaCa
 from mac.pure_aloha import PureAloha
 from mobility.gauss_markov_3d import GaussMarkov3D
@@ -118,10 +117,10 @@ class Drone:
         self.mac_process_finish = dict()
         self.mac_process_count = 0
 
-        self.routing_protocol = QGeo(self.simulator, self)
+        self.routing_protocol = Dsdv(self.simulator, self)
 
-        # self.mobility_model = GaussMarkov3D(self)
-        self.motion_controller = VfMotionController(self)
+        self.mobility_model = GaussMarkov3D(self)
+        # self.motion_controller = VfMotionController(self)
 
         self.energy_model = EnergyModel()
         self.residual_energy = config.INITIAL_ENERGY
@@ -204,7 +203,7 @@ class Drone:
                     if self.env.now < packet.creation_time + packet.deadline:
                         if isinstance(packet, DataPacket):
                             if packet.number_retransmission_attempt[self.identifier] < config.MAX_RETRANSMISSION_ATTEMPT:
-                                # it should be noted that "final_packet" may be the data packet itself or may be a control
+                                # it should be noted that "final_packet" may be the data packet itself or  a control
                                 # packet, depending on whether the routing protocol can find an appropriate next hop
                                 has_route, final_packet, enquire = self.routing_protocol.next_hop_selection(packet)
 
@@ -239,6 +238,7 @@ class Drone:
         The requirement of "ready" is:
             1) this packet is a control packet, or
             2) drone knows the next hop of the data packet
+
         :param pkd: packet that waits to enter the buffer of drone
         :return: none
         """
