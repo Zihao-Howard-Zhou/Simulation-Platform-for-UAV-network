@@ -40,7 +40,7 @@ class CsmaCa:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/11
-    Updated at: 2024/4/25
+    Updated at: 2024/8/13
     """
 
     def __init__(self, drone):
@@ -64,9 +64,9 @@ class CsmaCa:
         """
 
         transmission_attempt = pkd.number_retransmission_attempt[self.my_drone.identifier]
-        contention_window = min(config.CW_MIN * (2 ** transmission_attempt), config.CW_MAX)
+        contention_window = (config.CW_MIN + 1) * (2 ** transmission_attempt) - 1
 
-        backoff = random.randint(0, contention_window - 1) * config.SLOT_DURATION  # random backoff
+        backoff = random.randint(0, contention_window - 1) * config.SLOT_DURATION  # random backoff, in us
         to_wait = config.DIFS_DURATION + backoff
 
         while to_wait:
@@ -195,4 +195,4 @@ class CsmaCa:
             else:
                 pass
 
-            yield self.env.timeout(1)
+            yield self.env.timeout(config.SLOT_DURATION)
