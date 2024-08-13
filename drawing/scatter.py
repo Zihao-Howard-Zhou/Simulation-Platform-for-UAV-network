@@ -24,4 +24,8 @@ def scatter_plot(simulator):
     ax.set_xlim(0, config.MAP_LENGTH)
     ax.set_ylim(0, config.MAP_WIDTH)
     ax.set_zlim(0, config.MAP_HEIGHT)
+    ax.set_xlabel('x')
+    ax.set_ylabel('y')
+    ax.set_zlabel('z')
+
     plt.show()
