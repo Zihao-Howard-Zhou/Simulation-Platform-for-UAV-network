@@ -1,14 +1,17 @@
 import logging
+from utils.ieee_802_11 import IEEE_802_11
+
+IEEE_802_11 = IEEE_802_11().b
 
 # --------------------- simulation parameters --------------------- #
-MAP_LENGTH = 1000  # m, length of the map
-MAP_WIDTH = 1000  # m, width of the map
-MAP_HEIGHT = 120  # m, height of the map 120
+MAP_LENGTH = 500  # m, length of the map
+MAP_WIDTH = 500  # m, width of the map
+MAP_HEIGHT = 60  # m, height of the map 120
 SIM_TIME = 20 * 1e6  # us, total simulation time (10s)
-NUMBER_OF_DRONES = 10  # number of drones in the network
+NUMBER_OF_DRONES = 15  # number of drones in the network
 STATIC_CASE = 0
 HETEROGENEOUS = 0  # heterogeneous network support (in terms of speed)
-LOGGING_LEVEL = logging.INFO
+LOGGING_LEVEL = logging.INFO  # whether to print the detail information during simulation
 
 # ---------- hardware parameters of drone (rotary-wing) -----------#
 PROFILE_DRAG_COEFFICIENT = 0.012
@@ -26,26 +29,26 @@ INITIAL_ENERGY = 20 * 1e3  # in joule
 ENERGY_THRESHOLD = 2000  # in joule
 
 # ----------------------- radio parameters ----------------------- #
-TRANSMITTING_POWER = 1  # Watt
+TRANSMITTING_POWER = 1  # in Watt
 LIGHT_SPEED = 3 * 1e8  # light speed (m/s)
-CARRIER_FREQUENCY = 1 * 1e9  # carrier frequency (Hz)
-NOISE_POWER = 4*1e-9  # noise power (Watt)
+CARRIER_FREQUENCY = IEEE_802_11['carrier_frequency']  # carrier frequency (Hz)
+NOISE_POWER = 4 * 1e-9  # noise power (Watt)
 RADIO_SWITCHING_TIME = 100  # us, the switching time of the transceiver mode
-SNR_THRESHOLD = 2  # dB
-RADIO_SENSITIVITY = 1e-10  # power under which signal is not sensed
+SNR_THRESHOLD = 0  # dB
 
 # ---------------------- packet parameters ----------------------- #
-MAX_TTL = 15
+MAX_TTL = 15  # maximum time-to-live value
 PACKET_LIFETIME = 10 * 1e6  # 10s
-PACKET_HEADER_LENGTH = 128  # bit
-DATA_PACKET_PAYLOAD_LENGTH = 1024 * 8  # bit
-DATA_PACKET_LENGTH = PACKET_HEADER_LENGTH + DATA_PACKET_PAYLOAD_LENGTH
+IP_HEADER_LENGTH = 20 * 8  # header length in network layer, 20 byte
+MAC_HEADER_LENGTH = 14 * 8  # header length in mac layer, 14 byte
 
-ACK_PACKET_LENGTH = 128  # bit
+DATA_PACKET_PAYLOAD_LENGTH = 4096 * 8  # 4096 byte
+DATA_PACKET_LENGTH = IP_HEADER_LENGTH + MAC_HEADER_LENGTH + DATA_PACKET_PAYLOAD_LENGTH
 
-HELLO_PACKET_HEADER_LENGTH = 128  # bit
+ACK_PACKET_LENGTH = IP_HEADER_LENGTH + MAC_HEADER_LENGTH + 128  # bit
+
 HELLO_PACKET_PAYLOAD_LENGTH = 256  # bit
-HELLO_PACKET_LENGTH = HELLO_PACKET_HEADER_LENGTH + HELLO_PACKET_PAYLOAD_LENGTH
+HELLO_PACKET_LENGTH = IP_HEADER_LENGTH + MAC_HEADER_LENGTH + HELLO_PACKET_PAYLOAD_LENGTH
 
 # define the range of packet_id of different types of packets
 GL_ID_HELLO_PACKET = 10000
@@ -55,19 +58,15 @@ GL_ID_GRAD_MESSAGE = 40000
 GL_ID_CHIRP_PACKET = 50000
 
 # ------------------ physical layer parameters ------------------- #
-BIT_RATE = 54 * 1e6  # 54 Mbit/s
+BIT_RATE = IEEE_802_11['bit_rate']  # IEEE 802.11b is adopted, 11 Mbit/s
 BIT_TRANSMISSION_TIME = 1/BIT_RATE * 1e6
-BANDWIDTH = 20 * 1e6  # 20 MHz
-SENSING_RANGE = 750
+BANDWIDTH = IEEE_802_11['bandwidth']  # 20 MHz
+SENSING_RANGE = 750  # in meter, detects whether the channel is busy in this range
 
 # --------------------- mac layer parameters --------------------- #
-SLOT_DURATION = 50  # 50 microseconds, 802.11g 2.4 GHz
-SIFS_DURATION = 28  # 28 microseconds, 802.11g 2.4 GHz
+SLOT_DURATION = IEEE_802_11['slot_duration']  # 20 microseconds, IEEE 802.11b
+SIFS_DURATION = IEEE_802_11['SIFS']  # 10 microseconds, IEEE 802.11b
 DIFS_DURATION = SIFS_DURATION + (2 * SLOT_DURATION)  # 128 microseconds
-MAC_HEADER_LENGTH = 34*8  # 34 byte fixed fields of a mac packet
-MAX_MAC_PAYLOAD_LENGTH = 2312*8
-ACK_LENGTH = MAC_HEADER_LENGTH
-CW_MIN = 16
-CW_MAX = 1024
+CW_MIN = 31
 ACK_TIMEOUT = 1 * 1e3  # maximum waiting time for ACK (1ms)
 MAX_RETRANSMISSION_ATTEMPT = 5
