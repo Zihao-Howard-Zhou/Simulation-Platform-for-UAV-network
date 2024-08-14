@@ -229,9 +229,13 @@ class Opar:
         current_time = self.simulator.env.now
         if isinstance(packet, DataPacket):
             packet_copy = copy.copy(packet)
+            logging.info('~~~Packet: %s is received by UAV: %s at: %s',
+                         packet_copy.packet_id, self.my_drone.identifier, self.simulator.env.now)
             if packet_copy.dst_drone.identifier == self.my_drone.identifier:
-                self.simulator.metrics.deliver_time_dict[packet_copy.packet_id] \
-                    = self.simulator.env.now - packet_copy.creation_time
+                latency = self.simulator.env.now - packet_copy.creation_time  # in us
+                self.simulator.metrics.deliver_time_dict[packet_copy.packet_id] = latency
+                self.simulator.metrics.throughput_dict[packet_copy.packet_id] = config.DATA_PACKET_LENGTH / (latency / 1e6)
+                self.simulator.metrics.hop_cnt_dict[packet_copy.packet_id] = packet_copy.get_current_ttl()
                 self.simulator.metrics.datapacket_arrived.add(packet_copy.packet_id)
                 logging.info('Packet: %s is received by destination UAV: %s',
                              packet_copy.packet_id, self.my_drone.identifier)
@@ -251,12 +255,15 @@ class Opar:
 
             # unicast the ack packet immediately without contention for the channel
             if not self.my_drone.sleep:
-                self.my_drone.mac_protocol.phy.unicast(ack_packet, src_drone_id)
+                ack_packet.increase_ttl()
                 yield self.simulator.env.timeout(ack_packet.packet_length / config.BIT_RATE * 1e6)
+                self.my_drone.mac_protocol.phy.unicast(ack_packet, src_drone_id)
+                self.simulator.drones[src_drone_id].receive()
             else:
                 pass
 
         elif isinstance(packet, AckPacket):
+            print('UAV: ', self.my_drone.identifier, ' receives an ACK from: ', src_drone_id)
             key2 = str(self.my_drone.identifier) + '_' + str(self.my_drone.mac_protocol.wait_ack_process_count)
 
             if self.my_drone.mac_protocol.wait_ack_process_finish[key2] == 0:

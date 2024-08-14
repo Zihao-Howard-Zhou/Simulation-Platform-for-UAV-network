@@ -157,10 +157,13 @@ class Grad:
             elif msg_type == "M_DATA":
                 data_packet = packet_copy.attached_data_packet
                 if data_packet.dst_drone.identifier == self.my_drone.identifier:  # reach the destination
-                    self.simulator.metrics.deliver_time_dict[data_packet.packet_id] = self.simulator.env.now - data_packet.creation_time
-                    self.simulator.metrics.datapacket_arrived.add(data_packet.packet_id)
-                    logging.info('Packet: %s is received by destination UAV: %s at: %s', data_packet.packet_id,
-                                 self.my_drone.identifier, self.simulator.env.now)
+                    latency = self.simulator.env.now - packet_copy.creation_time  # in us
+                    self.simulator.metrics.deliver_time_dict[packet_copy.packet_id] = latency
+                    self.simulator.metrics.throughput_dict[packet_copy.packet_id] = config.DATA_PACKET_LENGTH / (latency / 1e6)
+                    self.simulator.metrics.hop_cnt_dict[packet_copy.packet_id] = packet_copy.get_current_ttl()
+                    self.simulator.metrics.datapacket_arrived.add(packet_copy.packet_id)
+                    logging.info('Packet: %s is received by destination UAV: %s',
+                                 packet_copy.packet_id, self.my_drone.identifier)
                 else:
                     if packet_copy.remaining_value > 0:
                         # not all the drones hearing this message have entries related to the destination
