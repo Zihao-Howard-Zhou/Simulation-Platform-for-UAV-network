@@ -4,8 +4,6 @@ from entities.drone import Drone
 from simulator.metrics import Metrics
 from mobility import start_coords
 from utils import config
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 from drawing.scatter import scatter_plot
 
 
@@ -51,7 +49,7 @@ class Simulator:
             if config.HETEROGENEOUS:
                 speed = random.randint(5, 60)
             else:
-                speed = 50
+                speed = 20
 
             print('UAV: ', i, ' initial location is at: ', start_position[i], ' speed is: ', speed)
             drone = Drone(env=env, node_id=i, coords=start_position[i], speed=speed,
