@@ -76,7 +76,7 @@ class Drone:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/11
-    Updated at: 2024/5/21
+    Updated at: 2024/8/14
     """
 
     def __init__(self,
@@ -117,7 +117,7 @@ class Drone:
         self.mac_process_finish = dict()
         self.mac_process_count = 0
 
-        self.routing_protocol = Dsdv(self.simulator, self)
+        self.routing_protocol = Parrot(self.simulator, self)
 
         self.mobility_model = GaussMarkov3D(self)
         # self.motion_controller = VfMotionController(self)
@@ -172,8 +172,8 @@ class Drone:
 
                 self.simulator.metrics.datapacket_generated_num += 1
 
-                logging.info('------> At time: %s, UAV: %s generates a data packet (id: %s, dst: %s)',
-                             self.env.now, self.identifier, pkd.packet_id, destination.identifier)
+                logging.info('------> UAV: %s generates a data packet (id: %s, dst: %s) at: %s',
+                             self.identifier, pkd.packet_id, destination.identifier, self.env.now)
 
                 self.transmitting_queue.put(pkd)
             else:  # cannot generate packets if "my_drone" is in sleep state
@@ -200,17 +200,17 @@ class Drone:
                 if not self.transmitting_queue.empty():
                     packet = self.transmitting_queue.get()  # get the packet at the head of the queue
 
-                    if self.env.now < packet.creation_time + packet.deadline:
+                    if self.env.now < packet.creation_time + packet.deadline:  # this packet has not expired
                         if isinstance(packet, DataPacket):
                             if packet.number_retransmission_attempt[self.identifier] < config.MAX_RETRANSMISSION_ATTEMPT:
-                                # it should be noted that "final_packet" may be the data packet itself or  a control
+                                # it should be noted that "final_packet" may be the data packet itself or a control
                                 # packet, depending on whether the routing protocol can find an appropriate next hop
                                 has_route, final_packet, enquire = self.routing_protocol.next_hop_selection(packet)
 
                                 if has_route:
-                                    logging.info('At time: %s, UAV: %s obtain the next hop of data packet (id: %s), '
-                                                 'which is: %s, and this packet will wait buffer resource.',
-                                                 self.env.now, self.identifier, packet.packet_id, packet.next_hop_id)
+                                    logging.info('UAV: %s obtain the next hop of data packet (id: %s), '
+                                                 'which is: %s, and this packet will wait buffer resource at: %s.',
+                                                 self.identifier, packet.packet_id, packet.next_hop_id, self.env.now)
 
                                     yield self.env.process(self.packet_coming(final_packet))  # actually the data packet
                                 else:
@@ -238,7 +238,6 @@ class Drone:
         The requirement of "ready" is:
             1) this packet is a control packet, or
             2) drone knows the next hop of the data packet
-
         :param pkd: packet that waits to enter the buffer of drone
         :return: none
         """
@@ -281,6 +280,16 @@ class Drone:
                 # print('UAV: ', self.identifier, ' run out of energy at: ', self.env.now)
 
     def receive(self):
+        """
+        Core receiving function of drone
+        1. the drone checks its "inbox" to see if there is incoming packet every 5 units (in us) from the time it is
+           instantiated to the end of the simulation
+        2. update the "inbox" by deleting the inconsequential data packet
+        3. then the drone will detect if it receives a (or multiple) complete data packet(s)
+        4. SINR calculation
+        :return: none
+        """
+
         while True:
             if not self.sleep:
                 # delete packets that have been processed and do not interfere with
@@ -291,8 +300,6 @@ class Drone:
 
                 if len(all_drones_send_to_me) > 1:
                     self.simulator.metrics.collision_num += 1
-                    # print(self.simulator.metrics.collision_num)
-                    # print(all_drones_send_to_me)
 
                 if flag:
                     # find the transmitters of all packets currently transmitted on the channel
@@ -324,10 +331,7 @@ class Drone:
                             sender = all_drones_send_to_me[which_one]
 
                             logging.info('Packet %s from UAV: %s is received by UAV: %s at time: %s, sinr is: %s',
-                                         pkd, sender, self.identifier, self.simulator.env.now, max_sinr)
-
-                            # transmission delay
-                            yield self.env.timeout(pkd.packet_length / config.BIT_RATE * 1e6)
+                                         pkd.packet_id, sender, self.identifier, self.simulator.env.now, max_sinr)
 
                             yield self.env.process(self.routing_protocol.packet_reception(pkd, sender))
                         else:
@@ -340,15 +344,35 @@ class Drone:
                 break
 
     def update_inbox(self):
-        max_transmission_time = (config.DATA_PACKET_LENGTH / config.BIT_RATE) * 1e6
+        """
+        Clear the packets that have been processed.
+                                           ↓ (current time step)
+                              |==========|←- (current incoming packet p1)
+                       |==========|←- (packet p2 that has been processed, but also can affect p1, so reserve it)
+        |==========|←- (packet p3 that has been processed, no impact on p1, can be deleted)
+        --------------------------------------------------------> time
+        :return:
+        """
+
+        max_transmission_time = (config.DATA_PACKET_LENGTH / config.BIT_RATE) * 1e6  # for a single data packet
         for item in self.inbox:
-            insertion_time = item[1]
-            received = item[3]
-            if insertion_time + 2 * max_transmission_time < self.env.now:
+            insertion_time = item[1]  # the moment that this packet begins to be sent to the channel
+            received = item[3]  # used to indicate if this packet has been processed (1: processed, 0: unprocessed)
+            if insertion_time + 2 * max_transmission_time < self.env.now:  # no impact on the current packet
                 if received:
                     self.inbox.remove(item)
 
     def trigger(self):
+        """
+        Detects whether the drone has received a complete data packet
+        :return:
+        1. flag: bool variable, "1" means a complete data packet has been received by this drone and vice versa
+        2. all_drones_send_to_me: a list, including all the sender of the complete data packets received
+        3. time_span, a list, the element inside is the time interval in which the received complete data packet is
+           transmitted in the channel
+        4. potential_packet, a list, including all the instances of the received complete data packet
+        """
+
         flag = 0  # used to indicate if I receive a complete packet
         all_drones_send_to_me = []
         time_span = []
@@ -359,7 +383,7 @@ class Drone:
             insertion_time = item[1]  # transmission start time
             transmitter = item[2]
             processed = item[3]  # indicate if this packet has been processed
-            transmitting_time = packet.packet_length / config.BIT_RATE * 1e6
+            transmitting_time = packet.packet_length / config.BIT_RATE * 1e6  # expected transmission time
 
             if not processed:  # this packet has not been processed yet
                 if self.env.now >= insertion_time + transmitting_time:  # it has been transmitted completely

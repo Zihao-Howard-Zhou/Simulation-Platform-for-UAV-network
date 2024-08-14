@@ -40,7 +40,7 @@ class CsmaCa:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/11
-    Updated at: 2024/8/13
+    Updated at: 2024/8/14
     """
 
     def __init__(self, drone):
@@ -109,13 +109,14 @@ class CsmaCa:
                             self.wait_ack_process_finish[key2] = 0
 
                         pkd.increase_ttl()
-                        self.phy.unicast(pkd, next_hop_id)
                         yield self.env.timeout(pkd.packet_length / config.BIT_RATE * 1e6)
+                        self.phy.unicast(pkd, next_hop_id)
 
                     elif transmission_mode == 1:
                         pkd.increase_ttl()
-                        self.phy.broadcast(pkd)
                         yield self.env.timeout(pkd.packet_length / config.BIT_RATE * 1e6)
+                        self.phy.broadcast(pkd)
+                        # yield self.env.timeout(pkd.packet_length / config.BIT_RATE * 1e6)
 
             except simpy.Interrupt:
                 already_wait = self.env.now - start_time
@@ -146,7 +147,7 @@ class CsmaCa:
             key2 = str(self.my_drone.identifier) + '_' + str(self.wait_ack_process_count)
             self.wait_ack_process_finish[key2] = 1
 
-            logging.info('ACK timeout of packet: %s', pkd.packet_id)
+            logging.info('ACK timeout of packet: %s at: %s', pkd.packet_id, self.env.now)
             # timeout expired
             if pkd.number_retransmission_attempt[self.my_drone.identifier] < config.MAX_RETRANSMISSION_ATTEMPT:
                 self.my_drone.transmitting_queue.put(pkd)
