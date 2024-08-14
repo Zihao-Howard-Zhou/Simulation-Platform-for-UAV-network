@@ -4,11 +4,11 @@ from utils.ieee_802_11 import IEEE_802_11
 IEEE_802_11 = IEEE_802_11().b
 
 # --------------------- simulation parameters --------------------- #
-MAP_LENGTH = 500  # m, length of the map
-MAP_WIDTH = 500  # m, width of the map
-MAP_HEIGHT = 60  # m, height of the map 120
+MAP_LENGTH = 1500  # m, length of the map
+MAP_WIDTH = 1500  # m, width of the map
+MAP_HEIGHT = 120  # m, height of the map 120
 SIM_TIME = 20 * 1e6  # us, total simulation time (10s)
-NUMBER_OF_DRONES = 15  # number of drones in the network
+NUMBER_OF_DRONES = 5  # number of drones in the network
 STATIC_CASE = 0
 HETEROGENEOUS = 0  # heterogeneous network support (in terms of speed)
 LOGGING_LEVEL = logging.INFO  # whether to print the detail information during simulation
@@ -32,9 +32,9 @@ ENERGY_THRESHOLD = 2000  # in joule
 TRANSMITTING_POWER = 1  # in Watt
 LIGHT_SPEED = 3 * 1e8  # light speed (m/s)
 CARRIER_FREQUENCY = IEEE_802_11['carrier_frequency']  # carrier frequency (Hz)
-NOISE_POWER = 4 * 1e-9  # noise power (Watt)
+NOISE_POWER = 4 * 1e-11  # noise power (Watt)
 RADIO_SWITCHING_TIME = 100  # us, the switching time of the transceiver mode
-SNR_THRESHOLD = 0  # dB
+SNR_THRESHOLD = -2  # dB
 
 # ---------------------- packet parameters ----------------------- #
 MAX_TTL = 15  # maximum time-to-live value
@@ -61,12 +61,12 @@ GL_ID_CHIRP_PACKET = 50000
 BIT_RATE = IEEE_802_11['bit_rate']  # IEEE 802.11b is adopted, 11 Mbit/s
 BIT_TRANSMISSION_TIME = 1/BIT_RATE * 1e6
 BANDWIDTH = IEEE_802_11['bandwidth']  # 20 MHz
-SENSING_RANGE = 750  # in meter, detects whether the channel is busy in this range
+SENSING_RANGE = 350  # in meter, detects whether the channel is busy in this range
 
 # --------------------- mac layer parameters --------------------- #
 SLOT_DURATION = IEEE_802_11['slot_duration']  # 20 microseconds, IEEE 802.11b
 SIFS_DURATION = IEEE_802_11['SIFS']  # 10 microseconds, IEEE 802.11b
 DIFS_DURATION = SIFS_DURATION + (2 * SLOT_DURATION)  # 128 microseconds
 CW_MIN = 31
-ACK_TIMEOUT = 1 * 1e3  # maximum waiting time for ACK (1ms)
+ACK_TIMEOUT = 0.3 * 1e6  # maximum waiting time for ACK (0.3 s)
 MAX_RETRANSMISSION_ATTEMPT = 5
