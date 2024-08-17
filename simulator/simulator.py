@@ -4,7 +4,7 @@ from entities.drone import Drone
 from simulator.metrics import Metrics
 from mobility import start_coords
 from utils import config
-from drawing.scatter import scatter_plot
+from visualization.scatter import scatter_plot
 
 
 class Simulator:
@@ -22,7 +22,7 @@ class Simulator:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/11
-    Updated at: 2024/5/21
+    Updated at: 2024/8/16
     """
 
     def __init__(self,

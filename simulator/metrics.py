@@ -7,16 +7,16 @@ class Metrics:
     Tools for statistics of network performance
 
     1. Packet Delivery Ratio (PDR): is the ratio of number of packets received at the destinations to the number
-       of packets sent from the sources.
+       of packets sent from the sources
     2. Average end-to-end (E2E) delay: is the time a packet takes to route from a source to its destination through
        the network. It is the time the data packet reaches the destination minus the time the data packet was generated
-       in the source node.
+       in the source node
     3. Routing Load: is calculated as the ratio between the numbers of control Packets transmitted
        to the number of packets actually received. NRL can reflect the average number of control packets required to
-       successfully transmit a data packet and reflect the efficiency of the routing protocol.
+       successfully transmit a data packet and reflect the efficiency of the routing protocol
     4. Throughput: it can be defined as a measure of how fast the data is sent from its source to its intended
        destination without loss. In our simulation, each time the destination receives a data packet, the throughput is
-       calculated and finally averaged.
+       calculated and finally averaged
 
     References:
         [1] Rani. N, Sharma. P, Sharma. P., "Performance Comparison of Various Routing Protocols in Different Mobility
