@@ -4,10 +4,10 @@ from utils.ieee_802_11 import IEEE_802_11
 IEEE_802_11 = IEEE_802_11().b
 
 # --------------------- simulation parameters --------------------- #
-MAP_LENGTH = 1500  # m, length of the map
-MAP_WIDTH = 1500  # m, width of the map
-MAP_HEIGHT = 120  # m, height of the map 120
-SIM_TIME = 20 * 1e6  # us, total simulation time (10s)
+MAP_LENGTH = 800  # m, length of the map
+MAP_WIDTH = 800  # m, width of the map
+MAP_HEIGHT = 120  # m, height of the map
+SIM_TIME = 15 * 1e6  # us, total simulation time
 NUMBER_OF_DRONES = 5  # number of drones in the network
 STATIC_CASE = 0
 HETEROGENEOUS = 0  # heterogeneous network support (in terms of speed)
@@ -61,12 +61,12 @@ GL_ID_CHIRP_PACKET = 50000
 BIT_RATE = IEEE_802_11['bit_rate']  # IEEE 802.11b is adopted, 11 Mbit/s
 BIT_TRANSMISSION_TIME = 1/BIT_RATE * 1e6
 BANDWIDTH = IEEE_802_11['bandwidth']  # 20 MHz
-SENSING_RANGE = 350  # in meter, detects whether the channel is busy in this range
+SENSING_RANGE = 350  # in meter, defines the area where a sending node can disturb a transmission from a third node
 
 # --------------------- mac layer parameters --------------------- #
 SLOT_DURATION = IEEE_802_11['slot_duration']  # 20 microseconds, IEEE 802.11b
 SIFS_DURATION = IEEE_802_11['SIFS']  # 10 microseconds, IEEE 802.11b
 DIFS_DURATION = SIFS_DURATION + (2 * SLOT_DURATION)  # 128 microseconds
 CW_MIN = 31
-ACK_TIMEOUT = 0.3 * 1e6  # maximum waiting time for ACK (0.3 s)
+ACK_TIMEOUT = 0.1 * 1e6  # maximum waiting time for ACK (0.1 s)
 MAX_RETRANSMISSION_ATTEMPT = 5
