@@ -263,7 +263,6 @@ class Opar:
                 pass
 
         elif isinstance(packet, AckPacket):
-            print('UAV: ', self.my_drone.identifier, ' receives an ACK from: ', src_drone_id)
             key2 = str(self.my_drone.identifier) + '_' + str(self.my_drone.mac_protocol.wait_ack_process_count)
 
             if self.my_drone.mac_protocol.wait_ack_process_finish[key2] == 0:
