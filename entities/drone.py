@@ -117,7 +117,7 @@ class Drone:
         self.mac_process_finish = dict()
         self.mac_process_count = 0
 
-        self.routing_protocol = Parrot(self.simulator, self)
+        self.routing_protocol = Opar(self.simulator, self)
 
         self.mobility_model = GaussMarkov3D(self)
         # self.motion_controller = VfMotionController(self)
@@ -131,7 +131,7 @@ class Drone:
         self.env.process(self.energy_monitor())
         self.env.process(self.receive())
 
-    def generate_data_packet(self, traffic_pattern='Uniform'):
+    def generate_data_packet(self, traffic_pattern='Poisson'):
         """
         Generate one data packet, it should be noted that only when the current packet has been sent can the next
         packet be started. When the drone generates a data packet, it will first put it into the "transmitting_queue",
@@ -145,13 +145,15 @@ class Drone:
         while True:
             if not self.sleep:
                 if traffic_pattern == 'Uniform':
-                    # the drone generates a data packet every 0.5s with jitter
-                    yield self.env.timeout(random.randint(500000, 505000))
+                    # the drone generates a data packet every 0.2s with jitter
+                    yield self.env.timeout(random.randint(200000, 205000))
                 elif traffic_pattern == 'Poisson':
-                    # the process of generating data packets by nodes follows Poisson distribution,
-                    # thus the generation interval of data packets follows exponential distribution
+                    """
+                    the process of generating data packets by nodes follows Poisson distribution, thus the generation 
+                    interval of data packets follows exponential distribution
+                    """
 
-                    rate = 2  # on average, 2 packets are generated in 1s
+                    rate = 10  # on average, 10 packets are generated in 1s
                     yield self.env.timeout(round(random.expovariate(rate) * 1e6))
 
                 GLOBAL_DATA_PACKET_ID += 1  # data packet id
