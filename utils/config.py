@@ -4,11 +4,11 @@ from utils.ieee_802_11 import IEEE_802_11
 IEEE_802_11 = IEEE_802_11().b
 
 # --------------------- simulation parameters --------------------- #
-MAP_LENGTH = 800  # m, length of the map
-MAP_WIDTH = 800  # m, width of the map
+MAP_LENGTH = 5000  # m, length of the map
+MAP_WIDTH = 5000  # m, width of the map
 MAP_HEIGHT = 120  # m, height of the map
-SIM_TIME = 15 * 1e6  # us, total simulation time
-NUMBER_OF_DRONES = 5  # number of drones in the network
+SIM_TIME = 30 * 1e6  # us, total simulation time
+NUMBER_OF_DRONES = 10  # number of drones in the network
 STATIC_CASE = 0
 HETEROGENEOUS = 0  # heterogeneous network support (in terms of speed)
 LOGGING_LEVEL = logging.INFO  # whether to print the detail information during simulation
@@ -37,8 +37,8 @@ RADIO_SWITCHING_TIME = 100  # us, the switching time of the transceiver mode
 SNR_THRESHOLD = -2  # dB
 
 # ---------------------- packet parameters ----------------------- #
-MAX_TTL = 15  # maximum time-to-live value
-PACKET_LIFETIME = 10 * 1e6  # 10s
+MAX_TTL = NUMBER_OF_DRONES + 1  # maximum time-to-live value
+PACKET_LIFETIME = 30 * 1e6  # 10s
 IP_HEADER_LENGTH = 20 * 8  # header length in network layer, 20 byte
 MAC_HEADER_LENGTH = 14 * 8  # header length in mac layer, 14 byte
 
