@@ -40,9 +40,15 @@ class Packet:
         for drone in self.simulator.drones:
             self.number_retransmission_attempt[drone.identifier] = 0  # initialization
 
-        self.time_delivery = None
+        # for calculating the queuing delay
+        self.waiting_start_time = None
+        self.transmitting_start_time = None
+
+        self.time_delivery = None  # for end-to-end delay
         self.time_transmitted_at_last_hop = 0
         self.transmission_mode = None
+
+        self.intermediate_drones = []
 
     def increase_ttl(self):
         self.__ttl += 1
