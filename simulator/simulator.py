@@ -1,4 +1,5 @@
 import random
+import numpy as np
 from phy.channel import Channel
 from entities.drone import Drone
 from simulator.metrics import Metrics

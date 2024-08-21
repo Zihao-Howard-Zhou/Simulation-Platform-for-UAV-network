@@ -19,7 +19,7 @@ logging.basicConfig(filename='running_log.log',
 
 class Opar:
     """
-    Main procedure of OPAR (v3.0)
+    Main procedure of Opar (v3.0)
 
     Attributes:
         simulator: the simulation platform that contains everything

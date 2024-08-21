@@ -10,7 +10,7 @@ from routing.gpsr.gpsr import Gpsr
 from routing.grad.grad import Grad
 from routing.opar.opar import Opar
 from routing.parrot.parrot import Parrot
-from routing.qgeo.qgeo import QGeo
+from routing.q_routing.q_routing import QRouting
 from mac.csma_ca import CsmaCa
 from mac.pure_aloha import PureAloha
 from mobility.gauss_markov_3d import GaussMarkov3D
@@ -117,7 +117,7 @@ class Drone:
         self.mac_process_finish = dict()
         self.mac_process_count = 0
 
-        self.routing_protocol = Opar(self.simulator, self)
+        self.routing_protocol = Gpsr(self.simulator, self)
 
         self.mobility_model = GaussMarkov3D(self)
         # self.motion_controller = VfMotionController(self)
@@ -126,9 +126,11 @@ class Drone:
         self.residual_energy = config.INITIAL_ENERGY
         self.sleep = False
 
-        self.env.process(self.generate_data_packet())
+        if self.identifier != 0:
+            self.env.process(self.generate_data_packet())
+
         self.env.process(self.feed_packet())
-        self.env.process(self.energy_monitor())
+        # self.env.process(self.energy_monitor())
         self.env.process(self.receive())
 
     def generate_data_packet(self, traffic_pattern='Poisson'):
@@ -146,23 +148,25 @@ class Drone:
             if not self.sleep:
                 if traffic_pattern == 'Uniform':
                     # the drone generates a data packet every 0.2s with jitter
-                    yield self.env.timeout(random.randint(200000, 205000))
+                    yield self.env.timeout(random.randint(500000, 505000))
                 elif traffic_pattern == 'Poisson':
                     """
                     the process of generating data packets by nodes follows Poisson distribution, thus the generation 
                     interval of data packets follows exponential distribution
                     """
 
-                    rate = 10  # on average, 10 packets are generated in 1s
+                    rate = 5  # on average, how many packets are generated in 1s
                     yield self.env.timeout(round(random.expovariate(rate) * 1e6))
 
                 GLOBAL_DATA_PACKET_ID += 1  # data packet id
 
-                # randomly choose a destination
-                all_candidate_list = [i for i in range(config.NUMBER_OF_DRONES)]
-                all_candidate_list.remove(self.identifier)
-                dst_id = random.choice(all_candidate_list)
-                destination = self.simulator.drones[dst_id]  # obtain the destination drone
+                # # randomly choose a destination
+                # all_candidate_list = [i for i in range(config.NUMBER_OF_DRONES)]
+                # all_candidate_list.remove(self.identifier)
+                # dst_id = random.choice(all_candidate_list)
+                # destination = self.simulator.drones[dst_id]  # obtain the destination drone
+
+                destination = self.simulator.drones[0]
 
                 pkd = DataPacket(self,
                                  dst_drone=destination,
@@ -205,6 +209,8 @@ class Drone:
                     if self.env.now < packet.creation_time + packet.deadline:  # this packet has not expired
                         if isinstance(packet, DataPacket):
                             if packet.number_retransmission_attempt[self.identifier] < config.MAX_RETRANSMISSION_ATTEMPT:
+                                packet.waiting_start_time = self.env.now  # this packet starts to wait in the queue
+
                                 # it should be noted that "final_packet" may be the data packet itself or a control
                                 # packet, depending on whether the routing protocol can find an appropriate next hop
                                 has_route, final_packet, enquire = self.routing_protocol.next_hop_selection(packet)
