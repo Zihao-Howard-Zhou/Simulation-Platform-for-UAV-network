@@ -36,11 +36,13 @@ class CsmaCa:
 
     References:
         [1] J. Li, et al., "Packet Delay in UAV Wireless Networks Under Non-saturated Traffic and Channel Fading
-            Conditions," Wireless Personal Communications, vol. 72, no. 2, pp. 1105-1123, 2013,
+            Conditions," Wireless Personal Communications, vol. 72, no. 2, pp. 1105-1123, 2013.
+        [2] Park, Ki hong, "Wireless Lecture Notes". Purdue. Retrieved 28 September 2012, link:
+            https://www.cs.purdue.edu/homes/park/cs536-wireless-3.pdf
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/11
-    Updated at: 2024/8/14
+    Updated at: 2024/8/21
     """
 
     def __init__(self, drone):
@@ -90,7 +92,11 @@ class CsmaCa:
                 # occupy the channel to send packet
                 with self.channel_states[self.my_drone.identifier].request() as req:
                     yield req
-                    logging.info('UAV: %s can send packet at: %s', self.my_drone.identifier, self.env.now)
+
+                    logging.info('UAV: %s can send packet (pkd id: %s) at: %s ',
+                                 self.my_drone.identifier, pkd.packet_id, self.env.now)
+
+                    pkd.transmitting_start_time = self.env.now
 
                     transmission_mode = pkd.transmission_mode
 
@@ -109,14 +115,13 @@ class CsmaCa:
                             self.wait_ack_process_finish[key2] = 0
 
                         pkd.increase_ttl()
+                        self.phy.unicast(pkd, next_hop_id)  # note: unicast function should be executed first!
                         yield self.env.timeout(pkd.packet_length / config.BIT_RATE * 1e6)
-                        self.phy.unicast(pkd, next_hop_id)
 
                     elif transmission_mode == 1:
                         pkd.increase_ttl()
-                        yield self.env.timeout(pkd.packet_length / config.BIT_RATE * 1e6)
                         self.phy.broadcast(pkd)
-                        # yield self.env.timeout(pkd.packet_length / config.BIT_RATE * 1e6)
+                        yield self.env.timeout(pkd.packet_length / config.BIT_RATE * 1e6)
 
             except simpy.Interrupt:
                 already_wait = self.env.now - start_time
@@ -153,6 +158,9 @@ class CsmaCa:
                 self.my_drone.transmitting_queue.put(pkd)
                 # yield self.env.process(self.my_drone.packet_coming(pkd))  # resend
             else:
+                latency = self.simulator.env.now - pkd.creation_time  # in us
+                self.simulator.metrics.deliver_time_dict[pkd.packet_id] = latency
+
                 logging.info('Packet: %s is dropped!', pkd.packet_id)
 
         except simpy.Interrupt:
