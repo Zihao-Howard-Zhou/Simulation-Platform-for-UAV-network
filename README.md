@@ -127,7 +127,7 @@ Our simulation platform can be expanded based on your research needs, including 
    ```
 
 ## Contributing
-Contributions, issues and pull requests are welcome! 
+Issues and pull requests are warmly welcome! 
 
 ## Show your support
 Give a ⭐ is this project helped you!
