@@ -4,12 +4,12 @@ from utils.ieee_802_11 import IEEE_802_11
 IEEE_802_11 = IEEE_802_11().b
 
 # --------------------- simulation parameters --------------------- #
-MAP_LENGTH = 5000  # m, length of the map
-MAP_WIDTH = 5000  # m, width of the map
+MAP_LENGTH = 800  # m, length of the map
+MAP_WIDTH = 800  # m, width of the map
 MAP_HEIGHT = 120  # m, height of the map
-SIM_TIME = 30 * 1e6  # us, total simulation time
-NUMBER_OF_DRONES = 10  # number of drones in the network
-STATIC_CASE = 0
+SIM_TIME = 13 * 1e6  # us, total simulation time
+NUMBER_OF_DRONES = 15  # number of drones in the network
+STATIC_CASE = 1
 HETEROGENEOUS = 0  # heterogeneous network support (in terms of speed)
 LOGGING_LEVEL = logging.INFO  # whether to print the detail information during simulation
 
@@ -29,26 +29,27 @@ INITIAL_ENERGY = 20 * 1e3  # in joule
 ENERGY_THRESHOLD = 2000  # in joule
 
 # ----------------------- radio parameters ----------------------- #
-TRANSMITTING_POWER = 1  # in Watt
+TRANSMITTING_POWER = 0.1  # in Watt
 LIGHT_SPEED = 3 * 1e8  # light speed (m/s)
 CARRIER_FREQUENCY = IEEE_802_11['carrier_frequency']  # carrier frequency (Hz)
 NOISE_POWER = 4 * 1e-11  # noise power (Watt)
 RADIO_SWITCHING_TIME = 100  # us, the switching time of the transceiver mode
-SNR_THRESHOLD = -2  # dB
+SNR_THRESHOLD = 7  # dB
 
 # ---------------------- packet parameters ----------------------- #
 MAX_TTL = NUMBER_OF_DRONES + 1  # maximum time-to-live value
 PACKET_LIFETIME = 30 * 1e6  # 10s
 IP_HEADER_LENGTH = 20 * 8  # header length in network layer, 20 byte
 MAC_HEADER_LENGTH = 14 * 8  # header length in mac layer, 14 byte
+PHY_HEADER_LENGTH = 8 * 8  # header length in physical layer, 8 byte
 
-DATA_PACKET_PAYLOAD_LENGTH = 4096 * 8  # 4096 byte
-DATA_PACKET_LENGTH = IP_HEADER_LENGTH + MAC_HEADER_LENGTH + DATA_PACKET_PAYLOAD_LENGTH
+DATA_PACKET_PAYLOAD_LENGTH = 1024 * 8  # 1024 byte
+DATA_PACKET_LENGTH = IP_HEADER_LENGTH + MAC_HEADER_LENGTH + PHY_HEADER_LENGTH + DATA_PACKET_PAYLOAD_LENGTH
 
-ACK_PACKET_LENGTH = IP_HEADER_LENGTH + MAC_HEADER_LENGTH + 128  # bit
+ACK_PACKET_LENGTH = PHY_HEADER_LENGTH + MAC_HEADER_LENGTH + 128  # bit
 
 HELLO_PACKET_PAYLOAD_LENGTH = 256  # bit
-HELLO_PACKET_LENGTH = IP_HEADER_LENGTH + MAC_HEADER_LENGTH + HELLO_PACKET_PAYLOAD_LENGTH
+HELLO_PACKET_LENGTH = IP_HEADER_LENGTH + MAC_HEADER_LENGTH + PHY_HEADER_LENGTH + HELLO_PACKET_PAYLOAD_LENGTH
 
 # define the range of packet_id of different types of packets
 GL_ID_HELLO_PACKET = 10000
