@@ -4,10 +4,10 @@ from utils.ieee_802_11 import IEEE_802_11
 IEEE_802_11 = IEEE_802_11().b
 
 # --------------------- simulation parameters --------------------- #
-MAP_LENGTH = 800  # m, length of the map
-MAP_WIDTH = 800  # m, width of the map
+MAP_LENGTH = 500  # m, length of the map
+MAP_WIDTH = 500  # m, width of the map
 MAP_HEIGHT = 120  # m, height of the map
-SIM_TIME = 13 * 1e6  # us, total simulation time
+SIM_TIME = 10 * 1e6  # us, total simulation time
 NUMBER_OF_DRONES = 15  # number of drones in the network
 STATIC_CASE = 1
 HETEROGENEOUS = 0  # heterogeneous network support (in terms of speed)
@@ -38,15 +38,16 @@ SNR_THRESHOLD = 7  # dB
 
 # ---------------------- packet parameters ----------------------- #
 MAX_TTL = NUMBER_OF_DRONES + 1  # maximum time-to-live value
-PACKET_LIFETIME = 30 * 1e6  # 10s
+PACKET_LIFETIME = 10 * 1e6  # 10s
 IP_HEADER_LENGTH = 20 * 8  # header length in network layer, 20 byte
 MAC_HEADER_LENGTH = 14 * 8  # header length in mac layer, 14 byte
-PHY_HEADER_LENGTH = 8 * 8  # header length in physical layer, 8 byte
+PHY_HEADER_LENGTH = 16 * 8  # header length in physical layer, PLCP preamble + PLCP header
+ACK_HEADER_LENGTH = 16 * 8  # header length of ACK packet, 16 byte
 
 DATA_PACKET_PAYLOAD_LENGTH = 1024 * 8  # 1024 byte
 DATA_PACKET_LENGTH = IP_HEADER_LENGTH + MAC_HEADER_LENGTH + PHY_HEADER_LENGTH + DATA_PACKET_PAYLOAD_LENGTH
 
-ACK_PACKET_LENGTH = PHY_HEADER_LENGTH + MAC_HEADER_LENGTH + 128  # bit
+ACK_PACKET_LENGTH = ACK_HEADER_LENGTH + 14 * 8  # bit
 
 HELLO_PACKET_PAYLOAD_LENGTH = 256  # bit
 HELLO_PACKET_LENGTH = IP_HEADER_LENGTH + MAC_HEADER_LENGTH + PHY_HEADER_LENGTH + HELLO_PACKET_PAYLOAD_LENGTH
@@ -59,15 +60,15 @@ GL_ID_GRAD_MESSAGE = 40000
 GL_ID_CHIRP_PACKET = 50000
 
 # ------------------ physical layer parameters ------------------- #
-BIT_RATE = IEEE_802_11['bit_rate']  # IEEE 802.11b is adopted, 11 Mbit/s
+BIT_RATE = IEEE_802_11['bit_rate']
 BIT_TRANSMISSION_TIME = 1/BIT_RATE * 1e6
-BANDWIDTH = IEEE_802_11['bandwidth']  # 20 MHz
+BANDWIDTH = IEEE_802_11['bandwidth']
 SENSING_RANGE = 350  # in meter, defines the area where a sending node can disturb a transmission from a third node
 
 # --------------------- mac layer parameters --------------------- #
-SLOT_DURATION = IEEE_802_11['slot_duration']  # 20 microseconds, IEEE 802.11b
-SIFS_DURATION = IEEE_802_11['SIFS']  # 10 microseconds, IEEE 802.11b
-DIFS_DURATION = SIFS_DURATION + (2 * SLOT_DURATION)  # 128 microseconds
+SLOT_DURATION = IEEE_802_11['slot_duration']
+SIFS_DURATION = IEEE_802_11['SIFS']
+DIFS_DURATION = SIFS_DURATION + (2 * SLOT_DURATION)
 CW_MIN = 31
 ACK_TIMEOUT = 0.1 * 1e6  # maximum waiting time for ACK (0.1 s)
 MAX_RETRANSMISSION_ATTEMPT = 5

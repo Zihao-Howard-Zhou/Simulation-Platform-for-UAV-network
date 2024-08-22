@@ -20,6 +20,12 @@ class IEEE_802_11:
           - DSSS (Direct Sequence Spread Spectrum) is most commonly used in IEEE 802.11, once spread, the resulting
             signal occupies a bandwidth of about 20 MHz, which is sightly lower than the bandwidth of a sub-channel
           - In 2.4 GHz band, only three sub-channels (1, 6 and 11) are non-overlapping.
+          
+        Packet structure at physical layer in 802.11b
+        |---------------|-------------|---------------------------------------------------|
+        | PLCP preamble | PLCP header |                MPDU at MAC layer                  | 
+                ↑              ↑                               ↑
+              DBPSK     DBPSK or DQPSK    DBPSK or DQPSK or CCK 5.5 Mbps or CCK 11 Mbps
         
         Reference:
         [1] Villegas. E. G, Lopez-Aguilera. E, Vidal. R, Paradells. J, "Effect of Adjacent-channel Interference in IEEE 
