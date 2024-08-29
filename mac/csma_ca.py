@@ -17,12 +17,12 @@ class CsmaCa:
     """
     Medium access control protocol: CSMA/CA (Carrier Sense Multiple Access With Collision Avoidance) without RTS/CTS
 
-    The basic flow of the CSMA/CA (without RTS/CTS) is as follows:
+    The basic flow of the basic CSMA/CA (without RTS/CTS) is as follows:
         1) when a node has a packet to send, it first needs to wait until the channel is idle
         2) when the channel is idle, the node starts a timer and waits for "DIFS+backoff" periods of time, where the
            length of backoff is related to the number of re-transmissions
         3) if the entire decrement of the timer to 0 is not interrupted, then the node can occupy the channel and start
-           sending the data packet
+           sending the data packet and waiting for the corresponding ACK
         4) if the countdown is interrupted, it means that the node loses the game. The node should freeze the timer and
            wait for channel idle again before re-starting its timer
 
@@ -42,7 +42,7 @@ class CsmaCa:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/11
-    Updated at: 2024/8/21
+    Updated at: 2024/8/29
     """
 
     def __init__(self, drone):
@@ -66,7 +66,7 @@ class CsmaCa:
         """
 
         transmission_attempt = pkd.number_retransmission_attempt[self.my_drone.identifier]
-        contention_window = (config.CW_MIN + 1) * (2 ** transmission_attempt) - 1
+        contention_window = (config.CW_MIN + 1) * (2 ** (transmission_attempt-1)) - 1
 
         backoff = random.randint(0, contention_window - 1) * config.SLOT_DURATION  # random backoff, in us
         to_wait = config.DIFS_DURATION + backoff
@@ -75,7 +75,15 @@ class CsmaCa:
             # wait until the channel becomes idle
             yield self.env.process(self.wait_idle_channel(self.my_drone, self.simulator.drones))
 
-            # start listen the channel
+            if pkd.number_retransmission_attempt[self.my_drone.identifier] == 1:
+                """
+                NOTE: because the service time of the packet is given by the interval between the time when this packet
+                starts backoff and the time when it is acknowledged and removed from the queue, so the "backoff_start_
+                time" should be recorded only when the drone transmits this packet for the first time.
+                """
+                pkd.backoff_start_time = self.env.now
+
+            # start listen the channel at backoff stage
             self.env.process(self.listen(self.channel_states, self.simulator.drones))
 
             logging.info('UAV: %s should wait from: %s, and wait for %s',
@@ -97,7 +105,6 @@ class CsmaCa:
                                  self.my_drone.identifier, pkd.packet_id, self.env.now)
 
                     pkd.transmitting_start_time = self.env.now
-
                     transmission_mode = pkd.transmission_mode
 
                     if transmission_mode == 0:  # for unicast
@@ -107,16 +114,19 @@ class CsmaCa:
 
                         next_hop_id = pkd.next_hop_id
 
-                        if self.enable_ack:
-                            self.wait_ack_process_count += 1
-                            key2 = str(self.my_drone.identifier) + '_' + str(self.wait_ack_process_count)
-                            self.wait_ack_process = self.env.process(self.wait_ack(pkd))
-                            self.wait_ack_process_dict[key2] = self.wait_ack_process
-                            self.wait_ack_process_finish[key2] = 0
-
                         pkd.increase_ttl()
                         self.phy.unicast(pkd, next_hop_id)  # note: unicast function should be executed first!
-                        yield self.env.timeout(pkd.packet_length / config.BIT_RATE * 1e6)
+                        yield self.env.timeout(pkd.packet_length / config.BIT_RATE * 1e6)  # transmission delay
+
+                        if self.enable_ack:
+                            # used to identify the process of waiting ack
+                            key2 = 'wait_ack' + str(self.my_drone.identifier) + '_' + str(pkd.packet_id)
+                            self.wait_ack_process = self.env.process(self.wait_ack(pkd))
+                            self.wait_ack_process_dict[key2] = self.wait_ack_process
+                            self.wait_ack_process_finish[key2] = 0  # indicate that this process hasn't finished
+
+                            # continue to occupy the channel to prevent the ACK from being interfered
+                            yield self.env.timeout(config.SIFS_DURATION + config.ACK_PACKET_LENGTH / config.BIT_RATE * 1e6)
 
                     elif transmission_mode == 1:
                         pkd.increase_ttl()
@@ -153,14 +163,13 @@ class CsmaCa:
             self.wait_ack_process_finish[key2] = 1
 
             logging.info('ACK timeout of packet: %s at: %s', pkd.packet_id, self.env.now)
-            # timeout expired
-            if pkd.number_retransmission_attempt[self.my_drone.identifier] < config.MAX_RETRANSMISSION_ATTEMPT:
-                self.my_drone.transmitting_queue.put(pkd)
-                # yield self.env.process(self.my_drone.packet_coming(pkd))  # resend
-            else:
-                latency = self.simulator.env.now - pkd.creation_time  # in us
-                self.simulator.metrics.deliver_time_dict[pkd.packet_id] = latency
 
+            if pkd.number_retransmission_attempt[self.my_drone.identifier] < config.MAX_RETRANSMISSION_ATTEMPT:
+                yield self.env.process(self.my_drone.packet_coming(pkd))  # resend
+            else:
+                # latency = self.simulator.env.now - pkd.creation_time  # in us
+                # self.simulator.metrics.deliver_time_dict[pkd.packet_id] = latency
+                self.simulator.metrics.mac_delay.append((self.simulator.env.now - pkd.backoff_start_time) / 1e3)
                 logging.info('Packet: %s is dropped!', pkd.packet_id)
 
         except simpy.Interrupt:
@@ -177,7 +186,7 @@ class CsmaCa:
         """
 
         while not check_channel_availability(self.channel_states, sender_drone, drones):
-            yield self.env.timeout(config.SLOT_DURATION)
+            yield self.env.timeout(1)
 
     def listen(self, channel_states, drones):
         """
