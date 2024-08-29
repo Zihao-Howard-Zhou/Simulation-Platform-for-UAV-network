@@ -20,6 +20,12 @@ class IEEE_802_11:
           - DSSS (Direct Sequence Spread Spectrum) is most commonly used in IEEE 802.11, once spread, the resulting
             signal occupies a bandwidth of about 20 MHz, which is sightly lower than the bandwidth of a sub-channel
           - In 2.4 GHz band, only three sub-channels (1, 6 and 11) are non-overlapping.
+        
+        - Different bit rate:
+          - 1 Mbps
+          - 2 Mbps
+          - 5.5 Mbps
+          - 11 Mbps
           
         Packet structure at physical layer in 802.11b
         |---------------|-------------|---------------------------------------------------|
@@ -33,8 +39,8 @@ class IEEE_802_11:
             communications, 2007, pp. 118-125.
         
         """
-        self.b = {'carrier_frequency': 2.4 * 1e9,  # 2.4 GHz
-                  'bit_rate': 11 * 1e6,  # 11 Mbps
+        self.b = {'carrier_frequency': 2.4 * 1e9,  # ≈2.4 GHz! (since there are many sub-channels)
+                  'bit_rate': 2 * 1e6,  # up to 11 Mbps
                   'bandwidth': 22 * 1e6,  # 22 MHz
                   'slot_duration': 20,  # microseconds
                   'SIFS': 10}

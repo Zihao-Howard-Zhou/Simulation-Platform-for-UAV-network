@@ -4,10 +4,10 @@ from utils.ieee_802_11 import IEEE_802_11
 IEEE_802_11 = IEEE_802_11().b
 
 # --------------------- simulation parameters --------------------- #
-MAP_LENGTH = 500  # m, length of the map
-MAP_WIDTH = 500  # m, width of the map
-MAP_HEIGHT = 120  # m, height of the map
-SIM_TIME = 10 * 1e6  # us, total simulation time
+MAP_LENGTH = 600  # m, length of the map
+MAP_WIDTH = 600  # m, width of the map
+MAP_HEIGHT = 500  # m, height of the map
+SIM_TIME = 35 * 1e6  # us, total simulation time
 NUMBER_OF_DRONES = 15  # number of drones in the network
 STATIC_CASE = 1
 HETEROGENEOUS = 0  # heterogeneous network support (in terms of speed)
@@ -34,14 +34,20 @@ LIGHT_SPEED = 3 * 1e8  # light speed (m/s)
 CARRIER_FREQUENCY = IEEE_802_11['carrier_frequency']  # carrier frequency (Hz)
 NOISE_POWER = 4 * 1e-11  # noise power (Watt)
 RADIO_SWITCHING_TIME = 100  # us, the switching time of the transceiver mode
-SNR_THRESHOLD = 7  # dB
+SNR_THRESHOLD = 6  # dB
 
 # ---------------------- packet parameters ----------------------- #
 MAX_TTL = NUMBER_OF_DRONES + 1  # maximum time-to-live value
 PACKET_LIFETIME = 10 * 1e6  # 10s
 IP_HEADER_LENGTH = 20 * 8  # header length in network layer, 20 byte
 MAC_HEADER_LENGTH = 14 * 8  # header length in mac layer, 14 byte
-PHY_HEADER_LENGTH = 16 * 8  # header length in physical layer, PLCP preamble + PLCP header
+
+# ---------------------- physical layer -------------------------- #
+PATH_LOSS_EXPONENT = 2  # for large-scale fading
+PLCP_PREAMBLE = 128 + 16  # including synchronization and SFD (start frame delimiter)
+PLCP_HEADER = 8 + 8 + 16 + 16  # including signal, service, length and HEC (header error check)
+PHY_HEADER_LENGTH = PLCP_PREAMBLE + PLCP_HEADER  # header length in physical layer, PLCP preamble + PLCP header
+
 ACK_HEADER_LENGTH = 16 * 8  # header length of ACK packet, 16 byte
 
 DATA_PACKET_PAYLOAD_LENGTH = 1024 * 8  # 1024 byte
@@ -63,7 +69,7 @@ GL_ID_CHIRP_PACKET = 50000
 BIT_RATE = IEEE_802_11['bit_rate']
 BIT_TRANSMISSION_TIME = 1/BIT_RATE * 1e6
 BANDWIDTH = IEEE_802_11['bandwidth']
-SENSING_RANGE = 350  # in meter, defines the area where a sending node can disturb a transmission from a third node
+SENSING_RANGE = 600  # in meter, defines the area where a sending node can disturb a transmission from a third node
 
 # --------------------- mac layer parameters --------------------- #
 SLOT_DURATION = IEEE_802_11['slot_duration']
