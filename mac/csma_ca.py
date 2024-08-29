@@ -114,10 +114,6 @@ class CsmaCa:
 
                         next_hop_id = pkd.next_hop_id
 
-                        pkd.increase_ttl()
-                        self.phy.unicast(pkd, next_hop_id)  # note: unicast function should be executed first!
-                        yield self.env.timeout(pkd.packet_length / config.BIT_RATE * 1e6)  # transmission delay
-
                         if self.enable_ack:
                             # used to identify the process of waiting ack
                             key2 = 'wait_ack' + str(self.my_drone.identifier) + '_' + str(pkd.packet_id)
@@ -127,6 +123,20 @@ class CsmaCa:
 
                             # continue to occupy the channel to prevent the ACK from being interfered
                             yield self.env.timeout(config.SIFS_DURATION + config.ACK_PACKET_LENGTH / config.BIT_RATE * 1e6)
+
+                        pkd.increase_ttl()
+                        self.phy.unicast(pkd, next_hop_id)  # note: unicast function should be executed first!
+                        yield self.env.timeout(pkd.packet_length / config.BIT_RATE * 1e6)  # transmission delay
+
+                        # if self.enable_ack:
+                        #     # used to identify the process of waiting ack
+                        #     key2 = 'wait_ack' + str(self.my_drone.identifier) + '_' + str(pkd.packet_id)
+                        #     self.wait_ack_process = self.env.process(self.wait_ack(pkd))
+                        #     self.wait_ack_process_dict[key2] = self.wait_ack_process
+                        #     self.wait_ack_process_finish[key2] = 0  # indicate that this process hasn't finished
+                        #
+                        #     # continue to occupy the channel to prevent the ACK from being interfered
+                        #     yield self.env.timeout(config.SIFS_DURATION + config.ACK_PACKET_LENGTH / config.BIT_RATE * 1e6)
 
                     elif transmission_mode == 1:
                         pkd.increase_ttl()
@@ -186,7 +196,7 @@ class CsmaCa:
         """
 
         while not check_channel_availability(self.channel_states, sender_drone, drones):
-            yield self.env.timeout(1)
+            yield self.env.timeout(config.SLOT_DURATION)
 
     def listen(self, channel_states, drones):
         """
@@ -213,4 +223,4 @@ class CsmaCa:
             else:
                 pass
 
-            yield self.env.timeout(config.SLOT_DURATION)
+            yield self.env.timeout(1)
