@@ -39,7 +39,7 @@ class Opar:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/3/19
-    Updated at: 2024/4/11
+    Updated at: 2024/8/29
     """
 
     def __init__(self, simulator, my_drone):
@@ -211,7 +211,10 @@ class Opar:
                 # if it is passed to itself, it'll try to find the path again the next time the packet is sent
                 best_next_hop_id = self.my_drone.identifier
 
-        packet.next_hop_id = best_next_hop_id
+        if best_next_hop_id is self.my_drone.identifier:
+            has_route = False  # no available next hop
+        else:
+            packet.next_hop_id = best_next_hop_id  # it has an available next hop drone
 
         return has_route, packet, enquire
 
@@ -229,19 +232,6 @@ class Opar:
         current_time = self.simulator.env.now
         if isinstance(packet, DataPacket):
             packet_copy = copy.copy(packet)
-            logging.info('~~~Packet: %s is received by UAV: %s at: %s',
-                         packet_copy.packet_id, self.my_drone.identifier, self.simulator.env.now)
-            if packet_copy.dst_drone.identifier == self.my_drone.identifier:
-                latency = self.simulator.env.now - packet_copy.creation_time  # in us
-                self.simulator.metrics.deliver_time_dict[packet_copy.packet_id] = latency
-                self.simulator.metrics.throughput_dict[packet_copy.packet_id] = config.DATA_PACKET_LENGTH / (latency / 1e6)
-                self.simulator.metrics.hop_cnt_dict[packet_copy.packet_id] = packet_copy.get_current_ttl()
-                self.simulator.metrics.datapacket_arrived.add(packet_copy.packet_id)
-                logging.info('Packet: %s is received by destination UAV: %s',
-                             packet_copy.packet_id, self.my_drone.identifier)
-            else:
-                self.my_drone.transmitting_queue.put(packet_copy)
-
             config.GL_ID_ACK_PACKET += 1
             src_drone = self.simulator.drones[src_drone_id]  # previous drone
             ack_packet = AckPacket(src_drone=self.my_drone,
@@ -256,15 +246,35 @@ class Opar:
             # unicast the ack packet immediately without contention for the channel
             if not self.my_drone.sleep:
                 ack_packet.increase_ttl()
-                yield self.simulator.env.timeout(ack_packet.packet_length / config.BIT_RATE * 1e6)
                 self.my_drone.mac_protocol.phy.unicast(ack_packet, src_drone_id)
+                yield self.simulator.env.timeout(ack_packet.packet_length / config.BIT_RATE * 1e6)
                 self.simulator.drones[src_drone_id].receive()
             else:
                 pass
 
-        elif isinstance(packet, AckPacket):
-            key2 = str(self.my_drone.identifier) + '_' + str(self.my_drone.mac_protocol.wait_ack_process_count)
+            logging.info('~~~Packet: %s is received by UAV: %s at: %s',
+                         packet_copy.packet_id, self.my_drone.identifier, self.simulator.env.now)
+            if packet_copy.dst_drone.identifier == self.my_drone.identifier:
+                latency = self.simulator.env.now - packet_copy.creation_time  # in us
+                self.simulator.metrics.deliver_time_dict[packet_copy.packet_id] = latency
+                self.simulator.metrics.throughput_dict[packet_copy.packet_id] = config.DATA_PACKET_LENGTH / (latency / 1e6)
+                self.simulator.metrics.hop_cnt_dict[packet_copy.packet_id] = packet_copy.get_current_ttl()
+                self.simulator.metrics.datapacket_arrived.add(packet_copy.packet_id)
+            else:
+                self.my_drone.transmitting_queue.put(packet_copy)
 
+        elif isinstance(packet, AckPacket):
+            data_packet_acked = packet.ack_packet
+            logging.info('+++ ACK of pkd (id: %s) is received by UAV: %s, access delay is: %s, now is: %s, backoff start time is: %s',
+                         data_packet_acked.packet_id, self.my_drone.identifier,
+                         (self.simulator.env.now - data_packet_acked.backoff_start_time) / 1e3, self.simulator.env.now,
+                         data_packet_acked.backoff_start_time)
+
+            self.simulator.metrics.mac_delay.append((self.simulator.env.now - data_packet_acked.backoff_start_time) / 1e3)
+
+            self.my_drone.remove_from_queue(data_packet_acked)
+
+            key2 = 'wait_ack' + str(self.my_drone.identifier) + '_' + str(data_packet_acked.packet_id)
             if self.my_drone.mac_protocol.wait_ack_process_finish[key2] == 0:
                 if not self.my_drone.mac_protocol.wait_ack_process_dict[key2].triggered:
                     logging.info('At time: %s, the wait_ack process (id: %s) of UAV: %s is interrupted by UAV: %s',
