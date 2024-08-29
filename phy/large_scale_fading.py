@@ -84,7 +84,7 @@ def general_path_loss(receiver, transmitter):
 def maximum_communication_range():
     c = config.LIGHT_SPEED
     fc = config.CARRIER_FREQUENCY
-    alpha = 2  # path loss exponent
+    alpha = config.PATH_LOSS_EXPONENT  # path loss exponent
     transmit_power_db = 10 * math.log10(config.TRANSMITTING_POWER)
     noise_power_db = 10 * math.log10(config.NOISE_POWER)
     snr_threshold_db = config.SNR_THRESHOLD
@@ -94,5 +94,3 @@ def maximum_communication_range():
     max_comm_range = (c * (10 ** (path_loss_db / (alpha * 10)))) / (4 * math.pi * fc)
 
     return max_comm_range
-
-
