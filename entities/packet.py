@@ -13,13 +13,16 @@ class Packet:
         deadline: maximum segment lifetime of packet, in second
         __ttl: current "Time to live (TTL)"
         number_retransmission_attempt: record the number of retransmissions of packet on different drones
+        waiting_start_time: the time at which tha packet is added to the "transmitting queue" of drone
+        backoff_start_time: the time at which the packet starts the backoff stage
+        transmitting_start_time: the time at which the packet can be transmitted to the channel after backoff
         time_delivery: the time at which the packet arrives at its destination
         time_transmitted_at_last_hop: the transmitting time at last drone
         transmission_mode: unicast or multicast or broadcast?
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/11
-    Updated at: 2024/5/4
+    Updated at: 2024/8/29
     """
 
     def __init__(self,
@@ -42,6 +45,7 @@ class Packet:
 
         # for calculating the queuing delay
         self.waiting_start_time = None
+        self.backoff_start_time = None
         self.transmitting_start_time = None
 
         self.time_delivery = None  # for end-to-end delay
