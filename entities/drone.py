@@ -76,7 +76,7 @@ class Drone:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/11
-    Updated at: 2024/8/14
+    Updated at: 2024/8/29
     """
 
     def __init__(self,
@@ -117,7 +117,7 @@ class Drone:
         self.mac_process_finish = dict()
         self.mac_process_count = 0
 
-        self.routing_protocol = Gpsr(self.simulator, self)
+        self.routing_protocol = Opar(self.simulator, self)
 
         self.mobility_model = GaussMarkov3D(self)
         # self.motion_controller = VfMotionController(self)
@@ -155,7 +155,7 @@ class Drone:
                     interval of data packets follows exponential distribution
                     """
 
-                    rate = 5  # on average, how many packets are generated in 1s
+                    rate = 15  # on average, how many packets are generated in 1s
                     yield self.env.timeout(round(random.expovariate(rate) * 1e6))
 
                 GLOBAL_DATA_PACKET_ID += 1  # data packet id
@@ -181,6 +181,7 @@ class Drone:
                 logging.info('------> UAV: %s generates a data packet (id: %s, dst: %s) at: %s',
                              self.identifier, pkd.packet_id, destination.identifier, self.env.now)
 
+                pkd.waiting_start_time = self.env.now
                 self.transmitting_queue.put(pkd)
             else:  # cannot generate packets if "my_drone" is in sleep state
                 break
@@ -204,12 +205,13 @@ class Drone:
             if not self.sleep:  # if drone still has enough energy to relay packets
                 yield self.env.timeout(10)  # for speed up the simulation
                 if not self.transmitting_queue.empty():
+                    # print(self.transmitting_queue.qsize())
                     packet = self.transmitting_queue.get()  # get the packet at the head of the queue
 
                     if self.env.now < packet.creation_time + packet.deadline:  # this packet has not expired
                         if isinstance(packet, DataPacket):
                             if packet.number_retransmission_attempt[self.identifier] < config.MAX_RETRANSMISSION_ATTEMPT:
-                                packet.waiting_start_time = self.env.now  # this packet starts to wait in the queue
+                                # packet.waiting_start_time = self.env.now  # this packet starts to wait in the queue
 
                                 # it should be noted that "final_packet" may be the data packet itself or a control
                                 # packet, depending on whether the routing protocol can find an appropriate next hop
@@ -286,6 +288,22 @@ class Drone:
             if self.residual_energy <= config.ENERGY_THRESHOLD:
                 self.sleep = True
                 # print('UAV: ', self.identifier, ' run out of energy at: ', self.env.now)
+
+    def remove_from_queue(self, data_pkd):
+        """
+        After receiving the ack packet, drone should remove the data packet that has been acked from its queue
+        :param data_pkd: the acked data packet
+        :return: none
+        """
+        temp_queue = queue.Queue()
+
+        while not self.transmitting_queue.empty():
+            pkd_entry = self.transmitting_queue.get()
+            if pkd_entry != data_pkd:
+                temp_queue.put(pkd_entry)
+
+        while not temp_queue.empty():
+            self.transmitting_queue.put(temp_queue.get())
 
     def receive(self):
         """
