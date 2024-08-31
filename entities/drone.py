@@ -76,7 +76,7 @@ class Drone:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/11
-    Updated at: 2024/8/29
+    Updated at: 2024/8/31
     """
 
     def __init__(self,
@@ -155,7 +155,7 @@ class Drone:
                     interval of data packets follows exponential distribution
                     """
 
-                    rate = 15  # on average, how many packets are generated in 1s
+                    rate = 5  # on average, how many packets are generated in 1s
                     yield self.env.timeout(round(random.expovariate(rate) * 1e6))
 
                 GLOBAL_DATA_PACKET_ID += 1  # data packet id
@@ -182,9 +182,25 @@ class Drone:
                              self.identifier, pkd.packet_id, destination.identifier, self.env.now)
 
                 pkd.waiting_start_time = self.env.now
+
                 self.transmitting_queue.put(pkd)
             else:  # cannot generate packets if "my_drone" is in sleep state
                 break
+
+    # The process of waiting for an ACK will block subsequent incoming data packets
+    def blocking(self):
+        if not self.mac_protocol.wait_ack_process_finish:
+            flag = False  # there is currently no waiting process for ACK
+        else:
+            # get the latest process status
+            final_indicator = list(self.mac_protocol.wait_ack_process_finish.items())[-1]
+
+            if final_indicator[1] == 0:
+                flag = True  # indicates that the drone is still waiting
+            else:
+                flag = False  # there is currently no waiting process for ACK
+
+        return flag
 
     def feed_packet(self):
         """
@@ -204,42 +220,37 @@ class Drone:
         while True:
             if not self.sleep:  # if drone still has enough energy to relay packets
                 yield self.env.timeout(10)  # for speed up the simulation
-                if not self.transmitting_queue.empty():
-                    # print(self.transmitting_queue.qsize())
-                    packet = self.transmitting_queue.get()  # get the packet at the head of the queue
 
-                    if self.env.now < packet.creation_time + packet.deadline:  # this packet has not expired
-                        if isinstance(packet, DataPacket):
-                            if packet.number_retransmission_attempt[self.identifier] < config.MAX_RETRANSMISSION_ATTEMPT:
-                                # packet.waiting_start_time = self.env.now  # this packet starts to wait in the queue
+                if not self.blocking():
+                    if not self.transmitting_queue.empty():
+                        packet = self.transmitting_queue.get()  # get the packet at the head of the queue
 
-                                # it should be noted that "final_packet" may be the data packet itself or a control
-                                # packet, depending on whether the routing protocol can find an appropriate next hop
-                                has_route, final_packet, enquire = self.routing_protocol.next_hop_selection(packet)
+                        if self.env.now < packet.creation_time + packet.deadline:  # this packet has not expired
+                            if isinstance(packet, DataPacket):
+                                if packet.number_retransmission_attempt[self.identifier] < config.MAX_RETRANSMISSION_ATTEMPT:
+                                    # it should be noted that "final_packet" may be the data packet itself or a control
+                                    # packet, depending on whether the routing protocol can find an appropriate next hop
+                                    has_route, final_packet, enquire = self.routing_protocol.next_hop_selection(packet)
 
-                                if has_route:
-                                    logging.info('UAV: %s obtain the next hop of data packet (id: %s), '
-                                                 'which is: %s, and this packet will wait buffer resource at: %s.',
-                                                 self.identifier, packet.packet_id, packet.next_hop_id, self.env.now)
+                                    if has_route:
+                                        logging.info('UAV: %s obtain the next hop: %s of data packet (id: %s)',
+                                                     self.identifier, packet.next_hop_id, packet.packet_id)
 
-                                    yield self.env.process(self.packet_coming(final_packet))  # actually the data packet
-                                else:
-                                    logging.info('Unfortunately, at time: %s, UAV: %s cannot find appropriate next '
-                                                 'hop of data packet (id: %s), and it will put the packet into waiting '
-                                                 'queue.', self.env.now, self.identifier, packet.packet_id)
-
-                                    self.waiting_list.append(packet)
-
-                                    if enquire:
-                                        # actually the control packet
+                                        # in this case, the "final_packet" is actually the data packet
                                         yield self.env.process(self.packet_coming(final_packet))
+                                    else:
+                                        self.waiting_list.append(packet)
 
-                        else:  # control packet but not ack
-                            yield self.env.process(self.packet_coming(packet))
-                    else:
-                        pass  # means dropping this data packet for expiration
+                                        if enquire:
+                                            # in this case, the "final_packet" is actually the control packet
+                                            yield self.env.process(self.packet_coming(final_packet))
+
+                            else:  # control packet but not ack
+                                yield self.env.process(self.packet_coming(packet))
+                        else:
+                            pass  # means dropping this data packet for expiration
             else:  # this drone runs out of energy
-                break  # important to break the while loop
+                break  # it is important to break the while loop
 
     def packet_coming(self, pkd):
         """
@@ -247,7 +258,7 @@ class Drone:
 
         The requirement of "ready" is:
             1) this packet is a control packet, or
-            2) drone knows the next hop of the data packet
+            2) the valid next hop of this data packet is obtained
         :param pkd: packet that waits to enter the buffer of drone
         :return: none
         """
