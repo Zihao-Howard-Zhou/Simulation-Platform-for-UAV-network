@@ -37,12 +37,17 @@ class CsmaCa:
     References:
         [1] J. Li, et al., "Packet Delay in UAV Wireless Networks Under Non-saturated Traffic and Channel Fading
             Conditions," Wireless Personal Communications, vol. 72, no. 2, pp. 1105-1123, 2013.
-        [2] Park, Ki hong, "Wireless Lecture Notes". Purdue. Retrieved 28 September 2012, link:
+        [2] M. A. Siddique and J. Kamruzzaman, "Performance Analysis of M-Retry BEB Based DCF Under Unsaturated Traffic
+            Condition," in 2010 IEEE Wireless Communication and Networking Conference, 2010, pp. 1-6.
+        [3] F. Daneshgaran, M. Laddomada, F. Mesiti and M. Mondin, "Unsaturated Throughput Analysis of IEEE 802.11 in
+            Presence of Non-ideal Transmission Channel and Capture Effects," IEEE transactions on Wireless Communications
+            vol. 7, no. 4, pp. 1276-1286, 2008.
+        [4] Park, Ki hong, "Wireless Lecture Notes". Purdue. Retrieved 28 September 2012, link:
             https://www.cs.purdue.edu/homes/park/cs536-wireless-3.pdf
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/11
-    Updated at: 2024/8/29
+    Updated at: 2024/8/31
     """
 
     def __init__(self, drone):
@@ -114,6 +119,10 @@ class CsmaCa:
 
                         next_hop_id = pkd.next_hop_id
 
+                        pkd.increase_ttl()
+                        self.phy.unicast(pkd, next_hop_id)  # note: unicast function should be executed first!
+                        yield self.env.timeout(pkd.packet_length / config.BIT_RATE * 1e6)  # transmission delay
+
                         if self.enable_ack:
                             # used to identify the process of waiting ack
                             key2 = 'wait_ack' + str(self.my_drone.identifier) + '_' + str(pkd.packet_id)
@@ -123,20 +132,6 @@ class CsmaCa:
 
                             # continue to occupy the channel to prevent the ACK from being interfered
                             yield self.env.timeout(config.SIFS_DURATION + config.ACK_PACKET_LENGTH / config.BIT_RATE * 1e6)
-
-                        pkd.increase_ttl()
-                        self.phy.unicast(pkd, next_hop_id)  # note: unicast function should be executed first!
-                        yield self.env.timeout(pkd.packet_length / config.BIT_RATE * 1e6)  # transmission delay
-
-                        # if self.enable_ack:
-                        #     # used to identify the process of waiting ack
-                        #     key2 = 'wait_ack' + str(self.my_drone.identifier) + '_' + str(pkd.packet_id)
-                        #     self.wait_ack_process = self.env.process(self.wait_ack(pkd))
-                        #     self.wait_ack_process_dict[key2] = self.wait_ack_process
-                        #     self.wait_ack_process_finish[key2] = 0  # indicate that this process hasn't finished
-                        #
-                        #     # continue to occupy the channel to prevent the ACK from being interfered
-                        #     yield self.env.timeout(config.SIFS_DURATION + config.ACK_PACKET_LENGTH / config.BIT_RATE * 1e6)
 
                     elif transmission_mode == 1:
                         pkd.increase_ttl()
@@ -169,13 +164,10 @@ class CsmaCa:
         try:
             yield self.env.timeout(config.ACK_TIMEOUT)
 
-            key2 = str(self.my_drone.identifier) + '_' + str(self.wait_ack_process_count)
-            self.wait_ack_process_finish[key2] = 1
-
             logging.info('ACK timeout of packet: %s at: %s', pkd.packet_id, self.env.now)
 
             if pkd.number_retransmission_attempt[self.my_drone.identifier] < config.MAX_RETRANSMISSION_ATTEMPT:
-                yield self.env.process(self.my_drone.packet_coming(pkd))  # resend
+                yield self.env.process(self.my_drone.packet_coming(pkd))  # resend right now
             else:
                 # latency = self.simulator.env.now - pkd.creation_time  # in us
                 # self.simulator.metrics.deliver_time_dict[pkd.packet_id] = latency
