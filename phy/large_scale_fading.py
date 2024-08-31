@@ -54,6 +54,7 @@ def sinr_calculator(my_drone, main_drones_list, all_transmitting_drones_list):
             logging.info('No interference')
 
         sinr = 10 * math.log10(receive_power / (noise_power + interference_power))
+        logging.info('The SINR of main link is: %s', sinr)
         sinr_list.append(sinr)
 
     return sinr_list
