@@ -76,7 +76,7 @@ class Drone:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/11
-    Updated at: 2024/8/31
+    Updated at: 2024/9/8
     """
 
     def __init__(self,
@@ -109,6 +109,7 @@ class Drone:
         self.inbox = inbox
 
         self.buffer = simpy.Resource(env, capacity=1)
+        self.max_queue_size = config.MAX_QUEUE_SIZE
         self.transmitting_queue = queue.Queue()
         self.waiting_list = []
 
@@ -116,6 +117,7 @@ class Drone:
         self.mac_process_dict = dict()
         self.mac_process_finish = dict()
         self.mac_process_count = 0
+        self.enable_blocking = 1
 
         self.routing_protocol = Opar(self.simulator, self)
 
@@ -126,8 +128,7 @@ class Drone:
         self.residual_energy = config.INITIAL_ENERGY
         self.sleep = False
 
-        if self.identifier != 0:
-            self.env.process(self.generate_data_packet())
+        self.env.process(self.generate_data_packet())
 
         self.env.process(self.feed_packet())
         # self.env.process(self.energy_monitor())
@@ -155,18 +156,16 @@ class Drone:
                     interval of data packets follows exponential distribution
                     """
 
-                    rate = 5  # on average, how many packets are generated in 1s
+                    rate = 2  # on average, how many packets are generated in 1s
                     yield self.env.timeout(round(random.expovariate(rate) * 1e6))
 
                 GLOBAL_DATA_PACKET_ID += 1  # data packet id
 
-                # # randomly choose a destination
-                # all_candidate_list = [i for i in range(config.NUMBER_OF_DRONES)]
-                # all_candidate_list.remove(self.identifier)
-                # dst_id = random.choice(all_candidate_list)
-                # destination = self.simulator.drones[dst_id]  # obtain the destination drone
-
-                destination = self.simulator.drones[0]
+                # randomly choose a destination
+                all_candidate_list = [i for i in range(config.NUMBER_OF_DRONES)]
+                all_candidate_list.remove(self.identifier)
+                dst_id = random.choice(all_candidate_list)
+                destination = self.simulator.drones[dst_id]  # obtain the destination drone
 
                 pkd = DataPacket(self,
                                  dst_drone=destination,
@@ -178,27 +177,33 @@ class Drone:
 
                 self.simulator.metrics.datapacket_generated_num += 1
 
-                logging.info('------> UAV: %s generates a data packet (id: %s, dst: %s) at: %s',
-                             self.identifier, pkd.packet_id, destination.identifier, self.env.now)
+                logging.info('------> UAV: %s generates a data packet (id: %s, dst: %s) at: %s, qsize is: %s',
+                             self.identifier, pkd.packet_id, destination.identifier, self.env.now,
+                             self.transmitting_queue.qsize())
 
                 pkd.waiting_start_time = self.env.now
 
-                self.transmitting_queue.put(pkd)
+                if self.transmitting_queue.qsize() < self.max_queue_size:
+                    self.transmitting_queue.put(pkd)
             else:  # cannot generate packets if "my_drone" is in sleep state
                 break
 
     # The process of waiting for an ACK will block subsequent incoming data packets
+    # head-of-line blocking problem
     def blocking(self):
-        if not self.mac_protocol.wait_ack_process_finish:
-            flag = False  # there is currently no waiting process for ACK
-        else:
-            # get the latest process status
-            final_indicator = list(self.mac_protocol.wait_ack_process_finish.items())[-1]
-
-            if final_indicator[1] == 0:
-                flag = True  # indicates that the drone is still waiting
-            else:
+        if self.enable_blocking:
+            if not self.mac_protocol.wait_ack_process_finish:
                 flag = False  # there is currently no waiting process for ACK
+            else:
+                # get the latest process status
+                final_indicator = list(self.mac_protocol.wait_ack_process_finish.items())[-1]
+
+                if final_indicator[1] == 0:
+                    flag = True  # indicates that the drone is still waiting
+                else:
+                    flag = False  # there is currently no waiting process for ACK
+        else:
+            flag = False
 
         return flag
 
