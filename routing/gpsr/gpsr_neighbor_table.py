@@ -1,3 +1,4 @@
+import logging
 import math
 from utils.util_function import euclidean_distance
 from collections import defaultdict
@@ -90,11 +91,11 @@ class GpsrNeighborTable:
 
     # print neighbor table
     def print_neighbor(self, my_drone):
-        print('|----------Neighbor Table of: ', my_drone.identifier, ' ----------|')
+        logging.info('|----------Neighbor Table of: %s ----------|', my_drone.identifier)
         for key in self.neighbor_table:
-            print('Neighbor: ', key, ', position is: ', self.neighbor_table[key][0],
-                  ', updated time is: ', self.neighbor_table[key][1])
-        print('|-----------------------------------------------------------------|')
+            logging.info('Neighbor: %s, position is: %s, updated time is: %s, ',
+                         key, self.neighbor_table[key][0], self.neighbor_table[key][1])
+        logging.info('|-----------------------------------------------------------------|')
 
     # clear neighbor table
     def clear(self):
