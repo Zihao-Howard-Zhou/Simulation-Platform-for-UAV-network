@@ -39,7 +39,7 @@ class Opar:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/3/19
-    Updated at: 2024/8/29
+    Updated at: 2024/9/8
     """
 
     def __init__(self, simulator, my_drone):
@@ -232,25 +232,6 @@ class Opar:
         current_time = self.simulator.env.now
         if isinstance(packet, DataPacket):
             packet_copy = copy.copy(packet)
-            config.GL_ID_ACK_PACKET += 1
-            src_drone = self.simulator.drones[src_drone_id]  # previous drone
-            ack_packet = AckPacket(src_drone=self.my_drone,
-                                   dst_drone=src_drone,
-                                   ack_packet_id=config.GL_ID_ACK_PACKET,
-                                   ack_packet_length=config.ACK_PACKET_LENGTH,
-                                   ack_packet=packet_copy,
-                                   simulator=self.simulator)
-
-            yield self.simulator.env.timeout(config.SIFS_DURATION)  # switch from receiving to transmitting
-
-            # unicast the ack packet immediately without contention for the channel
-            if not self.my_drone.sleep:
-                ack_packet.increase_ttl()
-                self.my_drone.mac_protocol.phy.unicast(ack_packet, src_drone_id)
-                yield self.simulator.env.timeout(ack_packet.packet_length / config.BIT_RATE * 1e6)
-                self.simulator.drones[src_drone_id].receive()
-            else:
-                pass
 
             logging.info('~~~Packet: %s is received by UAV: %s at: %s',
                          packet_copy.packet_id, self.my_drone.identifier, self.simulator.env.now)
@@ -260,15 +241,54 @@ class Opar:
                 self.simulator.metrics.throughput_dict[packet_copy.packet_id] = config.DATA_PACKET_LENGTH / (latency / 1e6)
                 self.simulator.metrics.hop_cnt_dict[packet_copy.packet_id] = packet_copy.get_current_ttl()
                 self.simulator.metrics.datapacket_arrived.add(packet_copy.packet_id)
+
+                config.GL_ID_ACK_PACKET += 1
+                src_drone = self.simulator.drones[src_drone_id]  # previous drone
+                ack_packet = AckPacket(src_drone=self.my_drone,
+                                       dst_drone=src_drone,
+                                       ack_packet_id=config.GL_ID_ACK_PACKET,
+                                       ack_packet_length=config.ACK_PACKET_LENGTH,
+                                       ack_packet=packet_copy,
+                                       simulator=self.simulator)
+
+                yield self.simulator.env.timeout(config.SIFS_DURATION)  # switch from receiving to transmitting
+
+                # unicast the ack packet immediately without contention for the channel
+                if not self.my_drone.sleep:
+                    ack_packet.increase_ttl()
+                    self.my_drone.mac_protocol.phy.unicast(ack_packet, src_drone_id)
+                    yield self.simulator.env.timeout(ack_packet.packet_length / config.BIT_RATE * 1e6)
+                    self.simulator.drones[src_drone_id].receive()
+                else:
+                    pass
             else:
-                self.my_drone.transmitting_queue.put(packet_copy)
+                if self.my_drone.transmitting_queue.qsize() < self.my_drone.max_queue_size:
+                    self.my_drone.transmitting_queue.put(packet_copy)
+
+                    config.GL_ID_ACK_PACKET += 1
+                    src_drone = self.simulator.drones[src_drone_id]  # previous drone
+                    ack_packet = AckPacket(src_drone=self.my_drone,
+                                           dst_drone=src_drone,
+                                           ack_packet_id=config.GL_ID_ACK_PACKET,
+                                           ack_packet_length=config.ACK_PACKET_LENGTH,
+                                           ack_packet=packet_copy,
+                                           simulator=self.simulator)
+
+                    yield self.simulator.env.timeout(config.SIFS_DURATION)  # switch from receiving to transmitting
+
+                    # unicast the ack packet immediately without contention for the channel
+                    if not self.my_drone.sleep:
+                        ack_packet.increase_ttl()
+                        self.my_drone.mac_protocol.phy.unicast(ack_packet, src_drone_id)
+                        yield self.simulator.env.timeout(ack_packet.packet_length / config.BIT_RATE * 1e6)
+                        self.simulator.drones[src_drone_id].receive()
+                    else:
+                        pass
+                else:
+                    pass
 
         elif isinstance(packet, AckPacket):
             data_packet_acked = packet.ack_packet
-            logging.info('+++ ACK of pkd (id: %s) is received by UAV: %s, access delay is: %s, now is: %s, backoff start time is: %s',
-                         data_packet_acked.packet_id, self.my_drone.identifier,
-                         (self.simulator.env.now - data_packet_acked.backoff_start_time) / 1e3, self.simulator.env.now,
-                         data_packet_acked.backoff_start_time)
 
             self.simulator.metrics.mac_delay.append((self.simulator.env.now - data_packet_acked.backoff_start_time) / 1e3)
 
@@ -279,6 +299,8 @@ class Opar:
                 if not self.my_drone.mac_protocol.wait_ack_process_dict[key2].triggered:
                     logging.info('At time: %s, the wait_ack process (id: %s) of UAV: %s is interrupted by UAV: %s',
                                  self.simulator.env.now, key2, self.my_drone.identifier, src_drone_id)
+
+                    self.my_drone.mac_protocol.wait_ack_process_finish[key2] = 1  # mark it as "finished"
                     self.my_drone.mac_protocol.wait_ack_process_dict[key2].interrupt()
 
         elif isinstance(packet, VfPacket):
