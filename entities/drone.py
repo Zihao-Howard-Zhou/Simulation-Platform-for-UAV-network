@@ -67,16 +67,17 @@ class Drone:
         mac_process_dict: a dictionary, used to store the mac_process that is launched each time
         mac_process_finish: a dictionary, used to indicate the completion of the process
         mac_process_count: used to distinguish between different "mac_send" processes
+        enable_blocking: describe whether the process of waiting for an ACK blocks the delivery of subsequent packets
+                         1: stop-and-wait protocol; 0: sliding window (need further implemented)
         routing_protocol: routing protocol installed (GPSR, DSDV, etc.)
         mobility_model: mobility model installed (3-D Gauss-markov, 3-D random waypoint, etc.)
-        motion_controller: used to control the cooperative movement of drones
         energy_model: energy consumption model installed
         residual_energy: the residual energy of drone in Joule
         sleep: if the drone is in a "sleep" state, it cannot perform packet sending and receiving operations.
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/11
-    Updated at: 2024/9/8
+    Updated at: 2024/9/18
     """
 
     def __init__(self,
@@ -97,7 +98,7 @@ class Drone:
 
         random.seed(2025 + self.identifier)
         self.pitch = random.uniform(-0.05, 0.05)
-        self.speed = speed
+        self.speed = speed  # constant speed throughout the simulation
         self.velocity = [self.speed * math.cos(self.direction) * math.cos(self.pitch),
                          self.speed * math.sin(self.direction) * math.cos(self.pitch),
                          self.speed * math.sin(self.pitch)]
@@ -110,7 +111,7 @@ class Drone:
 
         self.buffer = simpy.Resource(env, capacity=1)
         self.max_queue_size = config.MAX_QUEUE_SIZE
-        self.transmitting_queue = queue.Queue()
+        self.transmitting_queue = queue.Queue()  # queue in the real sense
         self.waiting_list = []
 
         self.mac_protocol = CsmaCa(self)
@@ -121,7 +122,7 @@ class Drone:
 
         self.routing_protocol = Opar(self.simulator, self)
 
-        self.mobility_model = GaussMarkov3D(self)
+        self.mobility_model = RandomWalk3D(self)
         # self.motion_controller = VfMotionController(self)
 
         self.energy_model = EnergyModel()
@@ -156,7 +157,7 @@ class Drone:
                     interval of data packets follows exponential distribution
                     """
 
-                    rate = 2  # on average, how many packets are generated in 1s
+                    rate = 8  # on average, how many packets are generated in 1s
                     yield self.env.timeout(round(random.expovariate(rate) * 1e6))
 
                 GLOBAL_DATA_PACKET_ID += 1  # data packet id
@@ -185,12 +186,19 @@ class Drone:
 
                 if self.transmitting_queue.qsize() < self.max_queue_size:
                     self.transmitting_queue.put(pkd)
+                else:
+                    # the drone has no more room for new packets
+                    pass
             else:  # cannot generate packets if "my_drone" is in sleep state
                 break
 
-    # The process of waiting for an ACK will block subsequent incoming data packets
-    # head-of-line blocking problem
     def blocking(self):
+        """
+        The process of waiting for an ACK will block subsequent incoming data packets to simulate the
+        "head-of-line blocking problem"
+        :return: none
+        """
+
         if self.enable_blocking:
             if not self.mac_protocol.wait_ack_process_finish:
                 flag = False  # there is currently no waiting process for ACK
@@ -245,6 +253,7 @@ class Drone:
                                         yield self.env.process(self.packet_coming(final_packet))
                                     else:
                                         self.waiting_list.append(packet)
+                                        self.remove_from_queue(packet)
 
                                         if enquire:
                                             # in this case, the "final_packet" is actually the control packet
@@ -289,7 +298,7 @@ class Drone:
 
                 # every time the drone initiates a data packet transmission, "mac_process_count" will be increased by 1
                 self.mac_process_count += 1
-                key = str(self.identifier) + '_' + str(self.mac_process_count)  # used to uniquely refer to a process
+                key = 'mac_send' + str(self.identifier) + '_' + str(pkd.packet_id)
                 mac_process = self.env.process(self.mac_protocol.mac_send(pkd))
                 self.mac_process_dict[key] = mac_process
                 self.mac_process_finish[key] = 0
@@ -340,8 +349,8 @@ class Drone:
 
                 flag, all_drones_send_to_me, time_span, potential_packet = self.trigger()
 
-                if len(all_drones_send_to_me) > 1:
-                    self.simulator.metrics.collision_num += 1
+                # if len(all_drones_send_to_me) > 1:
+                #     self.simulator.metrics.collision_num += 1
 
                 if flag:
                     # find the transmitters of all packets currently transmitted on the channel
@@ -379,6 +388,7 @@ class Drone:
                         else:
                             logging.info('Packet %s is dropped due to exceeding max TTL', pkd.packet_id)
                     else:  # sinr is lower than threshold
+                        self.simulator.metrics.collision_num += len(sinr_list)
                         pass
 
                 yield self.env.timeout(5)
