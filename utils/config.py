@@ -4,12 +4,12 @@ from utils.ieee_802_11 import IEEE_802_11
 IEEE_802_11 = IEEE_802_11().b
 
 # --------------------- simulation parameters --------------------- #
-MAP_LENGTH = 600  # m, length of the map
-MAP_WIDTH = 600  # m, width of the map
+MAP_LENGTH = 500  # m, length of the map
+MAP_WIDTH = 500  # m, width of the map
 MAP_HEIGHT = 500  # m, height of the map
-SIM_TIME = 35 * 1e6  # us, total simulation time
+SIM_TIME = 20 * 1e6  # us, total simulation time
 NUMBER_OF_DRONES = 15  # number of drones in the network
-STATIC_CASE = 1
+STATIC_CASE = 0  # whether to simulate a static network
 HETEROGENEOUS = 0  # heterogeneous network support (in terms of speed)
 LOGGING_LEVEL = logging.INFO  # whether to print the detail information during simulation
 
@@ -27,6 +27,7 @@ MEAN_ROTOR_VELOCITY = 7.2  # mean rotor induced velocity in hover
 FUSELAGE_DRAG_RATIO = 0.3
 INITIAL_ENERGY = 20 * 1e3  # in joule
 ENERGY_THRESHOLD = 2000  # in joule
+MAX_QUEUE_SIZE = 200  # maximum size of drone's queue
 
 # ----------------------- radio parameters ----------------------- #
 TRANSMITTING_POWER = 0.1  # in Watt
@@ -75,6 +76,6 @@ SENSING_RANGE = 600  # in meter, defines the area where a sending node can distu
 SLOT_DURATION = IEEE_802_11['slot_duration']
 SIFS_DURATION = IEEE_802_11['SIFS']
 DIFS_DURATION = SIFS_DURATION + (2 * SLOT_DURATION)
-CW_MIN = 31
-ACK_TIMEOUT = 0.1 * 1e6  # maximum waiting time for ACK (0.1 s)
+CW_MIN = 201  # initial contention window size
+ACK_TIMEOUT = ACK_PACKET_LENGTH / BIT_RATE * 1e6 + SIFS_DURATION + 50  # maximum waiting time for ACK (0.1 s)
 MAX_RETRANSMISSION_ATTEMPT = 5
