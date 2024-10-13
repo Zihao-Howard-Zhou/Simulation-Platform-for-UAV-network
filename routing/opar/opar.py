@@ -53,6 +53,7 @@ class Opar:
         self.w2 = 0.5
 
         self.max_comm_range = maximum_communication_range()
+        self.simulator.env.process(self.check_waiting_list())
 
     def calculate_cost_matrix(self):
         cost = np.zeros((self.simulator.n_drones, self.simulator.n_drones))
@@ -263,7 +264,7 @@ class Opar:
                     pass
             else:
                 if self.my_drone.transmitting_queue.qsize() < self.my_drone.max_queue_size:
-                    self.my_drone.transmitting_queue.put(packet_copy)
+                    self.my_drone.transmitting_queue.put(packet_copy)  
 
                     config.GL_ID_ACK_PACKET += 1
                     src_drone = self.simulator.drones[src_drone_id]  # previous drone
@@ -322,6 +323,23 @@ class Opar:
                 self.my_drone.transmitting_queue.put(ack_packet)
             else:
                 pass
+
+    def check_waiting_list(self):
+        while True:
+            if not self.my_drone.sleep:
+                yield self.simulator.env.timeout(0.6 * 1e6)
+                for waiting_pkd in self.my_drone.waiting_list:
+                    if self.simulator.env.now < waiting_pkd.creation_time + waiting_pkd.deadline:
+                        self.my_drone.waiting_list.remove(waiting_pkd)
+                    else:
+                        best_next_hop_id = self.next_hop_selection(waiting_pkd)
+                        if best_next_hop_id != self.my_drone.identifier:
+                            self.my_drone.transmitting_queue.put(waiting_pkd)
+                            self.my_drone.waiting_list.remove(waiting_pkd)
+                        else:
+                            pass
+            else:
+                break
 
 
 def link_lifetime_predictor(drone1, drone2, max_comm_range):
