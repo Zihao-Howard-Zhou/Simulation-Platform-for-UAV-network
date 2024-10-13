@@ -64,7 +64,7 @@ class EnergyModel:
             total_power.append(temp_p)
 
         plt.figure()
-        plt.plot(test_speed, total_power,color='black', linestyle='-', linewidth=2, label='total')
+        plt.plot(test_speed, total_power, color='black', linestyle='-', linewidth=2, label='total')
         plt.legend()
         plt.xlabel('UAV speed (m/s)')
         plt.ylabel('Required power (W)')
