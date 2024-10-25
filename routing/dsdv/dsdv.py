@@ -142,36 +142,67 @@ class Dsdv:
                 self.simulator.metrics.datapacket_arrived.add(packet_copy.packet_id)
                 logging.info('Packet: %s is received by destination UAV: %s',
                              packet_copy.packet_id, self.my_drone.identifier)
+
+                config.GL_ID_ACK_PACKET += 1
+                src_drone = self.simulator.drones[src_drone_id]  # previous drone
+                ack_packet = AckPacket(src_drone=self.my_drone,
+                                       dst_drone=src_drone,
+                                       ack_packet_id=config.GL_ID_ACK_PACKET,
+                                       ack_packet_length=config.ACK_PACKET_LENGTH,
+                                       ack_packet=packet_copy,
+                                       simulator=self.simulator)
+
+                yield self.simulator.env.timeout(config.SIFS_DURATION)  # switch from receiving to transmitting
+
+                # unicast the ack packet immediately without contention for the channel
+                if not self.my_drone.sleep:
+                    ack_packet.increase_ttl()
+                    self.my_drone.mac_protocol.phy.unicast(ack_packet, src_drone_id)
+                    yield self.simulator.env.timeout(ack_packet.packet_length / config.BIT_RATE * 1e6)
+                    self.simulator.drones[src_drone_id].receive()
+                else:
+                    pass
             else:
-                self.my_drone.transmitting_queue.put(packet_copy)
+                if self.my_drone.transmitting_queue.qsize() < self.my_drone.max_queue_size:
+                    self.my_drone.transmitting_queue.put(packet_copy)  # ###################
 
-            config.GL_ID_ACK_PACKET += 1
-            src_drone = self.simulator.drones[src_drone_id]  # previous drone
-            ack_packet = AckPacket(src_drone=self.my_drone,
-                                   dst_drone=src_drone,
-                                   ack_packet_id=config.GL_ID_ACK_PACKET,
-                                   ack_packet_length=config.ACK_PACKET_LENGTH,
-                                   ack_packet=packet_copy,
-                                   simulator=self.simulator)
+                    config.GL_ID_ACK_PACKET += 1
+                    src_drone = self.simulator.drones[src_drone_id]  # previous drone
+                    ack_packet = AckPacket(src_drone=self.my_drone,
+                                           dst_drone=src_drone,
+                                           ack_packet_id=config.GL_ID_ACK_PACKET,
+                                           ack_packet_length=config.ACK_PACKET_LENGTH,
+                                           ack_packet=packet_copy,
+                                           simulator=self.simulator)
 
-            yield self.simulator.env.timeout(config.SIFS_DURATION)  # switch from receiving to transmitting
+                    yield self.simulator.env.timeout(config.SIFS_DURATION)  # switch from receiving to transmitting
 
-            # unicast the ack packet immediately without contention for the channel
-            if not self.my_drone.sleep:
-                ack_packet.increase_ttl()
-                yield self.simulator.env.timeout(ack_packet.packet_length / config.BIT_RATE * 1e6)
-                self.my_drone.mac_protocol.phy.unicast(ack_packet, src_drone_id)
-                self.simulator.drones[src_drone_id].receive()
-            else:
-                pass
+                    # unicast the ack packet immediately without contention for the channel
+                    if not self.my_drone.sleep:
+                        ack_packet.increase_ttl()
+                        self.my_drone.mac_protocol.phy.unicast(ack_packet, src_drone_id)
+                        yield self.simulator.env.timeout(ack_packet.packet_length / config.BIT_RATE * 1e6)
+                        self.simulator.drones[src_drone_id].receive()
+                    else:
+                        pass
+                else:
+                    pass
 
         elif isinstance(packet, AckPacket):
-            key2 = str(self.my_drone.identifier) + '_' + str(self.my_drone.mac_protocol.wait_ack_process_count)
+            data_packet_acked = packet.ack_packet
+
+            self.simulator.metrics.mac_delay.append((self.simulator.env.now - data_packet_acked.backoff_start_time) / 1e3)
+
+            self.my_drone.remove_from_queue(data_packet_acked)
+
+            key2 = 'wait_ack' + str(self.my_drone.identifier) + '_' + str(data_packet_acked.packet_id)
 
             if self.my_drone.mac_protocol.wait_ack_process_finish[key2] == 0:
                 if not self.my_drone.mac_protocol.wait_ack_process_dict[key2].triggered:
                     logging.info('At time: %s, the wait_ack process (id: %s) of UAV: %s is interrupted by UAV: %s',
                                  self.simulator.env.now, key2, self.my_drone.identifier, src_drone_id)
+
+                    self.my_drone.mac_protocol.wait_ack_process_finish[key2] = 1  # mark it as "finished"
                     self.my_drone.mac_protocol.wait_ack_process_dict[key2].interrupt()
 
         elif isinstance(packet, VfPacket):
