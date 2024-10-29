@@ -9,7 +9,6 @@ from routing.dsdv.dsdv import Dsdv
 from routing.gpsr.gpsr import Gpsr
 from routing.grad.grad import Grad
 from routing.opar.opar import Opar
-from routing.parrot.parrot import Parrot
 from routing.q_routing.q_routing import QRouting
 from mac.csma_ca import CsmaCa
 from mac.pure_aloha import PureAloha
@@ -118,7 +117,7 @@ class Drone:
         self.mac_process_dict = dict()
         self.mac_process_finish = dict()
         self.mac_process_count = 0
-        self.enable_blocking = 1
+        self.enable_blocking = 1  # enable "stop-and-wait" protocol
 
         self.routing_protocol = Opar(self.simulator, self)
 
@@ -149,7 +148,7 @@ class Drone:
         while True:
             if not self.sleep:
                 if traffic_pattern == 'Uniform':
-                    # the drone generates a data packet every 0.2s with jitter
+                    # the drone generates a data packet every 0.5s with jitter
                     yield self.env.timeout(random.randint(500000, 505000))
                 elif traffic_pattern == 'Poisson':
                     """
@@ -157,7 +156,7 @@ class Drone:
                     interval of data packets follows exponential distribution
                     """
 
-                    rate = 8  # on average, how many packets are generated in 1s
+                    rate = 5  # on average, how many packets are generated in 1s
                     yield self.env.timeout(round(random.expovariate(rate) * 1e6))
 
                 GLOBAL_DATA_PACKET_ID += 1  # data packet id
@@ -348,9 +347,6 @@ class Drone:
                 self.update_inbox()
 
                 flag, all_drones_send_to_me, time_span, potential_packet = self.trigger()
-
-                # if len(all_drones_send_to_me) > 1:
-                #     self.simulator.metrics.collision_num += 1
 
                 if flag:
                     # find the transmitters of all packets currently transmitted on the channel
