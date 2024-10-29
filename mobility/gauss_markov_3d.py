@@ -18,8 +18,8 @@ class GaussMarkov3D:
     Attributes:
         model_identifier: model name
         my_drone: the drone that installed the mobility model
-        position_update_interval: unit: microsecond, determine how often the drone updates its position
-        direction_update_interval: unit: microsecond, determine how often the drone changes its direction
+        position_update_interval: unit: us, determine how often the drone updates its position
+        direction_update_interval: unit: us, determine how often the drone changes its direction
         alpha: control the randomness of the mobility
         move_counter: control the random seed
         b1, b2, b3: buffer zone, avoid getting too close to the boundary
@@ -31,7 +31,7 @@ class GaussMarkov3D:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/17
-    Updated at: 2024/5/1
+    Updated at: 2024/10/29
     """
 
     def __init__(self, drone):
@@ -57,7 +57,7 @@ class GaussMarkov3D:
 
         self.my_drone.simulator.env.process(self.mobility_update(self.my_drone))
         self.trajectory = []
-        # self.my_drone.simulator.env.process(self.show_trajectory())
+        self.my_drone.simulator.env.process(self.show_trajectory())
 
     def mobility_update(self, drone):
         while True:
@@ -89,13 +89,16 @@ class GaussMarkov3D:
                 alpha3 = np.sqrt(1.0 - self.alpha * self.alpha)
 
                 np.random.seed(drone_id + 1 + self.move_counter)
-                next_speed = self.alpha * cur_speed + alpha2 * velocity_mean + alpha3 * np.random.normal(0.0, 1.0, 1)
+                next_speed = (self.alpha * cur_speed + alpha2 * velocity_mean +
+                              alpha3 * np.random.normal(0.0, 1.0, 1))
 
                 np.random.seed(drone_id + 1000 + self.move_counter)
-                next_direction = self.alpha * cur_direction + alpha2 * direction_mean + alpha3 * np.random.normal(0.0, 1.0, 1)
+                next_direction = (self.alpha * cur_direction + alpha2 * direction_mean +
+                                  alpha3 * np.random.normal(0.0, 1.0, 1))
 
                 np.random.seed(drone_id + 2000 + self.move_counter)
-                next_pitch = self.alpha * cur_pitch + alpha2 * pitch_mean + alpha3 * np.random.normal(0.0, 0.1, 1)
+                next_pitch = (self.alpha * cur_pitch + alpha2 * pitch_mean +
+                              alpha3 * np.random.normal(0.0, 0.1, 1))
 
                 next_velocity_x = next_speed * np.cos(next_direction) * np.cos(next_pitch)
                 next_velocity_y = next_speed * np.sin(next_direction) * np.cos(next_pitch)
@@ -148,7 +151,7 @@ class GaussMarkov3D:
         y = []
         z = []
         yield self.my_drone.simulator.env.timeout(config.SIM_TIME-1)
-        if self.my_drone.identifier == 1:
+        if self.my_drone.identifier == 1:  # you can choose which drone's trajectory you want to check
             for i in range(len(self.trajectory)):
                 x.append(self.trajectory[i][0])
                 y.append(self.trajectory[i][1])
