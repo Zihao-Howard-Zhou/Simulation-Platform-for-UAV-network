@@ -1,19 +1,51 @@
+import math
+
 import numpy as np
 import random
 from utils import config
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
+
 class RandomWalk3D:
+    """
+    3-D Random walk mobility model
+
+    In this model, firstly, the drone will randomly choose a direction of motion, and move along this direction for a
+    fixed amount of time ("travel_duration"). In addition to this, it is also possible to specify the drone to move a
+    fixed distance in this direction. In this code, we assume that the speed of drone is constant.
+
+    Attributes:
+        my_drone: the drone which installs this mobility model
+        move_counter
+        position_update_interval: in us, determine how often the drone updates its position
+        travel_duration: specifies the time for a node to move in a certain direction
+        b1, b2, b3: safety boundary of x-, y- and z-axis, respectively
+        min_x, max_x: Boundaries on the length of the map
+        min_y, max_y: Boundaries on the width of the map
+        min_z, max_z: Boundaries on the height of the map
+        trajectory: list, used to record the flying trajectories of a certain drone
+
+    References:
+        [1] Roy, R.R. (2011). Random Walk Mobility. In: Handbook of Mobile Ad Hoc Networks for Mobility Models.
+            Springer, Boston, MA. https://doi.org/10.1007/978-1-4419-6050-4_3
+        [2] NS-3 for 2D Random walk mobility model:
+            https://www.nsnam.org/docs/release/3.20/doxygen/classns3_1_1_random_walk2d_mobility_model.html
+
+
+    Author: Zihao Zhou, eezihaozhou@gmail.com
+    Created at: 2024/1/20
+    Updated at: 2024/11/18
+    """
     def __init__(self, drone):
         self.my_drone = drone
         self.move_counter = 1
         self.position_update_interval = 1 * 1e5  # 0.1s
-        self.travel_duration = 4*1e6  # the travelling time in the new direction
+        self.travel_duration = 4 * 1e6  # the travelling time in the new direction
 
         self.b1 = 50  # safety boundary of x-axis
         self.b2 = 50  # safety boundary of y-axis
-        self.b3 = 3  # safety boundary of z-axis
+        self.b3 = 50  # safety boundary of z-axis
 
         self.min_x = 0
         self.max_x = config.MAP_LENGTH
@@ -26,7 +58,7 @@ class RandomWalk3D:
 
         self.my_drone.simulator.env.process(self.mobility_update(self.my_drone))
         self.trajectory = []
-        # self.my_drone.simulator.env.process(self.show_trajectory())
+        self.my_drone.simulator.env.process(self.show_trajectory())
 
     def mobility_update(self, drone):
         while True:
@@ -56,7 +88,7 @@ class RandomWalk3D:
                 next_direction = random.uniform(0, 2 * np.pi)
 
                 random.seed(drone_id + 1000 + self.move_counter)
-                next_pitch = random.uniform(-0.05, 0.05)
+                next_pitch = random.uniform(-math.pi / 2, math.pi / 2)
 
                 next_velocity_x = cur_speed * np.cos(next_direction) * np.cos(next_pitch)
                 next_velocity_y = cur_speed * np.sin(next_direction) * np.cos(next_pitch)
@@ -69,7 +101,7 @@ class RandomWalk3D:
 
                 next_position = [next_position_x, next_position_y, next_position_z]
 
-                if drone_id == 1:
+                if drone_id == 6:
                     self.trajectory.append(next_position)
 
                 if type(next_velocity_x) is np.ndarray:
@@ -106,7 +138,8 @@ class RandomWalk3D:
         y = []
         z = []
         yield self.my_drone.simulator.env.timeout(config.SIM_TIME-1)
-        if self.my_drone.identifier == 1:
+
+        if self.my_drone.identifier == 6:
             for i in range(len(self.trajectory)):
                 x.append(self.trajectory[i][0])
                 y.append(self.trajectory[i][1])
