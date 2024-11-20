@@ -21,7 +21,7 @@ This Python-based simulation platform can realistically model various components
 ## Installation and usage
 Firstly, download this project:
 ```
-git clone https://github.com/ZihaoZhouSCUT/Simulation-Platform-for-UAV-network.git
+git clone https://github.com/Zihao-Howard-Zhou/Simulation-Platform-for-UAV-network
 ```
 You can even ```run main.py``` directly with one click to get a sneak peek. But we recommend that you go to ```utils/config.py``` to browse and roughly understand the simulation parameters before starting the operation, including: the size of the simulation map, the number of drones, the velocities of drones, the routing protocol adopted and so on.
 
