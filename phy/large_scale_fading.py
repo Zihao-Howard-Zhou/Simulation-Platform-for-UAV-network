@@ -39,6 +39,8 @@ def sinr_calculator(my_drone, main_drones_list, all_transmitting_drones_list):
         interference_power = 0
 
         if len(interference_list) != 0:
+            logging.info('Has interference')
+            # my_drone.simulator.metrics.collision_num += 1
             for interference_id in interference_list:
                 interference = simulator.drones[interference_id]
 
@@ -51,7 +53,8 @@ def sinr_calculator(my_drone, main_drones_list, all_transmitting_drones_list):
                 interference_link_path_loss = general_path_loss(receiver, interference)
                 interference_power += transmit_power * interference_link_path_loss
         else:
-            logging.info('No interference')
+            logging.info('No interference, main link distance is: %s',
+                         euclidean_distance(transmitter.coords, receiver.coords))
 
         sinr = 10 * math.log10(receive_power / (noise_power + interference_power))
         logging.info('The SINR of main link is: %s', sinr)
@@ -62,7 +65,12 @@ def sinr_calculator(my_drone, main_drones_list, all_transmitting_drones_list):
 
 def general_path_loss(receiver, transmitter):
     """
-    general path loss model
+    general path loss model of line-of-sight (LoS) channels without system loss
+
+    References:
+        [1] J. Sabzehali, et al., "Optimizing number, placement, and backhaul connectivity of multi-UAV networks," in
+            IEEE Internet of Things Journal, vol. 9, no. 21, pp. 21548-21560, 2022.
+
     :param receiver: the drone that receives the packet
     :param transmitter: the drone that sends the packet
     :return: path loss
