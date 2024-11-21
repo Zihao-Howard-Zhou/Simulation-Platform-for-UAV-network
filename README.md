@@ -130,7 +130,7 @@ Our simulation platform can be expanded based on your research needs, including 
 Issues and pull requests are warmly welcome! 
 
 ## Show your support
-Give a ⭐ is this project helped you!
+Give a ⭐ if this project helped you!
 
 ## License
 This project is MIT licensed.
