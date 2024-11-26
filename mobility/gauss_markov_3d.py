@@ -31,7 +31,7 @@ class GaussMarkov3D:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/17
-    Updated at: 2024/10/29
+    Updated at: 2024/11/18
     """
 
     def __init__(self, drone):
@@ -42,9 +42,9 @@ class GaussMarkov3D:
         self.alpha = 0.85
         self.move_counter = 1
 
-        self.b1 = 50
-        self.b2 = 50
-        self.b3 = 10
+        self.b1 = 1
+        self.b2 = 1
+        self.b3 = 1
 
         self.min_x = 0
         self.max_x = config.MAP_LENGTH

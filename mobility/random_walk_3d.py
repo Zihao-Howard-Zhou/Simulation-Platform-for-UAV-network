@@ -43,9 +43,9 @@ class RandomWalk3D:
         self.position_update_interval = 1 * 1e5  # 0.1s
         self.travel_duration = 4 * 1e6  # the travelling time in the new direction
 
-        self.b1 = 50  # safety boundary of x-axis
-        self.b2 = 50  # safety boundary of y-axis
-        self.b3 = 50  # safety boundary of z-axis
+        self.b1 = 1  # safety boundary of x-axis
+        self.b2 = 1  # safety boundary of y-axis
+        self.b3 = 1  # safety boundary of z-axis
 
         self.min_x = 0
         self.max_x = config.MAP_LENGTH
@@ -58,7 +58,7 @@ class RandomWalk3D:
 
         self.my_drone.simulator.env.process(self.mobility_update(self.my_drone))
         self.trajectory = []
-        self.my_drone.simulator.env.process(self.show_trajectory())
+        # self.my_drone.simulator.env.process(self.show_trajectory())
 
     def mobility_update(self, drone):
         while True:

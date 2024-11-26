@@ -17,14 +17,14 @@ class RandomWaypoint3D:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/4/19
-    Updated at: 2024/5/1
+    Updated at: 2024/11/18
     """
 
     def __init__(self, drone):
         self.model_identifier = 'RandomWaypoint'
         self.my_drone = drone
         self.position_update_interval = 1 * 1e5  # 0.1s
-        self.pause_time = 1 * 1e6  # 1s
+        self.pause_time = 5 * 1e6  # in second
 
         self.min_x = 0
         self.max_x = config.MAP_LENGTH
@@ -36,11 +36,11 @@ class RandomWaypoint3D:
         self.max_z = config.MAP_HEIGHT
 
         # generate random waypoint
-        self.waypoint_num = 10
+        self.waypoint_num = 20
         self.waypoint_spacing_x = 50
         self.waypoint_spacing_y = 50
-        self.waypoint_spacing_z = 5
-        self.waypoint_coords = []  # 两个相邻的waypoint距离不能太近,否则在UAV speed很大的非常容易飞过头
+        self.waypoint_spacing_z = 50
+        self.waypoint_coords = []
         self.waypoint_generator(self.my_drone.coords)
 
         # used to determine if the waypoint has been visited
