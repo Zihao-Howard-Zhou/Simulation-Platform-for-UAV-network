@@ -6,7 +6,7 @@ import math
 import queue
 from entities.packet import DataPacket
 from routing.dsdv.dsdv import Dsdv
-from routing.gpsr.gpsr import Gpsr
+from routing.greedy.greedy import Greedy
 from routing.grad.grad import Grad
 from routing.opar.opar import Opar
 from routing.q_routing.q_routing import QRouting
@@ -156,7 +156,7 @@ class Drone:
                     interval of data packets follows exponential distribution
                     """
 
-                    rate = 5  # on average, how many packets are generated in 1s
+                    rate = 8  # on average, how many packets are generated in 1s
                     yield self.env.timeout(round(random.expovariate(rate) * 1e6))
 
                 GLOBAL_DATA_PACKET_ID += 1  # data packet id
