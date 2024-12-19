@@ -264,7 +264,7 @@ class Opar:
                     pass
             else:
                 if self.my_drone.transmitting_queue.qsize() < self.my_drone.max_queue_size:
-                    self.my_drone.transmitting_queue.put(packet_copy)  
+                    # self.my_drone.transmitting_queue.put(packet_copy)  # ###################
 
                     config.GL_ID_ACK_PACKET += 1
                     src_drone = self.simulator.drones[src_drone_id]  # previous drone
@@ -329,7 +329,7 @@ class Opar:
             if not self.my_drone.sleep:
                 yield self.simulator.env.timeout(0.6 * 1e6)
                 for waiting_pkd in self.my_drone.waiting_list:
-                    if self.simulator.env.now < waiting_pkd.creation_time + waiting_pkd.deadline:
+                    if self.simulator.env.now > waiting_pkd.creation_time + waiting_pkd.deadline:  # expired
                         self.my_drone.waiting_list.remove(waiting_pkd)
                     else:
                         best_next_hop_id = self.next_hop_selection(waiting_pkd)
