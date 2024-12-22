@@ -54,7 +54,7 @@ class QRouting:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/8/20
-    Updated at: 2024/8/21
+    Updated at: 2024/8/29
 
     """
 
@@ -128,59 +128,93 @@ class QRouting:
         current_time = self.simulator.env.now
         if isinstance(packet, QRoutingHelloPacket):
             self.table.add_neighbor(packet, current_time)  # update the neighbor table
-            # self.neighbor_table.print_neighbor(self.my_drone)
 
         elif isinstance(packet, DataPacket):
             packet_copy = copy.copy(packet)
+
             packet_copy.previous_drone = self.simulator.drones[src_drone_id]
             logging.info('~~~Packet: %s is received by UAV: %s at: %s',
                          packet_copy.packet_id, self.my_drone.identifier, self.simulator.env.now)
 
-            queuing_delay = packet_copy.transmitting_start_time - packet_copy.waiting_start_time
-            # print('packet id: ', packet_copy.packet_id, ' queuing delay is: ', queuing_delay)
-
-            config.GL_ID_ACK_PACKET += 1
-            src_drone = self.simulator.drones[src_drone_id]  # previous drone
-            min_q = self.table.get_min_q_value(packet_copy.dst_drone.identifier)
-
-            ack_packet = QRoutingAckPacket(src_drone=self.my_drone,
-                                           dst_drone=src_drone,
-                                           ack_packet_id=config.GL_ID_ACK_PACKET,
-                                           ack_packet_length=config.ACK_PACKET_LENGTH,
-                                           ack_packet=packet,
-                                           transmitting_start_time=packet_copy.transmitting_start_time,
-                                           queuing_delay=queuing_delay,
-                                           min_q=min_q,
-                                           simulator=self.simulator)
-
-            yield self.simulator.env.timeout(config.SIFS_DURATION)  # switch from receiving to transmitting
-
-            # unicast the ack packet immediately without contention for the channel
-            if not self.my_drone.sleep:
-                ack_packet.increase_ttl()
-                self.my_drone.mac_protocol.phy.unicast(ack_packet, src_drone_id)
-                yield self.simulator.env.timeout(ack_packet.packet_length / config.BIT_RATE * 1e6)
-                self.simulator.drones[src_drone_id].receive()
-            else:
-                pass
-
             if packet_copy.dst_drone.identifier == self.my_drone.identifier:
                 latency = self.simulator.env.now - packet_copy.creation_time  # in us
                 self.simulator.metrics.deliver_time_dict[packet_copy.packet_id] = latency
-                self.simulator.metrics.throughput_dict[packet_copy.packet_id] = config.DATA_PACKET_LENGTH / (
-                            latency / 1e6)
+                self.simulator.metrics.throughput_dict[packet_copy.packet_id] = config.DATA_PACKET_LENGTH / (latency / 1e6)
                 self.simulator.metrics.hop_cnt_dict[packet_copy.packet_id] = packet_copy.get_current_ttl()
                 self.simulator.metrics.datapacket_arrived.add(packet_copy.packet_id)
                 logging.info('Packet: %s is received by destination UAV: %s',
                              packet_copy.packet_id, self.my_drone.identifier)
+
+                # waiting time includes queuing delay and access delay
+                waiting_time = packet_copy.transmitting_start_time - packet_copy.waiting_start_time
+
+                config.GL_ID_ACK_PACKET += 1
+                src_drone = self.simulator.drones[src_drone_id]  # previous drone
+                min_q = self.table.get_min_q_value(packet_copy.dst_drone.identifier)
+
+                ack_packet = QRoutingAckPacket(src_drone=self.my_drone,
+                                               dst_drone=src_drone,
+                                               ack_packet_id=config.GL_ID_ACK_PACKET,
+                                               ack_packet_length=config.ACK_PACKET_LENGTH,
+                                               ack_packet=packet,
+                                               transmitting_start_time=packet_copy.transmitting_start_time,
+                                               queuing_delay=waiting_time,
+                                               min_q=min_q,
+                                               simulator=self.simulator)
+
+                yield self.simulator.env.timeout(config.SIFS_DURATION)  # switch from receiving to transmitting
+
+                # unicast the ack packet immediately without contention for the channel
+                if not self.my_drone.sleep:
+                    ack_packet.increase_ttl()
+                    self.my_drone.mac_protocol.phy.unicast(ack_packet, src_drone_id)
+                    yield self.simulator.env.timeout(ack_packet.packet_length / config.BIT_RATE * 1e6)
+                    self.simulator.drones[src_drone_id].receive()
+                else:
+                    pass
             else:
-                self.my_drone.transmitting_queue.put(packet_copy)
+                if self.my_drone.transmitting_queue.qsize() < self.my_drone.max_queue_size:
+                    self.my_drone.transmitting_queue.put(packet_copy)
+                    packet_copy.waiting_start_time = self.simulator.env.now  # this packet starts to wait in the queue
+
+                    # waiting time includes queuing delay and access delay
+                    waiting_time = packet_copy.transmitting_start_time - packet_copy.waiting_start_time
+
+                    config.GL_ID_ACK_PACKET += 1
+                    src_drone = self.simulator.drones[src_drone_id]  # previous drone
+                    min_q = self.table.get_min_q_value(packet_copy.dst_drone.identifier)
+
+                    ack_packet = QRoutingAckPacket(src_drone=self.my_drone,
+                                                   dst_drone=src_drone,
+                                                   ack_packet_id=config.GL_ID_ACK_PACKET,
+                                                   ack_packet_length=config.ACK_PACKET_LENGTH,
+                                                   ack_packet=packet,
+                                                   transmitting_start_time=packet_copy.transmitting_start_time,
+                                                   queuing_delay=waiting_time,
+                                                   min_q=min_q,
+                                                   simulator=self.simulator)
+
+                    yield self.simulator.env.timeout(config.SIFS_DURATION)  # switch from receiving to transmitting
+
+                    # unicast the ack packet immediately without contention for the channel
+                    if not self.my_drone.sleep:
+                        ack_packet.increase_ttl()
+                        self.my_drone.mac_protocol.phy.unicast(ack_packet, src_drone_id)
+                        yield self.simulator.env.timeout(ack_packet.packet_length / config.BIT_RATE * 1e6)
+                        self.simulator.drones[src_drone_id].receive()
+                    else:
+                        pass
+                else:
+                    pass
 
         elif isinstance(packet, QRoutingAckPacket):
+            data_packet_acked = packet.ack_packet
             # update Q-table
             self.update_q_table(packet, src_drone_id)
 
-            key2 = str(self.my_drone.identifier) + '_' + str(self.my_drone.mac_protocol.wait_ack_process_count)
+            self.my_drone.remove_from_queue(data_packet_acked)
+
+            key2 = 'wait_ack' + str(self.my_drone.identifier) + '_' + str(data_packet_acked.packet_id)
 
             if self.my_drone.mac_protocol.wait_ack_process_finish[key2] == 0:
                 if not self.my_drone.mac_protocol.wait_ack_process_dict[key2].triggered:
@@ -192,9 +226,12 @@ class QRouting:
         data_packet_acked = packet.ack_packet
         dst_drone = data_packet_acked.dst_drone
 
-        queuing_delay = packet.queuing_delay
-        transmitting_start_time = packet.transmitting_start_time
+        waiting_time = packet.queuing_delay
+
+        transmitting_start_time = data_packet_acked.transmitting_start_time
         transmission_delay = self.simulator.env.now - transmitting_start_time  # in us
+
+        self.simulator.metrics.mac_delay.append((self.simulator.env.now - data_packet_acked.backoff_start_time) / 1e3)
 
         logging.info('Data packet id: %s, real transmission delay is: %s',
                      data_packet_acked.packet_id, transmission_delay)
@@ -209,7 +246,7 @@ class QRouting:
 
         self.table.q_table[next_hop_id][dst_drone.identifier] = \
             (1 - self.learning_rate) * self.table.q_table[next_hop_id][dst_drone.identifier] + \
-            self.learning_rate * (queuing_delay + transmission_delay + (1 - f) * min_q)
+            self.learning_rate * (waiting_time + transmission_delay + (1 - f) * min_q)
 
         logging.info('The Q-table in UAV: %s is: %s',
                      self.my_drone.identifier, self.table.q_table)
