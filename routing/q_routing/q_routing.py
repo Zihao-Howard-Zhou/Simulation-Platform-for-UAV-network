@@ -220,6 +220,8 @@ class QRouting:
                 if not self.my_drone.mac_protocol.wait_ack_process_dict[key2].triggered:
                     logging.info('At time: %s, the wait_ack process (id: %s) of UAV: %s is interrupted by UAV: %s',
                                  self.simulator.env.now, key2, self.my_drone.identifier, src_drone_id)
+
+                    self.my_drone.mac_protocol.wait_ack_process_finish[key2] = 1  # mark it as "finished"
                     self.my_drone.mac_protocol.wait_ack_process_dict[key2].interrupt()
 
     def update_q_table(self, packet, next_hop_id):
