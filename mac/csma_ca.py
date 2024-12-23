@@ -170,6 +170,10 @@ class CsmaCa:
                 yield self.env.process(self.my_drone.packet_coming(pkd))
             else:
                 self.simulator.metrics.mac_delay.append((self.simulator.env.now - pkd.backoff_start_time) / 1e3)
+
+                key2 = 'wait_ack' + str(self.my_drone.identifier) + '_' + str(pkd.packet_id)
+                self.my_drone.mac_protocol.wait_ack_process_finish[key2] = 1
+
                 logging.info('Packet: %s is dropped!', pkd.packet_id)
 
         except simpy.Interrupt:
