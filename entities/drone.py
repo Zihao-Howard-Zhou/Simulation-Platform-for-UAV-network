@@ -76,7 +76,7 @@ class Drone:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/11
-    Updated at: 2024/9/18
+    Updated at: 2025/1/7
     """
 
     def __init__(self,
@@ -92,11 +92,10 @@ class Drone:
         self.coords = coords
         self.start_coords = coords
 
-        random.seed(2024 + self.identifier)
-        self.direction = random.uniform(0, 2 * np.pi)
+        self.rng_drone = random.Random(self.identifier + self.simulator.seed)
 
-        random.seed(2025 + self.identifier)
-        self.pitch = random.uniform(-0.05, 0.05)
+        self.direction = self.rng_drone.uniform(0, 2 * np.pi)
+        self.pitch = self.rng_drone.uniform(-0.05, 0.05)
         self.speed = speed  # constant speed throughout the simulation
         self.velocity = [self.speed * math.cos(self.direction) * math.cos(self.pitch),
                          self.speed * math.sin(self.direction) * math.cos(self.pitch),
@@ -119,9 +118,9 @@ class Drone:
         self.mac_process_count = 0
         self.enable_blocking = 1  # enable "stop-and-wait" protocol
 
-        self.routing_protocol = Opar(self.simulator, self)
+        self.routing_protocol = Greedy(self.simulator, self)
 
-        self.mobility_model = RandomWalk3D(self)
+        self.mobility_model = GaussMarkov3D(self)
         # self.motion_controller = VfMotionController(self)
 
         self.energy_model = EnergyModel()
@@ -149,22 +148,22 @@ class Drone:
             if not self.sleep:
                 if traffic_pattern == 'Uniform':
                     # the drone generates a data packet every 0.5s with jitter
-                    yield self.env.timeout(random.randint(500000, 505000))
+                    yield self.env.timeout(self.rng_drone.randint(500000, 505000))
                 elif traffic_pattern == 'Poisson':
                     """
                     the process of generating data packets by nodes follows Poisson distribution, thus the generation 
                     interval of data packets follows exponential distribution
                     """
 
-                    rate = 8  # on average, how many packets are generated in 1s
-                    yield self.env.timeout(round(random.expovariate(rate) * 1e6))
+                    rate = 2  # on average, how many packets are generated in 1s
+                    yield self.env.timeout(round(self.rng_drone.expovariate(rate) * 1e6))
 
                 GLOBAL_DATA_PACKET_ID += 1  # data packet id
 
                 # randomly choose a destination
                 all_candidate_list = [i for i in range(config.NUMBER_OF_DRONES)]
                 all_candidate_list.remove(self.identifier)
-                dst_id = random.choice(all_candidate_list)
+                dst_id = self.rng_drone.choice(all_candidate_list)
                 destination = self.simulator.drones[dst_id]  # obtain the destination drone
 
                 pkd = DataPacket(self,
