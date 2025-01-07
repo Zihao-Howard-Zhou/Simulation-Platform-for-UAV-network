@@ -1,5 +1,5 @@
-import numpy as np
 import random
+import numpy as np
 from utils import config
 import matplotlib.pyplot as plt
 from utils.util_function import euclidean_distance
@@ -17,12 +17,14 @@ class RandomWaypoint3D:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/4/19
-    Updated at: 2024/11/18
+    Updated at: 2025/1/7
     """
 
     def __init__(self, drone):
         self.model_identifier = 'RandomWaypoint'
         self.my_drone = drone
+        self.rng_mobility = random.Random(self.my_drone.identifier + self.my_drone.simulator.seed + 1)
+
         self.position_update_interval = 1 * 1e5  # 0.1s
         self.pause_time = 5 * 1e6  # in second
 
@@ -36,7 +38,7 @@ class RandomWaypoint3D:
         self.max_z = config.MAP_HEIGHT
 
         # generate random waypoint
-        self.waypoint_num = 20
+        self.waypoint_num = 5
         self.waypoint_spacing_x = 50
         self.waypoint_spacing_y = 50
         self.waypoint_spacing_z = 50
@@ -63,9 +65,8 @@ class RandomWaypoint3D:
             if last_waypoint[0] + self.waypoint_spacing_x < self.max_x:
                 ranges_x.append([last_waypoint[0] + self.waypoint_spacing_x, self.max_x])
 
-            random.seed(self.my_drone.simulator.seed + self.my_drone.identifier + 1)
-            which_range_x = random.choice(ranges_x)
-            waypoint_x = random.uniform(which_range_x[0], which_range_x[1])
+            which_range_x = self.rng_mobility.choice(ranges_x)
+            waypoint_x = self.rng_mobility.uniform(which_range_x[0], which_range_x[1])
 
             ranges_y = []
             if last_waypoint[1] - self.waypoint_spacing_y > self.min_y:
@@ -73,9 +74,8 @@ class RandomWaypoint3D:
             if last_waypoint[1] + self.waypoint_spacing_y < self.max_y:
                 ranges_y.append([last_waypoint[1] + self.waypoint_spacing_y, self.max_y])
 
-            random.seed(self.my_drone.simulator.seed + self.my_drone.identifier + 2)
-            which_range_y = random.choice(ranges_y)
-            waypoint_y = random.uniform(which_range_y[0], which_range_y[1])
+            which_range_y = self.rng_mobility.choice(ranges_y)
+            waypoint_y = self.rng_mobility.uniform(which_range_y[0], which_range_y[1])
 
             ranges_z = []
             if last_waypoint[2] - self.waypoint_spacing_z > self.min_z:
@@ -83,9 +83,8 @@ class RandomWaypoint3D:
             if last_waypoint[2] + self.waypoint_spacing_z < self.max_z:
                 ranges_z.append([last_waypoint[2] + self.waypoint_spacing_z, self.max_z])
 
-            random.seed(self.my_drone.simulator.seed + self.my_drone.identifier + 3)
-            which_range_z = random.choice(ranges_z)
-            waypoint_z = random.uniform(which_range_z[0], which_range_z[1])
+            which_range_z = self.rng_mobility.choice(ranges_z)
+            waypoint_z = self.rng_mobility.uniform(which_range_z[0], which_range_z[1])
 
             next_waypoint = [waypoint_x, waypoint_y, waypoint_z]
             self.waypoint_coords.append(next_waypoint)
@@ -116,11 +115,6 @@ class RandomWaypoint3D:
                 next_position_x = cur_position[0]
                 next_position_y = cur_position[1]
                 next_position_z = cur_position[2]
-
-            if type(next_position_x) is np.ndarray:
-                next_position_x = next_position_x[0]
-                next_position_y = next_position_y[0]
-                next_position_z = next_position_z[0]
 
             next_position = [next_position_x, next_position_y, next_position_z]
 

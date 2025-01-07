@@ -1,3 +1,5 @@
+import random
+import math
 import numpy as np
 from utils import config
 import matplotlib.pyplot as plt
@@ -31,12 +33,14 @@ class GaussMarkov3D:
 
     Author: Zihao Zhou, eezihaozhou@gmail.com
     Created at: 2024/1/17
-    Updated at: 2024/11/18
+    Updated at: 2025/1/7
     """
 
     def __init__(self, drone):
         self.model_identifier = 'GaussMarkov'
         self.my_drone = drone
+        self.rng_mobility = random.Random(self.my_drone.identifier + self.my_drone.simulator.seed + 1)
+
         self.position_update_interval = 1*1e5  # 0.1s
         self.direction_update_interval = 5*1e5  # 0.5s
         self.alpha = 0.85
@@ -86,41 +90,27 @@ class GaussMarkov3D:
             if env.now % self.direction_update_interval == 0:  # update velocity and direction
                 self.move_counter += 1
                 alpha2 = 1.0 - self.alpha
-                alpha3 = np.sqrt(1.0 - self.alpha * self.alpha)
+                alpha3 = math.sqrt(1.0 - self.alpha * self.alpha)
 
-                np.random.seed(drone_id + 1 + self.move_counter)
                 next_speed = (self.alpha * cur_speed + alpha2 * velocity_mean +
-                              alpha3 * np.random.normal(0.0, 1.0, 1))
+                              alpha3 * self.rng_mobility.normalvariate(0, 1))
 
-                np.random.seed(drone_id + 1000 + self.move_counter)
                 next_direction = (self.alpha * cur_direction + alpha2 * direction_mean +
-                                  alpha3 * np.random.normal(0.0, 1.0, 1))
+                                  alpha3 * self.rng_mobility.normalvariate(0, 1))
 
-                np.random.seed(drone_id + 2000 + self.move_counter)
                 next_pitch = (self.alpha * cur_pitch + alpha2 * pitch_mean +
-                              alpha3 * np.random.normal(0.0, 0.1, 1))
+                              alpha3 * self.rng_mobility.normalvariate(0, 1))
 
-                next_velocity_x = next_speed * np.cos(next_direction) * np.cos(next_pitch)
-                next_velocity_y = next_speed * np.sin(next_direction) * np.cos(next_pitch)
-                next_velocity_z = next_speed * np.sin(next_pitch)
-
-                if type(next_position_x) is np.ndarray:
-                    next_position_x = next_position_x[0]
-                    next_position_y = next_position_y[0]
-                    next_position_z = next_position_z[0]
+                next_velocity_x = next_speed * math.cos(next_direction) * math.cos(next_pitch)
+                next_velocity_y = next_speed * math.sin(next_direction) * math.cos(next_pitch)
+                next_velocity_z = next_speed * math.sin(next_pitch)
 
                 next_position = [next_position_x, next_position_y, next_position_z]
 
                 if drone_id == 1:
                     self.trajectory.append(next_position)
 
-                if type(next_velocity_x) is np.ndarray:
-                    next_velocity_x = next_velocity_x[0]
-                    next_velocity_y = next_velocity_y[0]
-                    next_velocity_z = next_velocity_z[0]
-
                 next_velocity = [next_velocity_x, next_velocity_y, next_velocity_z]
-                next_speed = next_speed.item()
             else:
                 next_position = [next_position_x, next_position_y, next_position_z]
 
@@ -185,9 +175,9 @@ class GaussMarkov3D:
             next_velocity[2] = -next_velocity[2]
             pitch_mean = -pitch_mean
 
-        next_position[0] = np.clip(next_position[0], self.min_x + self.b1, self.max_x - self.b1)
-        next_position[1] = np.clip(next_position[1], self.min_y + self.b2, self.max_y - self.b2)
-        next_position[2] = np.clip(next_position[2], self.min_z + self.b3, self.max_z - self.b3)
+        next_position[0] = max(self.min_x + self.b1, min(next_position[0], self.max_x - self.b1))
+        next_position[1] = max(self.min_y + self.b2, min(next_position[1], self.max_y - self.b2))
+        next_position[2] = max(self.min_z + self.b3, min(next_position[2], self.max_z - self.b3))
 
         next_direction = direction_mean
         next_pitch = pitch_mean
